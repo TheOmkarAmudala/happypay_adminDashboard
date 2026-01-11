@@ -76,6 +76,11 @@ export const protectedRoutes = [
         component: React.lazy(() => import('views/app-views/wallet')),
     },
     {
+        key: 'domesticcards',
+        path: `${APP_PREFIX_PATH}/domesticcards`,
+        component: React.lazy(() => import('views/app-views/domesticcards/PaymentPage')),
+    },
+    {
         key: 'apps',
         path: `${APP_PREFIX_PATH}/apps`,
         component: React.lazy(() => import('views/app-views/apps')),

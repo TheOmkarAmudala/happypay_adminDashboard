@@ -59,7 +59,7 @@ export const AnnualStatisticData = [
 		value: "₹2,45,000",
 		status: 12.5,
 		subtitle: "Total Pay In",
-		route: "/DomesticCards"
+		route: "/domesticcards"
 	},
 	{
 		title: "Business Cards",
