@@ -2,8 +2,7 @@
   "name": "emilus",
   "version": "4.0.2",
   "private": true,
-  "homepage": "https://TheOmkarAmudala/happypay_adminDashboard",
-  "dependencies": {
+   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
