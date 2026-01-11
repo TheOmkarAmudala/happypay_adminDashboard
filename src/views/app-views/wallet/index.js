@@ -90,44 +90,36 @@ const WalletTransactionsPage = () => {
                     }
                 );
 
+                console.log("RAW API DATA:", response.data.data);
+
                 const transactions = response.data?.data || [];
                 console.log("💰 WALLET TX COUNT:", transactions.length);
 
                 const formatted = transactions.map((tx, index) => {
-                    const isDebit = tx.from?.toLowerCase() !== "happy pay";
                     const extra = tx.extraInfo || {};
+                    const isDebit = tx.to?.toLowerCase() !== "happy pay";
 
                     return {
                         key: tx._id,
                         sn: index + 1,
-
-                        // ✅ FIXED: from extraInfo
-                        referenceId: extra.referenceId || "-",
-
+                        referenceId: extra.serviceReferenceId || "-",
                         amount: `₹${tx.amount}`,
-
                         direction: isDebit ? "DEBIT" : "CREDIT",
-
-                        // ✅ FIXED
-                        transactionType:
-                            extra.transactionType === "refund"
+                        transactionType: extra.transactionType
+                            ? extra.transactionType === "refund"
                                 ? "REFUND"
-                                : "SERVICE",
+                                : "SERVICE"
+                            : "WALLET",
 
-                        // ✅ FIXED
                         serviceName: extra.serviceName || "-",
-
-
-                        // ✅ FIXED
                         provider: extra.provider || "-",
-
                         status: tx.status || "-",
-
                         transactionTime: tx.createdAt
                             ? new Date(tx.createdAt).toLocaleString()
                             : "-"
                     };
                 });
+
 
                 setWalletData(formatted);
             } catch (error) {

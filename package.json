@@ -2,6 +2,7 @@
   "name": "emilus",
   "version": "4.0.2",
   "private": true,
+  "homepage": "https://TheOmkarAmudala/happypay_adminDashboard",
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "@emotion/react": "^11.10.5",
@@ -66,6 +67,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "eject": "react-scripts eject",
     "dev": "concurrently \"npm run start\" \"gulp watch\""
   },
@@ -89,6 +92,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.8.4",
+    "gh-pages": "^6.3.0",
     "gulp": "^4.0.2",
     "gulp-csso": "^4.0.1",
     "gulp-debug": "^4.0.0",
