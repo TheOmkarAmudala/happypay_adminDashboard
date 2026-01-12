@@ -1,0 +1,53 @@
+.slab-card {
+    background: #2a2f45;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.slab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slab-header h4 {
+    color: #8aa2ff;
+    margin: 0;
+}
+
+.badges {
+    display: flex;
+    gap: 8px;
+}
+
+.slab-table {
+    width: 100%;
+    margin-top: 12px;
+    border-collapse: collapse;
+}
+
+.slab-table th {
+    text-align: left;
+    color: #bfbfbf;
+    font-size: 12px;
+    padding-bottom: 6px;
+}
+
+.slab-table td {
+    padding: 6px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.rate-cell {
+    font-weight: 600;
+}
+
+.rate-cell .domestic {
+    color: #6ea8fe;
+}
+
+.rate-cell .corporate {
+    color: #9b9b9b;
+    margin-left: 4px;
+}

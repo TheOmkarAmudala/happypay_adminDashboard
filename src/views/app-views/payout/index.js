@@ -7,24 +7,14 @@ const PayoutPage = () => {
     const [payoutData, setPayoutData] = useState([]);
 
     const columns = [
+        { title: "S/N", dataIndex: "sn", key: "sn", width: 70 },
+
+        { title: "Service Txn Ref ID", dataIndex: "serviceTxnRefId", key: "serviceTxnRefId" },
+
+        { title: "Payout Amount", dataIndex: "payoutAmount", key: "payoutAmount" },
+
         {
-            title: "S/N",
-            dataIndex: "sn",
-            key: "sn",
-            width: 70
-        },
-        {
-            title: "Service Txn Ref ID",
-            dataIndex: "serviceTxnRefId",
-            key: "serviceTxnRefId"
-        },
-        {
-            title: "PayOut Amount",
-            dataIndex: "payoutAmount",
-            key: "payoutAmount"
-        },
-        {
-            title: "PayOut Status",
+            title: "Payout Status",
             dataIndex: "payoutStatus",
             key: "payoutStatus",
             render: (status) => (
@@ -33,36 +23,14 @@ const PayoutPage = () => {
                 </Tag>
             )
         },
-        {
-            title: "Beneficiary Name",
-            dataIndex: "beneficiaryName",
-            key: "beneficiaryName"
-        },
-        {
-            title: "Beneficiary A/c",
-            dataIndex: "beneficiaryAccount",
-            key: "beneficiaryAccount"
-        },
-        {
-            title: "IFSC",
-            dataIndex: "beneficiaryIfsc",
-            key: "beneficiaryIfsc"
-        },
-        {
-            title: "Transfer Mode",
-            dataIndex: "transferMode",
-            key: "transferMode"
-        },
-        {
-            title: "UTR",
-            dataIndex: "utr",
-            key: "utr"
-        },
-        {
-            title: "Transaction Time",
-            dataIndex: "transactionTime",
-            key: "transactionTime"
-        }
+
+        { title: "Beneficiary Name", dataIndex: "beneficiaryName", key: "beneficiaryName" },
+        { title: "Beneficiary A/c", dataIndex: "beneficiaryAccount", key: "beneficiaryAccount" },
+        { title: "IFSC", dataIndex: "beneficiaryIfsc", key: "beneficiaryIfsc" },
+        { title: "Transfer Mode", dataIndex: "transferMode", key: "transferMode" },
+        { title: "UTR", dataIndex: "utr", key: "utr" },
+
+        { title: "Transaction Time", dataIndex: "transactionTime", key: "transactionTime" }
     ];
 
     useEffect(() => {
@@ -71,62 +39,63 @@ const PayoutPage = () => {
                 setLoading(true);
 
                 const token = localStorage.getItem("AUTH_TOKEN");
-                if (!token) {
-                    console.warn("No auth token found");
-                    return;
-                }
+                if (!token) return;
 
-                const response = await axios.get(
+                const res = await axios.get(
                     "https://test.happypay.live/users/serviceTransactions",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    }
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
 
-                const transactions = response.data?.data || [];
-                console.log("ALL TX COUNT:", transactions.length);
-                console.log(
-                    "PAYOUT TX COUNT:",
-                    transactions.filter(t => t?.extraInfo?.payout_response?.status).length
-                );
+                const transactions = res.data?.data || [];
 
-                // ✅ ONLY PAYOUT TRANSACTIONS
+                // ✅ FILTER ONLY PAYOUTS (correct way)
                 const payouts = transactions
                     .filter(tx =>
-                        tx.callBack === true &&
-                        tx.paymentStatus === "success" &&
-                        tx.message?.toLowerCase().includes("payout")
+                        tx.domainName === "payout" ||
+                        tx.paymentType === "payout"
                     )
-                    .map((tx, index) => ({
-                        key: tx.id,
-                        sn: index + 1,
-                        serviceTxnRefId: tx.serviceReferenceId || "-",
-                        payoutAmount: tx.amount ? `₹${tx.amount}` : "-",
-                        payoutStatus: "SUCCESS",
-                        beneficiaryName: "-",
-                        beneficiaryAccount: "-",
-                        beneficiaryIfsc: "-",
-                        transferMode: "-",
-                        utr: "-",
-                        transactionTime: tx.updatedAt
-                            ? new Date(tx.updatedAt).toLocaleString()
-                            : "-"
-                    }));
+                    .map((tx, index) => {
+                        const bank = tx.extraInfo?.bank_account || {};
+                        const payout = tx.extraInfo?.payout_response || {};
 
+                        return {
+                            key: tx.id,
+                            sn: index + 1,
 
-                transactions.forEach(tx => {
-                    if (tx.callBack === true) {
-                        console.log("CALLBACK TX:", tx);
-                    }
-                });
+                            serviceTxnRefId: tx.serviceReferenceId || "-",
 
+                            payoutAmount: tx.amount
+                                ? `₹${Number(tx.amount).toFixed(2)}`
+                                : "-",
 
+                            payoutStatus:
+                                payout.status ||
+                                tx.paymentStatus?.toUpperCase() ||
+                                "-",
+
+                            beneficiaryName: bank.beneficiary_name || "-",
+                            beneficiaryAccount: bank.bank_account_number || "-",
+                            beneficiaryIfsc: bank.bank_ifsc || "-",
+
+                            transferMode:
+                                payout.transfermode ||
+                                payout.transfer_mode ||
+                                "-",
+
+                            utr:
+                                payout.transferutr ||
+                                payout.transfer_utr ||
+                                "-",
+
+                            transactionTime: tx.updatedAt
+                                ? new Date(tx.updatedAt).toLocaleString()
+                                : "-"
+                        };
+                    });
 
                 setPayoutData(payouts);
-            } catch (error) {
-                console.error("Failed to fetch payouts", error);
+            } catch (err) {
+                console.error("Failed to fetch payout transactions", err);
             } finally {
                 setLoading(false);
             }
@@ -141,10 +110,8 @@ const PayoutPage = () => {
                 columns={columns}
                 dataSource={payoutData}
                 loading={loading}
-                pagination={false}
-                locale={{
-                    emptyText: "No PayOut transactions available"
-                }}
+                pagination={{ pageSize: 10 }}
+                locale={{ emptyText: "No PayOut transactions available" }}
                 scroll={{ x: true }}
             />
         </Card>

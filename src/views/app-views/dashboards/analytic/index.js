@@ -1,200 +1,125 @@
-import React, { useState } from 'react'
-import { Row, Col, Card, Avatar, Select, Tag, Badge, List } from 'antd';
-import RegiondataWidget from 'components/shared-components/RegiondataWidget';
-import DonutChartWidget from 'components/shared-components/DonutChartWidget'
-import Flex from 'components/shared-components/Flex'
-import ChartWidget from 'components/shared-components/ChartWidget';
-import NumberFormat from 'react-number-format';
-import ApexChart from "react-apexcharts";
-import { apexSparklineChartDefultOption, COLORS } from 'constants/ChartConstant';
-import utils from 'utils'
-import {
-  FacebookFilled,
-  TwitterSquareFilled,
-  LinkedinFilled,
-  YoutubeFilled,
-  DribbbleSquareFilled,
-  ArrowUpOutlined,
-  ArrowDownOutlined
-} from '@ant-design/icons';
-import { 
-  regionData, 
-  sessionData, 
-  sessionLabels, 
-  conbinedSessionData,
-  sessionColor,
-  pagesViewData,
-  socialMediaReferralData,
-  uniqueVisitorsDataWeek,
-  uniqueVisitorsDataDay,
-  uniqueVisitorsDataMonth
-} from './AnalyticDashboardData'
-import { useSelector } from 'react-redux'
+import React from "react";
+import { Card, Row, Col, Tag } from "antd";
+import "./commission.css";
 
-const socialMediaReferralIcon = [
-  <FacebookFilled style={{color: '#1774eb'}} />,
-  <TwitterSquareFilled style={{color: '#1c9deb'}}/>,
-  <YoutubeFilled style={{color: '#f00'}}/>,
-  <LinkedinFilled style={{color: '#0077b4'}} />,
-  <DribbbleSquareFilled  style={{color: '#e44a85'}} />
-]
-
-const { Option } = Select;
-
-const rederRegionTopEntrance = (
-  <div className="mb-4">
-    <div className="d-flex align-items-center">
-      <Avatar size={20} src="/img/flags/us.png"/>
-      <h2 className="mb-0 ml-2 font-weight-bold">37.61%</h2>
-    </div>
-    <span className="text-muted">Top entrance region</span>
-  </div>
-)
-
-export const AnalyticDashboard = () => {
-
-  const [uniqueVisitorsData, setUniqueVisitorsData] = useState(uniqueVisitorsDataWeek)
-  const { direction } = useSelector(state => state.theme)
-
-  const handleVisitorsChartChange = value => {
-    console.log(value)
-    switch (value) {
-      case 'day':
-        setUniqueVisitorsData(uniqueVisitorsDataDay)
-        break;
-      case 'week':
-        setUniqueVisitorsData(uniqueVisitorsDataWeek)
-        break;
-      case 'month':
-        setUniqueVisitorsData(uniqueVisitorsDataMonth)
-        break;
-      default:
-        setUniqueVisitorsData(uniqueVisitorsDataWeek)
-        break;
-    }
+const parseRate = (val) => {
+  if (!val) return { domestic: "-", corporate: "-" };
+  if (val.includes("/")) {
+    const [d, c] = val.split("/").map(v => v.trim());
+    return { domestic: d, corporate: c };
   }
+  return { domestic: val, corporate: "-" };
+};
+
+const RateCell = ({ value }) => {
+  const { domestic, corporate } = parseRate(value);
+  return (
+      <div className="rate-cell">
+        <span className="domestic">{domestic}</span>
+        {corporate !== "-" && <span className="corporate">/ {corporate}</span>}
+      </div>
+  );
+};
+
+const SlabCard = ({ title, commissions, maxLimit, rows }) => (
+    <Card className="slab-card">
+      <div className="slab-header">
+        <h4>{title}</h4>
+        <div className="badges">
+          <Tag color="red">{commissions} Commissions</Tag>
+          <Tag color="red">MAX Limit ₹{maxLimit}</Tag>
+        </div>
+      </div>
+
+      <table className="slab-table">
+        <thead>
+        <tr>
+          <th>Role</th>
+          <th>Total (%)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {rows.map((r, i) => (
+            <tr key={i}>
+              <td>{r.role}</td>
+              <td><RateCell value={r.rate} /></td>
+            </tr>
+        ))}
+        </tbody>
+      </table>
+    </Card>
+);
+
+const CommissionSlabs = () => {
+  const education = [
+    {
+      title: "Silver Prime Edu",
+      commissions: 2,
+      maxLimit: "2,00,000",
+      rows: [
+        { role: "HappyPay Admin", rate: "1.34% / 1.80%" },
+        { role: "Enterprise Partner", rate: "1.36% / 1.83%" },
+        { role: "Super Distributor", rate: "1.37% / 1.83%" },
+        { role: "Master Distributor", rate: "1.39% / 1.85%" },
+        { role: "Distributor", rate: "1.41% / 1.87%" },
+        { role: "Retailer", rate: "1.44% / 1.90%" }
+      ]
+    },
+    {
+      title: "Silver Edu Lite",
+      commissions: 2,
+      maxLimit: "95,000",
+      rows: [
+        { role: "HappyPay Admin", rate: "1.23% / 1.80%" },
+        { role: "Enterprise Partner", rate: "1.29% / 1.83%" },
+        { role: "Super Distributor", rate: "1.30% / 1.83%" },
+        { role: "Master Distributor", rate: "1.33% / 1.85%" },
+        { role: "Distributor", rate: "1.35% / 1.87%" },
+        { role: "Retailer", rate: "1.38% / 1.90%" }
+      ]
+    }
+  ];
+
+  const travel = [
+    {
+      title: "Gold Travel Prime",
+      commissions: 2,
+      maxLimit: "40,000",
+      rows: [
+        { role: "HappyPay Admin", rate: "1.33% / 1.80%" },
+        { role: "Enterprise Partner", rate: "1.37% / 1.85%" },
+        { role: "Super Distributor", rate: "1.38% / 1.86%" },
+        { role: "Master Distributor", rate: "1.40% / 1.88%" },
+        { role: "Distributor", rate: "1.42% / 1.90%" },
+        { role: "Retailer", rate: "1.45% / 1.93%" }
+      ]
+    },
+    {
+      title: "Gold Travel Fast",
+      commissions: 2,
+      maxLimit: "1,00,000",
+      rows: [
+        { role: "HappyPay Admin", rate: "1.38% / 1.65%" },
+        { role: "Enterprise Partner", rate: "1.42% / 1.72%" },
+        { role: "Super Distributor", rate: "1.43% / 1.73%" },
+        { role: "Master Distributor", rate: "1.45% / 1.75%" },
+        { role: "Distributor", rate: "1.47% / 1.77%" },
+        { role: "Retailer", rate: "1.50% / 1.80%" }
+      ]
+    }
+  ];
 
   return (
-    <>
       <Row gutter={16}>
-        <Col xs={24} sm={24} md={24} lg={24} xxl={18}>
-          <RegiondataWidget 
-            title="Entrance by region"
-            data={regionData}
-            content={rederRegionTopEntrance}
-          />
+        <Col span={12}>
+          {education.map((e, i) => <SlabCard key={i} {...e} />)}
         </Col>
-        <Col xs={24} sm={24} md={24} lg={24} xxl={6}>
-          <DonutChartWidget 
-            series={sessionData} 
-            labels={sessionLabels} 
-            title="Sessions Device"
-            bodyClass="my-3"
-            customOptions={{colors: sessionColor}}
-            extra={
-              <Row  justify="center">
-                <Col xs={20} sm={20} md={20} lg={24}>
-                  <div className="mt-4 mx-auto" style={{maxWidth: 200}}>
-                    {conbinedSessionData.map(elm => (
-                      <Flex alignItems="center" justifyContent="space-between" className="mb-3" key={elm.label}>
-                        <Flex gap={5}>
-                          <Badge color={elm.color} />
-                          <span className="text-gray-light">{elm.label}</span>
-                        </Flex>
-                        <span className="font-weight-bold text-dark">{elm.data}</span>
-                      </Flex>
-                    ))}
-                  </div>
-                </Col>
-              </Row>
-            }
-          />
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col xs={24} sm={24} md={24} lg={12} xxl={6}>
-          <Card title="Most visited pages">
-            <List
-              itemLayout="horizontal"
-              dataSource={pagesViewData}
-              renderItem={item => (
-                <List.Item>
-                  <div className="d-flex align-items-center justify-content-between w-100">
-                    <div>
-                      <h4 className="font-weight-bold mb-0">{item.title}</h4>
-                      <span className="text-muted">{item.url}</span>
-                    </div>
-                    <div>
-                      <Tag color="blue">
-                        <span className="font-weight-bold">
-                          <NumberFormat value={item.amount} thousandSeparator={true} displayType="text" ></NumberFormat>
-                        </span>
-                      </Tag>
-                    </div>
-                  </div>
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={24} md={24} lg={12} xxl={6}>
-          <Card title="Social media referrals">
-          <List
-            itemLayout="horizontal"
-            dataSource={socialMediaReferralData}
-            renderItem={(item, index) => (
-              <List.Item>
-                <div className="d-flex align-items-center justify-content-between w-100">
-                  <div className="d-flex align-items-center">
-                    <span className="font-size-xxl">{socialMediaReferralIcon[index]}</span>
-                    <div className="ml-3">
-                      <h4 className="font-weight-bold mb-0">{item.title}</h4>
-                      <span className="text-muted">Total: <span className="font-weight-bold">{item.amount}</span></span>
-                    </div>
-                  </div>
-                  <div className="d-flex align-items-center">
-                    <ApexChart 
-                      options={{...apexSparklineChartDefultOption, ...{colors: [utils.getSignNum(item.percentage, COLORS[1], COLORS[2])]}}} 
-                      series={item.data} 
-                      height={25} 
-                      width={50}
-                    />
-                    <span className="ml-3 font-weight-bold">{item.percentage}%</span>
-                    <span className={`ml-1 ${utils.getSignNum(item.percentage, 'text-success', 'text-danger')}`}>
-                      {utils.getSignNum(item.percentage, <ArrowUpOutlined />, <ArrowDownOutlined />)}
-                    </span>
-                  </div>
-                </div>
-              </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={24} md={24} lg={24} xxl={12}>
-          <ChartWidget 
-            series={uniqueVisitorsData.series} 
-            xAxis={uniqueVisitorsData.categories} 
-            title="Unique Visitors"
-            height={410}
-            type="bar"
-            direction={direction}
-            customOptions={
-              {
-                colors: [COLORS[1], COLORS[0]]
-              }
-            }
-            extra={
-              <Select defaultValue="week" size="small" style={{ width: 120 }} onChange={handleVisitorsChartChange}>
-                <Option value="day">Day</Option>
-                <Option value="week">Week</Option>
-                <Option value="month">Month</Option>
-              </Select>
-            }
-          />
-        </Col>
-      </Row>
-    </>
-  )
-}
 
-export default AnalyticDashboard
+        <Col span={12}>
+          {travel.map((t, i) => <SlabCard key={i} {...t} />)}
+        </Col>
+      </Row>
+  );
+};
+
+export default CommissionSlabs;

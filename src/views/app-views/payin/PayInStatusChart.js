@@ -1,38 +1,28 @@
 import React from "react";
 import ApexChart from "react-apexcharts";
-import { Card, Button } from "antd";
+import { Card } from "antd";
 
 const PayInStatusChart = ({ success, pending, failed }) => {
     const series = [success, pending, failed];
 
     const options = {
         labels: ["Success", "Pending", "Failed"],
-        colors: ["#3f8600", "#fa8c16", "#cf1322"], // green, orange, red
-        chart: {
-            type: "donut"
-        },
+        colors: ["#52c41a", "#faad14", "#ff4d4f"],
         legend: {
             position: "bottom"
         },
-        tooltip: {
-            y: {
-                formatter: val => `${val} payments`
-            }
+        chart: {
+            type: "donut"
         },
         plotOptions: {
             pie: {
                 donut: {
-                    size: "75%",
-                    labels: {
-                        show: true,
-                        total: {
-                            show: true,
-                            label: "Total",
-                            formatter: () => success + pending + failed
-                        }
-                    }
+                    size: "70%"
                 }
             }
+        },
+        dataLabels: {
+            enabled: false
         }
     };
 
@@ -42,15 +32,8 @@ const PayInStatusChart = ({ success, pending, failed }) => {
                 options={options}
                 series={series}
                 type="donut"
-                height={280}
+                height={260}
             />
-
-            <div style={{ textAlign: "center", marginTop: 12 }}>
-                <p style={{ color: "#8c8c8c" }}>
-                    Hover to see number of payments
-                </p>
-
-            </div>
         </Card>
     );
 };
