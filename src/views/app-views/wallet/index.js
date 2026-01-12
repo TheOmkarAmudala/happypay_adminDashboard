@@ -1,149 +1,141 @@
 import React, { useEffect, useState } from "react";
-import { Card, Table, Tag } from "antd";
 import axios from "axios";
+import { Card, Table, Tag, Modal, Descriptions, Skeleton } from "antd";
 
-const WalletTransactionsPage = () => {
+const WalletTransactionsPage = ({ onWalletTotalChange }) => {
     const [loading, setLoading] = useState(false);
     const [walletData, setWalletData] = useState([]);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [selectedTx, setSelectedTx] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const columns = [
-        {
-            title: "S/N",
-            dataIndex: "sn",
-            key: "sn",
-            width: 70
-        },
+        { title: "S/N", dataIndex: "sn", key: "sn", width: 70 },
         {
             title: "Reference ID",
             dataIndex: "referenceId",
-            key: "referenceId"
+            key: "referenceId",
+            render: (value) =>
+                value !== "-" ? (
+                    <a onClick={() => fetchTransactionDetails(value)}>
+                        {value}
+                    </a>
+                ) : (
+                    "-"
+                )
         },
-        {
-            title: "Amount",
-            dataIndex: "amount",
-            key: "amount"
-        },
+        { title: "Amount", dataIndex: "amount", key: "amount" },
         {
             title: "Direction",
             dataIndex: "direction",
             key: "direction",
-            render: (value) => (
-                <Tag color={value === "DEBIT" ? "red" : "green"}>
-                    {value}
-                </Tag>
-            )
+            render: (v) => <Tag color={v === "DEBIT" ? "red" : "green"}>{v}</Tag>
         },
         {
             title: "Transaction Type",
             dataIndex: "transactionType",
             key: "transactionType",
-            render: (value) => (
-                <Tag color={value === "REFUND" ? "blue" : "purple"}>
-                    {value}
-                </Tag>
-            )
+            render: (v) => <Tag color="purple">{v}</Tag>
         },
-        {
-            title: "Service",
-            dataIndex: "serviceName",
-            key: "serviceName"
-        },
-        {
-            title: "Provider",
-            dataIndex: "provider",
-            key: "provider"
-        },
-        {
+        { title: "Service", dataIndex: "serviceName", key: "serviceName" },
+       {
             title: "Status",
             dataIndex: "status",
             key: "status",
-            render: (status) => (
-                <Tag color={status === "success" ? "green" : "orange"}>
-                    {status?.toUpperCase()}
-                </Tag>
-            )
+            render: (s) => <Tag color="green">{s?.toUpperCase()}</Tag>
         },
-        {
-            title: "Transaction Time",
-            dataIndex: "transactionTime",
-            key: "transactionTime"
-        }
+        { title: "Transaction Time", dataIndex: "transactionTime", key: "transactionTime" }
     ];
 
     useEffect(() => {
         const fetchWalletTransactions = async () => {
             try {
                 setLoading(true);
-
                 const token = localStorage.getItem("AUTH_TOKEN");
-                if (!token) {
-                    console.warn("❌ No auth token found");
-                    return;
-                }
 
                 const response = await axios.get(
                     "https://test.happypay.live/users/walletTransactions",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    }
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
 
-                console.log("RAW API DATA:", response.data.data);
-
                 const transactions = response.data?.data || [];
-                console.log("💰 WALLET TX COUNT:", transactions.length);
+
+                // ✅ CALCULATE TOTALS HERE
+                let totalCredit = 0;
+                let totalDebit = 0;
+
+                transactions.forEach((tx) => {
+                    const isDebit = tx.to?.toLowerCase() === "external transfer";
+                    isDebit
+                        ? (totalDebit += Number(tx.amount))
+                        : (totalCredit += Number(tx.amount));
+                });
+
+                // 👉 send to parent
+                onWalletTotalChange?.(totalCredit - totalDebit);
 
                 const formatted = transactions.map((tx, index) => {
-                    const extra = tx.extraInfo || {};
-                    const isDebit = tx.to?.toLowerCase() !== "happy pay";
-
+                    const isDebit = tx.to?.toLowerCase() === "external transfer";
                     return {
                         key: tx._id,
                         sn: index + 1,
-                        referenceId: extra.serviceReferenceId || "-",
-                        amount: `₹${tx.amount}`,
-                        direction: isDebit ? "DEBIT" : "CREDIT",
-                        transactionType: extra.transactionType
-                            ? extra.transactionType === "refund"
-                                ? "REFUND"
-                                : "SERVICE"
-                            : "WALLET",
+                        referenceId: tx.extraInfo?.serviceReferenceId || "-",
+                        amount: `₹${Number(tx.amount).toFixed(2)}`,
 
-                        serviceName: extra.serviceName || "-",
-                        provider: extra.provider || "-",
-                        status: tx.status || "-",
-                        transactionTime: tx.createdAt
-                            ? new Date(tx.createdAt).toLocaleString()
-                            : "-"
+                        direction: isDebit ? "DEBIT" : "CREDIT",
+                        transactionType: "WALLET",
+                        serviceName: tx.description || tx.transactionType || "-",
+
+                        status: tx.status,
+                        transactionTime: new Date(tx.createdAt).toLocaleString()
                     };
                 });
 
-
                 setWalletData(formatted);
-            } catch (error) {
-                console.error("❌ Failed to fetch wallet transactions", error);
+            } catch (e) {
+                console.error(e);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchWalletTransactions();
-    }, []);
+    }, [onWalletTotalChange]);
+
+    const fetchTransactionDetails = async (referenceId) => {
+        try {
+            setDetailLoading(true);
+            setIsModalOpen(true);
+            const token = localStorage.getItem("AUTH_TOKEN");
+
+            const res = await axios.get(
+                `https://test.happypay.live/users/serviceTransaction?id=${referenceId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setSelectedTx(res.data?.data);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
 
     return (
         <Card title="Wallet Transactions">
-            <Table
-                columns={columns}
-                dataSource={walletData}
-                loading={loading}
-                pagination={false}
-                locale={{
-                    emptyText: "No wallet transactions available"
-                }}
-                scroll={{ x: true }}
-            />
+            <Table columns={columns} dataSource={walletData} loading={loading} />
+
+            <Modal open={isModalOpen} footer={null} onCancel={() => setIsModalOpen(false)}>
+                {detailLoading ? (
+                    <Skeleton active />
+                ) : (
+                    <Descriptions bordered column={1}>
+                        <Descriptions.Item label="UTR">
+                            {selectedTx?.response?.transfer_utr ||
+                                selectedTx?.extraInfo?.payout_response?.transferutr ||
+                                "-"}
+                        </Descriptions.Item>
+                    </Descriptions>
+                )}
+            </Modal>
         </Card>
     );
 };

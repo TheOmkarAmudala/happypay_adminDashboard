@@ -1,77 +1,33 @@
 import React, { useState } from "react";
-import { Modal, Input, Button, Typography } from "antd";
+import { Typography } from "antd";
+import SlpePaymentModesCards from "./index";
 
-const { Text } = Typography;
+import ServiceChargeModal from "./ServiceChargeModal";
 
-const quickPercents = [1.4, 2.2, 3.0];
+const { Title } = Typography;
 
-const ServiceChargeModal = ({ open, onClose, baseAmount, onApply }) => {
-    const [percent, setPercent] = useState(1.4);
+const PaymentPage = () => {
+    const [open, setOpen] = useState(false);
 
-    const charge = (baseAmount * percent) / 100;
-    const finalAmount = baseAmount - charge;
+    // this is just the displayed settlement amount
+    const [finalAmount, setFinalAmount] = useState(10001);
 
     return (
-        <Modal
-            open={open}
-            onCancel={onClose}
-            footer={null}
-            centered
-            width={350}
-        >
-            <Text strong>Payment Summary</Text>
+        <>
+            <Title level={4}>
+                Settlement Amount: ₹{finalAmount.toFixed(2)}
+            </Title>
 
-            <div style={{ marginTop: 12 }}>
-                <Text>Base Amount</Text>
-                <div>₹{baseAmount.toFixed(2)}</div>
-            </div>
+            <SlpePaymentModesCards onSelect={() => setOpen(true)} />
 
-            <div style={{ marginTop: 12 }}>
-                <Text>Customize Service Charge (%)</Text>
-                <Input
-                    value={percent}
-                    onChange={(e) => setPercent(Number(e.target.value))}
-                    placeholder="Enter %"
-                />
-            </div>
-
-            <div style={{ marginTop: 10 }}>
-                {quickPercents.map((p) => (
-                    <Button
-                        key={p}
-                        size="small"
-                        style={{ marginRight: 8 }}
-                        onClick={() => setPercent(p)}
-                    >
-                        {p}%
-                    </Button>
-                ))}
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-                <Text>Service Charge: ₹{charge.toFixed(2)}</Text>
-                <br />
-                <Text strong style={{ color: "green" }}>
-                    Settlement Amount: ₹{finalAmount.toFixed(2)}
-                </Text>
-            </div>
-
-            <div style={{ marginTop: 16, textAlign: "right" }}>
-                <Button onClick={onClose} style={{ marginRight: 8 }}>
-                    Cancel
-                </Button>
-                <Button
-                    type="primary"
-                    onClick={() => {
-                        onApply(finalAmount);
-                        onClose();
-                    }}
-                >
-                    Apply Changes
-                </Button>
-            </div>
-        </Modal>
+            <ServiceChargeModal
+                open={open}
+                initialBaseAmount={finalAmount}
+                onClose={() => setOpen(false)}
+                onApply={(amount) => setFinalAmount(amount)}
+            />
+        </>
     );
 };
 
-export default ServiceChargeModal;
+export default PaymentPage;
