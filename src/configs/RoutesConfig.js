@@ -52,7 +52,7 @@ export const protectedRoutes = [
     },
     {
         key: 'dashboard.analytic',
-        path: `${APP_PREFIX_PATH}/dashboards/analytic`,
+        path: `${APP_PREFIX_PATH}/dashboards/commercials`,
         component: React.lazy(() => import('views/app-views/dashboards/analytic')),
     },
     {

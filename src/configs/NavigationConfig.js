@@ -190,7 +190,7 @@ const dashBoardNavTree = [{
     },
     {
       key: 'dashboards-analytic',
-      path: `${APP_PREFIX_PATH}/dashboards/analytic`,
+      path: `${APP_PREFIX_PATH}/dashboards/commercials`,
       title: 'sidenav.dashboard.analytic',
       icon: DotChartOutlined,
       breadcrumb: false,

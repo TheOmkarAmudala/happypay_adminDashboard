@@ -35,7 +35,7 @@ const SlabCard = ({ title, commissions, maxLimit, rows }) => (
         <thead>
         <tr>
           <th>Role</th>
-          <th>Total (%)</th>
+          <th>Total (%) Domestic/Corporate</th>
         </tr>
         </thead>
         <tbody>
