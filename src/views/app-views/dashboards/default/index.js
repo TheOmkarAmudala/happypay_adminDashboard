@@ -1,29 +1,34 @@
 import React, { useState, useEffect } from "react";
-
-import { Row, Col, Button, Dropdown, Table, Tag } from 'antd';
+import { Row, Col, Button, Avatar, Dropdown, Table, Menu, Tag } from 'antd';
 import StatisticWidget from 'components/shared-components/StatisticWidget';
 import ChartWidget from 'components/shared-components/ChartWidget';
+import AvatarStatus from 'components/shared-components/AvatarStatus';
 import GoalWidget from 'components/shared-components/GoalWidget';
 import Card from 'components/shared-components/Card';
 import Flex from 'components/shared-components/Flex';
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { useNavigate } from "react-router-dom";
-
-
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import {
   VisitorChartData, 
   AnnualStatisticData, 
-  ActiveMembersData
+  ActiveMembersData,
+  NewMembersData,
+  RecentTransactionData
 } from './DefaultDashboardData';
 import ApexChart from 'react-apexcharts';
 import { apexLineChartDefaultOption, COLOR_2 } from 'constants/ChartConstant';
 import { SPACER } from 'constants/ThemeConstant'
 import { 
+  UserAddOutlined,
   FileExcelOutlined,
   PrinterOutlined,
+  PlusOutlined,
   EllipsisOutlined,
+  StopOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
+import utils from 'utils';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 
@@ -88,6 +93,8 @@ const CardDropdown = ({items}) => {
     </Dropdown>
   )
 }
+
+
 const tableColumns = [
   {
     title: "S/N",
@@ -184,18 +191,24 @@ export const DefaultDashboard = () => {
   const [visitorChartData] = useState(VisitorChartData);
   const [annualStatisticData] = useState(AnnualStatisticData);
   const [activeMembersData] = useState(ActiveMembersData);
+  const [newMembersData] = useState(NewMembersData)
   const { direction } = useSelector(state => state.theme)
   const [recentTransactionData, setRecentTransactionData] = useState([]);
-  // track loading state inside effects
   const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   const navigate = useNavigate();
 
-  // Navigate to a route when a statistic card is clicked.
-  // Normalizes legacy '/pay-out' to '/payout' (your requested path).
+
+
+  // Navigate to the app-prefixed route. If data provides '/pay-out', normalize
+  // it to '/payout' (we have a protected route at '/app/payout').
   const handleStatClick = (route) => {
+    if (!route) return;
     const normalized = route === '/pay-out' ? '/payout' : route;
-    navigate(normalized);
+    // ensure route starts with '/'
+
+    const finalPath = `${APP_PREFIX_PATH}${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
+    navigate(finalPath);
   };
 
   useEffect(() => {
@@ -203,7 +216,6 @@ export const DefaultDashboard = () => {
       try {
         setLoadingTransactions(true);
 
-        // ✅ READ TOKEN AT RUNTIME
         const token = localStorage.getItem("AUTH_TOKEN");
         console.log("🔐 Token read inside useEffect:", token);
 
@@ -236,7 +248,6 @@ export const DefaultDashboard = () => {
               return {
                 key: item.id,
 
-                // 1. S/N
                 sn: index + 1,
 
                 // 2. Customer Details
@@ -307,13 +318,12 @@ export const DefaultDashboard = () => {
   return (
     <>
       <Row gutter={16}>
-        <Col xs={24} sm={24} md={24} lg={18}>
+        <Col xs={24} sm={24} md={24} lg={24}>
           <Row gutter={16}>
             {annualStatisticData.map((elm, i) => (
-                <Col xs={24} sm={24} md={24} lg={24} xl={8} key={i}>
+                <Col xs={24} sm={24} md={24} lg={24} xl={6} key={i}>
 
                   <div
-
                       style={{ cursor: "pointer", transition: "transform 0.2s" }}
                       onClick={() => handleStatClick(elm.route)}
                       onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
@@ -332,7 +342,7 @@ export const DefaultDashboard = () => {
             ))}
           </Row>
 
-          <Row gutter={16}>
+          {/*  <Row gutter={16}>
             <Col span={24}>
                 <ChartWidget 
                   title="Unique Visitors" 
@@ -342,16 +352,18 @@ export const DefaultDashboard = () => {
                   direction={direction}
                 />
             </Col>
-          </Row>
+          </Row>  */}
         </Col>
         <Col xs={24} sm={24} md={24} lg={6}>
-          <GoalWidget
+
+          {/*    <GoalWidget
             title="Monthly Target"
             value={87}
             subtitle="You need abit more effort to hit monthly target"
             extra={<Button type="primary">Learn More</Button>}
-          />
-          <StatisticWidget
+          /> */}
+
+          {/*  <StatisticWidget
             title={
               <MembersChart 
                 options={memberChartOption}
@@ -362,13 +374,14 @@ export const DefaultDashboard = () => {
             value='17,329'
             status={3.7}
             subtitle="Active members"
-          />
+          />*/}
+
         </Col>
       </Row>
       <Row gutter={16}>
 
 
-        <Col xs={24} sm={24} md={24} lg={17}>
+        <Col xs={24} sm={24} md={24} lg={24}>
           <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
             <Table
                 columns={tableColumns}
@@ -400,6 +413,7 @@ export const DefaultDashboard = () => {
     </>
   )
 }
+
 
 
 

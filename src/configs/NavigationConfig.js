@@ -26,7 +26,7 @@ import {
   FileUnknownOutlined,
   ProfileOutlined
 } from '@ant-design/icons';
-import { APP_PREFIX_PATH, AUTH_PREFIX_PATH } from 'configs/AppConfig'
+import { APP_PREFIX_PATH } from 'configs/AppConfig'
 
 const extraNavTree = [
   {
@@ -197,9 +197,9 @@ const dashBoardNavTree = [{
       submenu: []
     },
     {
-      key: 'dashboards-sales',
-      path: `${APP_PREFIX_PATH}/dashboards/sales`,
-      title: 'sidenav.dashboard.sales',
+      key: 'dashboards-kyc',
+      path: `${APP_PREFIX_PATH}/dashboards/kyc`,
+      title: 'KYC',
       icon: FundOutlined,
       breadcrumb: false,
       submenu: []

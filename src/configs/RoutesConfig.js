@@ -56,9 +56,9 @@ export const protectedRoutes = [
         component: React.lazy(() => import('views/app-views/dashboards/analytic')),
     },
     {
-        key: 'dashboard.sales',
-        path: `${APP_PREFIX_PATH}/dashboards/sales`,
-        component: React.lazy(() => import('views/app-views/dashboards/sales')),
+        key: 'dashboard.kyc',
+        path: `${APP_PREFIX_PATH}/dashboards/kyc`,
+        component: React.lazy(() => import('views/app-views/dashboards/kyc')),
     },
     {
         key: 'payout',
