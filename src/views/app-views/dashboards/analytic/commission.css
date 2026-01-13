@@ -1,7 +1,6 @@
 .slab-card {
-    background: #2a2f45;
+    background: #2f3147 !important;
     border-radius: 12px;
-    margin-bottom: 16px;
     color: #fff;
 }
 
@@ -9,45 +8,43 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 16px;
 }
 
-.slab-header h4 {
-    color: #8aa2ff;
+.slab-title {
+    color: #d6ad4a;
     margin: 0;
 }
 
-.badges {
-    display: flex;
-    gap: 8px;
+.slab-badges .ant-tag {
+    margin-left: 8px;
+    font-weight: 600;
 }
 
 .slab-table {
     width: 100%;
-    margin-top: 12px;
     border-collapse: collapse;
 }
 
-.slab-table th {
+.slab-table thead th {
+    background: #43455c;
+    padding: 12px;
     text-align: left;
-    color: #bfbfbf;
-    font-size: 12px;
-    padding-bottom: 6px;
-}
-
-.slab-table td {
-    padding: 6px 0;
-    border-top: 1px solid rgba(255,255,255,0.05);
-}
-
-.rate-cell {
     font-weight: 600;
+    color: #fff;
 }
 
-.rate-cell .domestic {
-    color: #6ea8fe;
+.slab-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cfcfe8;
 }
 
-.rate-cell .corporate {
-    color: #9b9b9b;
-    margin-left: 4px;
+.rate-pill {
+    background: #d6ad4a;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
 }

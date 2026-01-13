@@ -2,122 +2,127 @@ import React from "react";
 import { Card, Row, Col, Tag } from "antd";
 import "./commission.css";
 
-const parseRate = (val) => {
-  if (!val) return { domestic: "-", corporate: "-" };
-  if (val.includes("/")) {
-    const [d, c] = val.split("/").map(v => v.trim());
-    return { domestic: d, corporate: c };
-  }
-  return { domestic: val, corporate: "-" };
-};
-
-const RateCell = ({ value }) => {
-  const { domestic, corporate } = parseRate(value);
+const SlabCard = ({ title, commissions, maxLimit, rows }) => {
   return (
-      <div className="rate-cell">
-        <span className="domestic">{domestic}</span>
-        {corporate !== "-" && <span className="corporate">/ {corporate}</span>}
-      </div>
+      <Card className="slab-card">
+        <div className="slab-header">
+          <h3 className="slab-title">{title}</h3>
+          <div className="slab-badges">
+            <Tag color="red">{commissions} Commissions</Tag>
+            <Tag color="red">MAX Limit ₹{maxLimit}</Tag>
+          </div>
+        </div>
+
+        <table className="slab-table">
+          <thead>
+          <tr>
+            <th>MODE</th>
+            <th>CARD TYPE</th>
+            <th>NETWORK</th>
+            <th>TYPE</th>
+            <th>TOTAL (%)</th>
+          </tr>
+          </thead>
+          <tbody>
+          {rows.map((r, i) => (
+              <tr key={i}>
+                <td>{r.mode}</td>
+                <td>{r.cardType}</td>
+                <td>{r.network}</td>
+                <td>{r.type}</td>
+                <td>
+                  <span className="rate-pill">{r.total}</span>
+                </td>
+              </tr>
+          ))}
+          </tbody>
+        </table>
+      </Card>
   );
 };
 
-const SlabCard = ({ title, commissions, maxLimit, rows }) => (
-    <Card className="slab-card">
-      <div className="slab-header">
-        <h4>{title}</h4>
-        <div className="badges">
-          <Tag color="red">{commissions} Commissions</Tag>
-          <Tag color="red">MAX Limit ₹{maxLimit}</Tag>
-        </div>
-      </div>
-
-      <table className="slab-table">
-        <thead>
-        <tr>
-          <th>Role</th>
-          <th>Total (%) Domestic/Corporate</th>
-        </tr>
-        </thead>
-        <tbody>
-        {rows.map((r, i) => (
-            <tr key={i}>
-              <td>{r.role}</td>
-              <td><RateCell value={r.rate} /></td>
-            </tr>
-        ))}
-        </tbody>
-      </table>
-    </Card>
-);
-
 const CommissionSlabs = () => {
-  const education = [
+  const cards = [
     {
-      title: "Silver Prime Edu",
+      title: "Slpe Silver Prime EDU",
       commissions: 2,
-      maxLimit: "2,00,000",
+      maxLimit: "200,000.000",
       rows: [
-        { role: "HappyPay Admin", rate: "1.34% / 1.80%" },
-        { role: "Enterprise Partner", rate: "1.36% / 1.83%" },
-        { role: "Super Distributor", rate: "1.37% / 1.83%" },
-        { role: "Master Distributor", rate: "1.39% / 1.85%" },
-        { role: "Distributor", rate: "1.41% / 1.87%" },
-        { role: "Retailer", rate: "1.44% / 1.90%" }
+        { mode: "CC", cardType: "-", network: "-", type: "Domestic", total: "1.34%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Corporate", total: "1.80%" }
       ]
     },
     {
-      title: "Silver Edu Lite",
+      title: "Slpe Silver Edu Lite",
       commissions: 2,
-      maxLimit: "95,000",
+      maxLimit: "95,000.000",
       rows: [
-        { role: "HappyPay Admin", rate: "1.23% / 1.80%" },
-        { role: "Enterprise Partner", rate: "1.29% / 1.83%" },
-        { role: "Super Distributor", rate: "1.30% / 1.83%" },
-        { role: "Master Distributor", rate: "1.33% / 1.85%" },
-        { role: "Distributor", rate: "1.35% / 1.87%" },
-        { role: "Retailer", rate: "1.38% / 1.90%" }
+        { mode: "CC", cardType: "-", network: "-", type: "Domestic", total: "1.23%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Corporate", total: "1.80%" }
+      ]
+    },
+    {
+      title: "Slpe Silver Edu",
+      commissions: 1,
+      maxLimit: "50,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "-", total: "1.65%" }
+      ]
+    },
+    {
+      title: "Slpe Gold Travel",
+      commissions: 1,
+      maxLimit: "100,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "-", total: "1.40%" }
+      ]
+    },
+    {
+      title: "Slpe Gold Travel Lite",
+      commissions: 1,
+      maxLimit: "100,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "-", total: "1.55%" }
+      ]
+    },
+    {
+      title: "Slpe Gold Travel Prime",
+      commissions: 2,
+      maxLimit: "40,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "Consumer", total: "1.33%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Business", total: "1.80%" }
+      ]
+    },
+    {
+      title: "Slpe Gold Travel Pure",
+      commissions: 2,
+      maxLimit: "50,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "Consumer", total: "1.33%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Business", total: "1.80%" }
+      ]
+    },
+    {
+      title: "Slpe Gold Travel Fast",
+      commissions: 2,
+      maxLimit: "100,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "Domestic", total: "1.38%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Corporate", total: "1.65%" }
       ]
     }
   ];
 
-  const travel = [
-    {
-      title: "Gold Travel Prime",
-      commissions: 2,
-      maxLimit: "40,000",
-      rows: [
-        { role: "HappyPay Admin", rate: "1.33% / 1.80%" },
-        { role: "Enterprise Partner", rate: "1.37% / 1.85%" },
-        { role: "Super Distributor", rate: "1.38% / 1.86%" },
-        { role: "Master Distributor", rate: "1.40% / 1.88%" },
-        { role: "Distributor", rate: "1.42% / 1.90%" },
-        { role: "Retailer", rate: "1.45% / 1.93%" }
-      ]
-    },
-    {
-      title: "Gold Travel Fast",
-      commissions: 2,
-      maxLimit: "1,00,000",
-      rows: [
-        { role: "HappyPay Admin", rate: "1.38% / 1.65%" },
-        { role: "Enterprise Partner", rate: "1.42% / 1.72%" },
-        { role: "Super Distributor", rate: "1.43% / 1.73%" },
-        { role: "Master Distributor", rate: "1.45% / 1.75%" },
-        { role: "Distributor", rate: "1.47% / 1.77%" },
-        { role: "Retailer", rate: "1.50% / 1.80%" }
-      ]
-    }
-  ];
+
 
   return (
-      <Row gutter={16}>
-        <Col span={12}>
-          {education.map((e, i) => <SlabCard key={i} {...e} />)}
-        </Col>
-
-        <Col span={12}>
-          {travel.map((t, i) => <SlabCard key={i} {...t} />)}
-        </Col>
+      <Row gutter={[16, 16]}>
+        {cards.map((card, index) => (
+            <Col span={12} key={index}>
+              <SlabCard {...card} />
+            </Col>
+        ))}
       </Row>
   );
 };

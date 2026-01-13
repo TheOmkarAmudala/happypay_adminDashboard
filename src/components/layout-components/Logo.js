@@ -14,6 +14,12 @@ const LogoWrapper = styled.div(() => ({
 	padding: '0 1rem',
 	backgroundColor: 'transparent',
 	transition: 'all .2s ease',
+
+	img: {
+		height: '22px',      // 🔥 adjust this (24px / 28px / 32px)
+		width: 'auto',
+		objectFit: 'contain',
+	},
 }));
 
 const { useBreakpoint } = Grid;
