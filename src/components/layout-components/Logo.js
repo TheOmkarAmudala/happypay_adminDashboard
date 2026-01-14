@@ -16,9 +16,10 @@ const LogoWrapper = styled.div(() => ({
 	transition: 'all .2s ease',
 
 	img: {
-		height: '22px',      // 🔥 adjust this (24px / 28px / 32px)
+		height: '40px',      // 🔥 adjust this (24px / 28px / 32px)
 		width: 'auto',
 		objectFit: 'contain',
+		margin: '12px'
 	},
 }));
 
