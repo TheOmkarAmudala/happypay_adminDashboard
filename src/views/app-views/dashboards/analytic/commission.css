@@ -1,9 +1,32 @@
-.slab-card {
-    background: #2f3147 !important;
-    border-radius: 12px;
-    color: #fff;
+/* ================================
+   HappyPay Theme Tokens
+================================ */
+:root {
+    --hp-blue: #2563eb;
+    --hp-blue-light: #eaf0ff;
+    --hp-border: #e5e7eb;
+    --hp-bg-soft: #f8fafc;
+    --hp-text-dark: #1f2937;
+    --hp-text-muted: #6b7280;
 }
 
+/* ================================
+   CARD
+================================ */
+.slab-card {
+    background: #ffffff !important;
+    border-radius: 14px;
+    color: var(--hp-text-dark);
+    border: 1px solid var(--hp-border);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+
+    /* ❌ REMOVE THIS */
+    /* min-height: 320px; */
+}
+
+/* ================================
+   HEADER
+================================ */
 .slab-header {
     display: flex;
     justify-content: space-between;
@@ -11,40 +34,65 @@
     margin-bottom: 16px;
 }
 
+/* ================================
+   TITLE
+================================ */
 .slab-title {
-    color: #d6ad4a;
+    color: var(--hp-blue);
     margin: 0;
+    font-weight: 600;
+    font-size: 17px;
 }
 
+/* ================================
+   BADGES
+================================ */
 .slab-badges .ant-tag {
     margin-left: 8px;
-    font-weight: 600;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 3px 10px;
+    background: #ffffff;
+    color: var(--hp-blue);
+    border: 1px solid var(--hp-blue);
 }
 
+/* ================================
+   TABLE
+================================ */
 .slab-table {
     width: 100%;
     border-collapse: collapse;
 }
 
+/* TABLE HEADER */
 .slab-table thead th {
-    background: #43455c;
-    padding: 12px;
+    background: var(--hp-bg-soft);
+    padding: 10px;
     text-align: left;
     font-weight: 600;
-    color: #fff;
+    color: var(--hp-text-muted);
+    font-size: 12px;
+    border-bottom: 1px solid var(--hp-border);
 }
 
+/* TABLE BODY */
 .slab-table tbody td {
-    padding: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #cfcfe8;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--hp-border);
+    color: var(--hp-text-dark);
+    font-size: 14px;
 }
 
+/* ================================
+   RATE PILL
+================================ */
 .rate-pill {
-    background: #d6ad4a;
-    color: #fff;
+    background: var(--hp-blue-light);
+    color: var(--hp-blue);
     padding: 4px 10px;
     border-radius: 6px;
     font-weight: 600;
     font-size: 13px;
+    display: inline-block;
 }

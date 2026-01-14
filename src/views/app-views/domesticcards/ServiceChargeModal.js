@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Modal, InputNumber, Button, Typography, Space } from "antd";
+import {
+    Modal,
+    InputNumber,
+    Button,
+    Typography,
+    Space,
+    List,
+    Tag,
+    Spin,
+    message,
+    Popover
+} from "antd";
+import axios from "axios";
 
 const { Text } = Typography;
 
-const PRESET_RATES = [1.4, 2.2, 3];
+/* ================= CONSTANTS ================= */
+const MIN_AMOUNT = 1000;
+const MAX_AMOUNT = 100000;
+const DEFAULT_PERCENTAGE = 1.8;
+const PRESET_RATES = [1.4, 1.8, 2.2, 3];
 
+/* ================= COMPONENT ================= */
 const ServiceChargeModal = ({
                                 open,
                                 baseAmount,
@@ -12,19 +29,102 @@ const ServiceChargeModal = ({
                                 onClose,
                                 onApply
                             }) => {
-    const [percentage, setPercentage] = useState(1.4);
+    const [percentage, setPercentage] = useState(DEFAULT_PERCENTAGE);
+    const [customers, setCustomers] = useState([]);
+    const [loadingCustomers, setLoadingCustomers] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
 
+    /* ================= EFFECTS ================= */
     useEffect(() => {
-        if (open) setPercentage(1.4);
+        if (open) {
+            setPercentage(DEFAULT_PERCENTAGE);
+            fetchCustomers();
+        }
     }, [open]);
 
+    /* ================= API ================= */
+    const fetchCustomers = async () => {
+        try {
+            setLoadingCustomers(true);
+            const token = localStorage.getItem("AUTH_TOKEN");
+
+            const res = await axios.get(
+                "https://test.happypay.live/customer/getAll",
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            setCustomers(res.data?.data || []);
+        } catch (err) {
+            console.error("FETCH CUSTOMERS ERROR:", err);
+        } finally {
+            setLoadingCustomers(false);
+        }
+    };
+
+    /* ================= HELPERS ================= */
+    const isKycVerified = (customer) =>
+        customer?.kyc?.some((k) => k.verified === true);
+
+    const getImpsFee = (amount) => {
+        if (amount < 25000) return 10;
+        if (amount <= 50000) return 15;
+        return 20;
+    };
+
+    /* ================= CALCULATIONS ================= */
     const serviceCharge = (baseAmount * percentage) / 100;
-    const settlementAmount = baseAmount - serviceCharge;
+    const impsFee = getImpsFee(baseAmount);
+    const settlementAmount = baseAmount - serviceCharge - impsFee;
+
+    /* ================= ACTIONS ================= */
+    const handleAmountChange = (v) => {
+        if (!v) return;
+
+        // HARD CLAMP (no invalid states)
+        const value = Math.max(MIN_AMOUNT, Math.min(MAX_AMOUNT, v));
+        setBaseAmount(value);
+    };
+
+    const handleSelectCustomer = (customer) => {
+        if (!isKycVerified(customer)) {
+            message.info("Complete KYC to add this customer");
+            return;
+        }
+        setSelectedCustomer(customer);
+    };
 
     const handleApply = useCallback(() => {
-        onApply(Number(settlementAmount.toFixed(2)));
-    }, [settlementAmount, onApply]);
+        onApply({
+            settlementAmount: Number(settlementAmount.toFixed(2)),
+            customer: selectedCustomer,
+            serviceCharge: Number(serviceCharge.toFixed(2)),
+            impsFee
+        });
+    }, [settlementAmount, selectedCustomer, serviceCharge, impsFee, onApply]);
 
+
+    const [inputAmount, setInputAmount] = useState(baseAmount);
+    const [amountError, setAmountError] = useState("");
+    const [showAmountHelp, setShowAmountHelp] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            setInputAmount(baseAmount);
+            setAmountError("");
+        }
+    }, [open, baseAmount]);
+
+
+    const validateAmount = (value) => {
+        if (value === null || value === undefined) return "";
+        if (value < 10000) return "Minimum amount is ₹10,000";
+        if (value > 100000) return "Maximum amount is ₹1,00,000";
+        return "";
+    };
+
+    /* ================= UI ================= */
     return (
         <Modal
             open={open}
@@ -33,63 +133,254 @@ const ServiceChargeModal = ({
             centered
             destroyOnClose
             title="Payment Summary"
+            width={600}
         >
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-                <div>
-
-
-                    <InputNumber
-                        min={1}
-                        value={baseAmount}
-                        style={{ width: 200 }}
-                        addonAfter="₹"
-                        onChange={(v) => {
-                            if (v === null) return;
-                            setBaseAmount(v);
+            <Space direction="vertical" size={18} style={{ width: "100%" }}>
+                {/* ===== Selected Customer ===== */}
+                {selectedCustomer && (
+                    <div
+                        style={{
+                            background: "#f6ffed",
+                            border: "1px solid #b7eb8f",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10
                         }}
-                    />
+                    >
+                        <Text strong>{selectedCustomer.name}</Text>
+                        <Text type="secondary">• {selectedCustomer.phone}</Text>
 
+                        <Tag color="green" style={{ marginLeft: "auto" }}>
+                            KYC
+                        </Tag>
 
-
-                </div>
-
-                <div>
-                    <Text type="secondary">Customize Service Charge (%)</Text>
-                    <InputNumber
-                        min={0}
-                        step={0.1}
-                        value={percentage}
-                        style={{ width: "100%", marginTop: 8 }}
-                        onChange={(v) => setPercentage(Number(v) || 0)}
-                    />
-                </div>
-
-                <Space>
-                    {PRESET_RATES.map((rate) => (
+                        {/* ❌ Remove customer */}
                         <Button
-                            key={rate}
-                            type={percentage === rate ? "primary" : "default"}
-                            onClick={() => setPercentage(rate)}
+                            type="text"
+                            danger
+                            size="small"
+                            onClick={() => setSelectedCustomer(null)}
+                            style={{ padding: "0 6px" }}
                         >
-                            {rate}%
+                            ✕
                         </Button>
-                    ))}
-                </Space>
+                    </div>
+                )}
 
-                <div>
-                    <Text>Service Charge: </Text>
-                    <Text strong>₹{serviceCharge.toFixed(2)}</Text>
-                </div>
-
-                <div>
-                    <Text strong style={{ color: "green" }}>
-                        Settlement Amount: ₹{settlementAmount.toFixed(2)}
+                {/* ===== Amount ===== */}
+                <div style={{ marginBottom: 20 }}>
+                    <Text
+                        type="secondary"
+                        style={{ display: "block", marginBottom: 8 }}
+                    >
+                        Enter Amount
                     </Text>
+
+                    <Popover
+                        content={amountError}
+                        open={!!amountError && showAmountHelp}
+                        placement="topLeft"
+                    >
+                        <InputNumber
+                            value={inputAmount}
+                            addonAfter="₹"
+                            style={{
+                                width: 240,
+                                height: 40,
+                                borderRadius: 8,
+                                borderColor: amountError ? "#ff4d4f" : undefined,
+                                animation: amountError ? "shake 0.3s" : "none"
+                            }}
+                            onChange={(v) => {
+                                if (v === null) return;
+
+                                setInputAmount(v);
+                                const error = validateAmount(v);
+                                setAmountError(error);
+
+                                if (!error) {
+                                    setBaseAmount(v);
+                                }
+                            }}
+                            onBlur={() => {
+                                if (amountError) {
+                                    setInputAmount(baseAmount);
+                                    setAmountError("");
+                                }
+                            }}
+                        />
+                    </Popover>
+
+                    <div style={{ marginTop: 6 }}>
+                        {amountError ? (
+                            <Text type="danger" style={{ fontSize: 12 }}>
+                                {amountError}
+                            </Text>
+                        ) : (
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                                Min ₹10,000 · Max ₹1,00,000
+                            </Text>
+                        )}
+                    </div>
                 </div>
 
+
+
+
+                {/* ===== Service Charge ===== */}
+                <div style={{ marginBottom: 20 }}>
+                    <Text
+                        type="secondary"
+                        style={{ display: "block", marginBottom: 10 }}
+                    >
+                        Service Charge
+                    </Text>
+
+                    <Space align="center" size={8} wrap>
+                        {PRESET_RATES.map((rate) => (
+                            <Button
+                                key={rate}
+                                size="middle"
+                                type={percentage === rate ? "primary" : "default"}
+                                onClick={() => setPercentage(rate)}
+                                style={{ borderRadius: 8 }}
+                            >
+                                {rate}%
+                            </Button>
+                        ))}
+
+                        {/* Editable percentage input */}
+                        <InputNumber
+                            min={0}
+                            step={0.1}
+                            value={percentage}
+                            controls={false}
+                            style={{
+                                width: 80,
+                                height: 36,
+                                borderRadius: 8,
+                                border: "1px solid #d9d9d9",
+                                background: "#fff"
+                            }}
+                            onChange={(v) =>
+                                setPercentage(Number(v) || DEFAULT_PERCENTAGE)
+                            }
+                        />
+                    </Space>
+                </div>
+
+                {/* ===== Fee Breakdown ===== */}
+                <div
+                    style={{
+                        background: "#fafafa",
+                        border: "1px solid #f0f0f0",
+                        borderRadius: 8,
+                        padding: 12
+                    }}
+                >
+                    <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                        <Text>
+                            Service Charge:{" "}
+                            <Text strong>₹{serviceCharge.toFixed(2)}</Text>
+                        </Text>
+                        <Text>
+                            IMPS Fee: <Text strong>₹{impsFee}</Text>
+                        </Text>
+
+                        <div
+                            style={{
+                                borderTop: "1px dashed #ddd",
+                                marginTop: 6,
+                                paddingTop: 6
+                            }}
+                        >
+                            <Text strong style={{ color: "green" }}>
+                                Settlement Amount: ₹{settlementAmount.toFixed(2)}
+                            </Text>
+                        </div>
+                    </Space>
+                </div>
+
+                {/* ===== Customers (Progressive) ===== */}
+                {/* ===== Customers (Progressive) ===== */}
+                {baseAmount >= MIN_AMOUNT && !selectedCustomer && (
+                    <>
+                        <Text strong>Select Customer</Text>
+
+                        <div
+                            style={{
+                                maxHeight: 220,
+                                overflowY: "auto",
+                                border: "1px solid #f0f0f0",
+                                borderRadius: 8,
+                                padding: 8,
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 8
+                            }}
+                        >
+                            {loadingCustomers ? (
+                                <Spin style={{ padding: 16 }} />
+                            ) : (
+                                customers.map((item) => {
+                                    const kyc = isKycVerified(item);
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            style={{
+                                                background: "#fff",
+                                                border: "1px solid #f0f0f0",
+                                                borderRadius: 8,
+                                                padding: "10px 12px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 10
+                                            }}
+                                        >
+                                            {/* Left: Name + Phone */}
+                                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                <Text strong>{item.name}</Text>
+                                                <Text type="secondary">· {item.phone}</Text>
+                                            </div>
+
+                                            {/* Middle: KYC Tag */}
+                                            <Tag color={kyc ? "green" : "red"}>
+                                                {kyc ? "KYC" : "No KYC"}
+                                            </Tag>
+
+                                            {/* Right: Action */}
+                                            <div style={{ marginLeft: "auto" }}>
+                                                <Button
+                                                    type="link"
+                                                    onClick={() =>
+                                                        kyc
+                                                            ? handleSelectCustomer(item)
+                                                            : message.info("Redirecting to KYC…")
+                                                    }
+                                                >
+                                                    {kyc ? "Add" : "Complete KYC →"}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </>
+                )}
+
+
+                {/* ===== Footer ===== */}
                 <Space style={{ justifyContent: "flex-end", width: "100%" }}>
                     <Button onClick={onClose}>Cancel</Button>
-                    <Button type="primary" onClick={handleApply}>
+                    <Button
+                        type="primary"
+                        disabled={!selectedCustomer}
+                        onClick={handleApply}
+                    >
                         Apply Changes
                     </Button>
                 </Space>

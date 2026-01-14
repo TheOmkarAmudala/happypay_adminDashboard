@@ -1,43 +1,42 @@
 import React from "react";
 import { Card, Row, Col, Tag } from "antd";
 import "./commission.css";
-
 const SlabCard = ({ title, commissions, maxLimit, rows }) => {
   return (
-      <Card className="slab-card">
-        <div className="slab-header">
-          <h3 className="slab-title">{title}</h3>
-          <div className="slab-badges">
-            <Tag color="red">{commissions} Commissions</Tag>
-            <Tag color="red">MAX Limit ₹{maxLimit}</Tag>
+      <div className="slab-wrap">
+        <Card className="slab-card">
+          <div className="slab-header">
+            <h3 className="slab-title">{title}</h3>
+            <div className="slab-badges">
+              <Tag>{commissions} Commissions</Tag>
+              <Tag>MAX Limit ₹{maxLimit}</Tag>
+            </div>
           </div>
-        </div>
 
-        <table className="slab-table">
-          <thead>
-          <tr>
-            <th>MODE</th>
-            <th>CARD TYPE</th>
-            <th>NETWORK</th>
-            <th>TYPE</th>
-            <th>TOTAL (%)</th>
-          </tr>
-          </thead>
-          <tbody>
-          {rows.map((r, i) => (
-              <tr key={i}>
-                <td>{r.mode}</td>
-                <td>{r.cardType}</td>
-                <td>{r.network}</td>
-                <td>{r.type}</td>
-                <td>
-                  <span className="rate-pill">{r.total}</span>
-                </td>
-              </tr>
-          ))}
-          </tbody>
-        </table>
-      </Card>
+          <table className="slab-table">
+            <thead>
+            <tr>
+              <th>MODE</th>
+              <th>CARD TYPE</th>
+              <th>NETWORK</th>
+              <th>TYPE</th>
+              <th>TOTAL (%)</th>
+            </tr>
+            </thead>
+            <tbody>
+            {rows.map((r, i) => (
+                <tr key={i}>
+                  <td>{r.mode}</td>
+                  <td>{r.cardType}</td>
+                  <td>{r.network}</td>
+                  <td>{r.type}</td>
+                  <td><span className="rate-pill">{r.total}</span></td>
+                </tr>
+            ))}
+            </tbody>
+          </table>
+        </Card>
+      </div>
   );
 };
 

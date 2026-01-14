@@ -12,9 +12,6 @@ const PaymentPage = () => {
 
     return (
         <>
-            <Title level={4}>
-                Settlement Amount: ₹{finalAmount.toFixed(2)}
-            </Title>
 
             <SlpePaymentModesCards onSelect={() => setOpen(true)} />
 
