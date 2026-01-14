@@ -44,6 +44,9 @@ const KYCPage = () => {
 	const [bankModalOpen, setBankModalOpen] = useState(false);
 	const [selectedBank, setSelectedBank] = useState(null);
 
+	const [showBankSection, setShowBankSection] = useState(false);
+
+
 
 
 	/* -------------------- GET KYC STATUS -------------------- */
@@ -89,9 +92,9 @@ const KYCPage = () => {
 		try {
 			setLoading(true);
 
-			const res = await axiosAuth.post("cashfree/aadhaar/sendotp", {
-				uid: aadhaar.trim()   // ✅ send uid, not aadhaar key
-			});
+			const res = await axiosAuth.get(
+				`cashfree/aadhaar/sendotp?aadhaar=${aadhaar.trim()}`
+			);
 
 			console.log("AADHAAR OTP RESPONSE:", res.data);
 
@@ -102,24 +105,41 @@ const KYCPage = () => {
 			} else {
 				message.error(res.data?.message || "Failed to send OTP");
 			}
-
 		} catch (err) {
-			console.error("AADHAAR OTP ERROR:", err.response?.status, err.response?.data);
+			console.error(
+				"AADHAAR OTP ERROR:",
+				err.response?.status,
+				err.response?.data
+			);
 			message.error(err.response?.data?.message || "Failed to send OTP");
 		} finally {
 			setLoading(false);
 		}
 	};
-
-
 	const verifyAadhaarOtp = async () => {
 		try {
 			setLoading(true);
 
-			const res = await axiosAuth.post("cashfree/aadhaar/verifyotp", {
-				otp: otp.trim(),
-				txnId: aadhaarTxnId
-			});
+			const token = localStorage.getItem("AUTH_TOKEN");
+
+			const payload = {
+				otp: otp.trim(),               // string, 6 digits
+				refId: aadhaarTxnId,            // MUST be "32953327"
+				aadhaar: aadhaar.trim()         // same Aadhaar used in send OTP
+			};
+
+			console.log("VERIFY PAYLOAD:", payload);
+
+			const res = await axios.post(
+				"https://test.happypay.live/cashfree/aadhaar/verifyotp",
+				payload,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json"
+					}
+				}
+			);
 
 			console.log("AADHAAR VERIFY RESPONSE:", res.data);
 
@@ -129,10 +149,13 @@ const KYCPage = () => {
 			} else {
 				message.error(res.data?.message || "Invalid OTP");
 			}
-
 		} catch (err) {
-			console.error("AADHAAR VERIFY ERROR:", err.response?.data);
-			message.error(err.response?.data?.message || "Invalid OTP");
+			console.error(
+				"AADHAAR VERIFY ERROR:",
+				err.response?.status,
+				err.response?.data
+			);
+			message.error(err.response?.data?.message || "Failed to verify OTP");
 		} finally {
 			setLoading(false);
 		}
@@ -243,290 +266,291 @@ const KYCPage = () => {
 		/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
 
 
-
 	/* -------------------- UI -------------------- */
 	return (
-		<Card title="KYC Verification">
-			{/* Aadhaar Section */}
-			<Title level={5} style={{ marginBottom: 16 }}>
-				Aadhaar Verification
-			</Title>
+		<>
+			{/* ================= Aadhaar + PAN ================= */}
+			<Row gutter={[16, 16]}>
 
-			<Row gutter={16} align="middle">
-				<Col xs={24} md={10}>
-					<Input
-						placeholder="Enter Aadhaar Number"
-						maxLength={12}
-						disabled={aadhaarVerified}
-						value={aadhaar}
-						onChange={e => setAadhaar(e.target.value)}
-					/>
-				</Col>
-
-				<Col>
-					{!aadhaarVerified && !otpSent && (
-						<Button type="primary" onClick={sendAadhaarOtp} loading={loading}>
-							Verify Aadhaar
-						</Button>
-					)}
-
-					{aadhaarVerified && <Tag color="green">VERIFIED</Tag>}
-				</Col>
-			</Row>
-
-			{otpSent && !aadhaarVerified && (
-				<Row gutter={16} className="mt-3" align="middle">
-					<Col xs={24} md={6}>
-						<Input
-							placeholder="Enter OTP"
-							maxLength={6}
-							value={otp}
-							onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
-						/>
-					</Col>
-					<Col>
-						<Button
-							type="primary"
-							onClick={verifyAadhaarOtp}
-							loading={loading}
-							disabled={otp.length !== 6}
-						>
-							Submit OTP
-						</Button>
-					</Col>
-				</Row>
-			)}
-
-
-
-			{/* PAN Section */}
-			<Title level={5}  style={{ marginBottom: 16, marginTop: 16 }}>
-				PAN Verification
-			</Title>
-
-			<Row gutter={16} align="middle">
-				<Col xs={24} md={8}>
-					<Input
-						placeholder="Enter PAN Number"
-						maxLength={10}
-						disabled={panVerified}
-						value={pan}
-						onChange={e => setPan(e.target.value.toUpperCase())}
-					/>
-				</Col>
-
-				<Col xs={24} md={10}>
-					<Input
-						placeholder="Enter Name as on PAN"
-						disabled={panVerified}
-						value={panName}
-						onChange={e => setPanName(e.target.value)}
-					/>
-				</Col>
-
-				<Col>
-					{!panVerified ? (
-						<Button type="primary" onClick={verifyPan} loading={loading}>
-							Verify PAN
-						</Button>
-					) : (
-						<Tag color="green">VERIFIED</Tag>
-					)}
-				</Col>
-			</Row>
-			{/* BANK SECTION */}
-			<Title level={5} style={{ marginBottom: 16, marginTop: 16 }}>
-				Bank Account Verification
-			</Title>
-
-			<Row gutter={16} align="middle">
-				<Col>
-					<Button
-						type="primary"
-						onClick={() => {
-							fetchBankAccounts();
-							setBankModalOpen(true);
+				{/* Aadhaar Card */}
+				<Col xs={24} md={12}>
+					<Card
+						title={
+							<div style={{display: "flex", alignItems: "center", gap: 8}}>
+								<span>Aadhaar Verification</span>
+								<span style={{fontSize: 12, color: "#888"}}>
+                • Government of India
+              </span>
+							</div>
+						}
+						bordered
+						style={{
+							borderRadius: 12,
+							overflow: "hidden"
 						}}
-						loading={bankLoading}
 					>
-						Add / Verify Bank Account
-					</Button>
+						<div
+							style={{
+								height: 4,
+								background:
+									"linear-gradient(to right, #FF9933 0%, #FFFFFF 50%, #138808 100%)",
+								marginBottom: 12
+							}}
+						/>
 
-
-
-				</Col>
-			</Row>
-
-			<Modal
-				title="Add Bank Account"
-				open={bankModalOpen}
-				onCancel={() => {
-					setBankModalOpen(false);
-					setSelectedBank(null);
-				}}
-				footer={null}
-				width={800}
-			>
-				{/* BANK SELECT */}
-				<Row gutter={16}>
-					<Col xs={24} md={12}>
-						<Select
-							showSearch
-							placeholder="Select Bank"
-							style={{ width: "100%" }}
-							options={bankList.map(bank => ({
-								label: bank,
-								value: bank
-							}))}
-							onChange={value => setSelectedBank(value)}
-							filterOption={(input, option) =>
-								option.label.toLowerCase().includes(input.toLowerCase())
+						<Input
+							placeholder="Enter Aadhaar Number"
+							maxLength={12}
+							disabled={aadhaarVerified}
+							value={aadhaar}
+							onChange={e =>
+								setAadhaar(e.target.value.replace(/\D/g, ""))
 							}
 						/>
-					</Col>
-				</Row>
 
-				{/* SHOW FORM ONLY AFTER BANK SELECTED */}
-				{selectedBank && (
-					<>
-						<Divider orientation="left" className="mt-3">
-							Bank Details
-						</Divider>
+						{!aadhaarVerified && !otpSent && (
+							<Button
+								type="primary"
+								block
+								className="mt-3"
+								loading={loading}
+								onClick={sendAadhaarOtp}
+								disabled={aadhaar.length !== 12}
+							>
+								Send OTP
+							</Button>
+						)}
 
-						<Row gutter={16}>
-							<Col xs={24} md={12}>
+						{otpSent && !aadhaarVerified && (
+							<>
 								<Input
-									placeholder="Account Number"
-									value={accountNumber}
-									onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-								/>
-							</Col>
-
-							<Col xs={24} md={12}>
-								<Input
-									placeholder="Confirm Account Number"
-									value={confirmAccountNumber}
+									placeholder="Enter OTP"
+									maxLength={6}
+									className="mt-3"
+									value={otp}
 									onChange={e =>
-										setConfirmAccountNumber(e.target.value.replace(/\D/g, ""))
+										setOtp(e.target.value.replace(/\D/g, ""))
 									}
 								/>
-							</Col>
-						</Row>
 
-						<Row gutter={16} className="mt-2">
-							<Col xs={24} md={12}>
-								<Input
-									placeholder="Account Holder Name"
-									value={accountHolderName}
-									onChange={e =>
-										setAccountHolderName(e.target.value.toUpperCase())
-									}
-								/>
-							</Col>
-
-							<Col xs={24} md={12}>
-								<Input
-									placeholder="IFSC Code"
-									maxLength={11}
-									value={ifsc}
-									onChange={e => setIfsc(e.target.value.toUpperCase())}
-								/>
-							</Col>
-						</Row>
-
-						<Row className="mt-3">
-							<Col>
 								<Button
 									type="primary"
-									disabled={!isBankFormValid}
-									loading={bankLoading}
-									onClick={submitBankAccount}
+									block
+									className="mt-2"
+									loading={loading}
+									disabled={otp.length !== 6}
+									onClick={verifyAadhaarOtp}
 								>
-									Submit Bank Details
+									Verify OTP
 								</Button>
+							</>
+						)}
 
-							</Col>
-						</Row>
-					</>
-				)}
-			</Modal>
+						{aadhaarVerified && (
+							<Tag color="green" className="mt-3">
+								VERIFIED
+							</Tag>
+						)}
+					</Card>
+				</Col>
 
-
-			{showBankForm && bankList.length > 0 && (
-				<Row gutter={[16, 16]} className="mt-3">
-					{bankList.map((bank, index) => (
-						<Col xs={24} md={8} key={index}>
-
-						</Col>
-					))}
-				</Row>
-
-			)}
-
-			{showBankForm && (
-				<>
-					<Row gutter={16} className="mt-4">
-						<Col xs={24} md={6}>
-							<Input
-								placeholder="Account Number"
-								value={accountNumber}
-								onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-							/>
-						</Col>
-
-						<Col xs={24} md={6}>
-							<Input
-								placeholder="Confirm Account Number"
-								value={confirmAccountNumber}
-								onChange={e => setConfirmAccountNumber(e.target.value.replace(/\D/g, ""))}
-							/>
-						</Col>
-
-						<Col xs={24} md={6}>
-							<Input
-								placeholder="Account Holder Name"
-								value={accountHolderName}
-								onChange={e => setAccountHolderName(e.target.value.toUpperCase())}
-							/>
-						</Col>
-
-						<Col xs={24} md={6}>
-							<Input
-								placeholder="IFSC Code"
-								maxLength={10}
-								value={ifsc}
-								onChange={e => setIfsc(e.target.value.toUpperCase())}
-							/>
-						</Col>
-					</Row>
-				</>
-			)}
-
-
-			{showBankForm && (
-				<Row gutter={16} className="mt-3">
-					<Col xs={24} md={8}>
-						<Select
-							showSearch
-							placeholder="Select Bank"
-							style={{ width: "100%" }}
-							options={bankList.map(bank => ({
-								label: bank,
-								value: bank
-							}))}
-							filterOption={(input, option) =>
-								option.label.toLowerCase().includes(input.toLowerCase())
+				{/* PAN Card */}
+				<Col xs={24} md={12}>
+					<Card
+						title={
+							<div style={{display: "flex", alignItems: "center", gap: 8}}>
+								<span>PAN Verification</span>
+								<span style={{fontSize: 12, color: "#1a4fa3"}}>
+                • Income Tax Dept.
+              </span>
+							</div>
+						}
+						bordered
+						style={{
+							borderRadius: 12,
+							borderTop: "4px solid #1a4fa3"
+						}}
+					>
+						<Input
+							placeholder="Enter PAN Number"
+							maxLength={10}
+							disabled={panVerified}
+							value={pan}
+							onChange={e =>
+								setPan(e.target.value.toUpperCase())
 							}
 						/>
-					</Col>
-				</Row>
-			)}
+
+						<Input
+							placeholder="Enter Name as on PAN"
+							className="mt-2"
+							disabled={panVerified}
+							value={panName}
+							onChange={e => setPanName(e.target.value)}
+						/>
+
+						{!panVerified ? (
+							<Button
+								type="primary"
+								block
+								className="mt-3"
+								loading={loading}
+								onClick={verifyPan}
+								disabled={pan.length !== 10 || panName.length < 3}
+							>
+								Verify PAN
+							</Button>
+						) : (
+							<Tag color="green" className="mt-3">
+								VERIFIED
+							</Tag>
+						)}
+					</Card>
+				</Col>
+
+			</Row>
+
+			{/* BANK SECTION */}
+				{/* ================= BANK CARD ================= */}
+				<Card
+					title={
+						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+							<span>Bank Account Verification</span>
+							<span style={{ fontSize: 12, color: "#389e0d" }}>
+        • Secure Payout Setup
+      </span>
+						</div>
+					}
+					bordered
+					style={{
+						borderRadius: 12,
+						borderTop: "4px solid #52c41a",
+						marginTop: 24
+					}}
+				>
+					{/* subtle gradient header */}
+					<div
+						style={{
+							height: 6,
+							background:
+								"linear-gradient(90deg, #d9f7be 0%, #ffffff 50%, #f6ffed 100%)",
+							marginBottom: 16,
+							borderRadius: 4
+						}}
+					/>
+
+					{/* STEP 1: CTA */}
+					{!showBankSection && (
+						<Button
+							type="primary"
+							block
+							size="large"
+							onClick={() => {
+								fetchBankAccounts();
+								setShowBankSection(true);
+							}}
+							loading={bankLoading}
+						>
+							Add / Verify Bank Account
+						</Button>
+					)}
+
+					{/* STEP 2: BANK SELECTION */}
+					{showBankSection && (
+						<>
+							<Divider orientation="left">Select Bank</Divider>
+
+							<Select
+								showSearch
+								placeholder="Search your bank"
+								style={{ width: "100%" }}
+								size="large"
+								value={selectedBank}
+								onChange={setSelectedBank}
+								options={bankList.map(bank => ({
+									label: bank,
+									value: bank
+								}))}
+								filterOption={(input, option) =>
+									option.label.toLowerCase().includes(input.toLowerCase())
+								}
+							/>
+
+							{/* STEP 3: DETAILS UNLOCK */}
+							{selectedBank && (
+								<>
+									<Divider orientation="left">Bank Details</Divider>
+
+									<Row gutter={[16, 16]}>
+										<Col xs={24} md={12}>
+											<Input
+												size="large"
+												placeholder="Account Number"
+												value={accountNumber}
+												onChange={e =>
+													setAccountNumber(e.target.value.replace(/\D/g, ""))
+												}
+											/>
+										</Col>
+
+										<Col xs={24} md={12}>
+											<Input
+												size="large"
+												placeholder="Confirm Account Number"
+												value={confirmAccountNumber}
+												onChange={e =>
+													setConfirmAccountNumber(e.target.value.replace(/\D/g, ""))
+												}
+												status={
+													confirmAccountNumber &&
+													confirmAccountNumber !== accountNumber
+														? "error"
+														: ""
+												}
+											/>
+										</Col>
+
+										<Col xs={24} md={12}>
+											<Input
+												size="large"
+												placeholder="Account Holder Name"
+												value={accountHolderName}
+												onChange={e =>
+													setAccountHolderName(e.target.value.toUpperCase())
+												}
+											/>
+										</Col>
+
+										<Col xs={24} md={12}>
+											<Input
+												size="large"
+												placeholder="IFSC Code"
+												maxLength={11}
+												value={ifsc}
+												onChange={e => setIfsc(e.target.value.toUpperCase())}
+											/>
+										</Col>
+									</Row>
+
+									<Button
+										type="primary"
+										size="large"
+										style={{ marginTop: 20 }}
+										block
+										disabled={!isBankFormValid}
+										loading={bankLoading}
+										onClick={submitBankAccount}
+									>
+										Submit Bank Details
+									</Button>
+								</>
+							)}
+						</>
+					)}
+				</Card>
 
 
-
-
-
-		</Card>
+		</>
 	);
 };
 

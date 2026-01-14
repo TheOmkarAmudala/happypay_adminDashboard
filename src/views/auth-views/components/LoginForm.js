@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { Button, Form, Input, Divider, Alert } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
@@ -81,7 +81,10 @@ export const LoginForm = props => {
 			dispatch(resetRedirect());
 		}
 	}, [redirect, isAuthenticated, navigate, dispatch]);
-	
+
+	const [loginMode, setLoginMode] = useState("PASSWORD"); // PASSWORD | OTP
+
+
 	const renderOtherSignIn = (
 		<div>
 			<Divider>
@@ -116,6 +119,7 @@ export const LoginForm = props => {
 					marginBottom: showMessage ? 20 : 0 
 				}}> 
 				<Alert type="error" showIcon message={message}></Alert>
+
 			</motion.div>
 			<Form 
 				layout="vertical" 
@@ -123,6 +127,7 @@ export const LoginForm = props => {
 				initialValues={initialCredential}
 				onFinish={onLogin}
 			>
+
 				<Form.Item
 					name="phoneNumber"
 					label="Mobile Number"
@@ -137,6 +142,8 @@ export const LoginForm = props => {
 						},
 					]}
 				>
+
+
 					<Input
 						prefix={<MailOutlined className="text-primary" />}
 						maxLength={10}
@@ -168,6 +175,20 @@ export const LoginForm = props => {
 				>
 					<Input.Password prefix={<LockOutlined className="text-primary" />}/>
 				</Form.Item>
+				<Form.Item>
+					<div className="d-flex justify-content-end">
+						<Button
+							type="default"
+							block
+							style={{ marginTop: 12 }}
+							onClick={() => navigate("/auth/login-otp")}
+						>
+							Login using OTP
+						</Button>
+
+					</div>
+				</Form.Item>
+
 				<Form.Item>
 					<Button type="primary" htmlType="submit" block loading={loading}>
 						Sign In

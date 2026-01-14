@@ -70,6 +70,7 @@ export const protectedRoutes = [
         path: `${APP_PREFIX_PATH}/payin`,
         component: React.lazy(() => import('views/app-views/payin')),
     },
+
     {
         key: 'wallet',
         path: `${APP_PREFIX_PATH}/wallet`,
@@ -531,6 +532,17 @@ export const protectedRoutes = [
             blankLayout: true
         }
     },
+    {
+        key: 'login-otp',
+        path: `${APP_PREFIX_PATH}/login-otp`,
+        component: React.lazy(() =>
+            import('views/auth-views/authentication/login-otp')
+        ),
+        meta: {
+            blankLayout: true
+        }
+    },
+
     {
         key: 'register-1',
         path: `${APP_PREFIX_PATH}/register-1`,
