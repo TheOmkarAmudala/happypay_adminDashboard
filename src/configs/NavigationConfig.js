@@ -216,17 +216,17 @@ const appsNavTree = [{
   isGroupTitle: true,
   submenu: [
     {
-      key: 'apps-mail',
-      path: `${APP_PREFIX_PATH}/apps/mail/inbox`,
-      title: 'sidenav.apps.mail',
+      key: 'apps-customers',
+      path: `${APP_PREFIX_PATH}/apps/customers`,
+      title: 'Customers',
       icon: MailOutlined,
       breadcrumb: false,
       submenu: []
     },
     {
       key: 'apps-chat',
-      path: `${APP_PREFIX_PATH}/apps/chat`,
-      title: 'sidenav.apps.chat',
+      path: `${APP_PREFIX_PATH}/apps/referral-tree`,
+      title: 'Referal Tree',
       icon: MessageOutlined,
       breadcrumb: false,
       submenu: []

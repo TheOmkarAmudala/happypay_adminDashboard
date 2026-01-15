@@ -142,13 +142,13 @@ const toBeProcessCards = [
 		attachments: [
 			{
 				'id': 'jubuK7XGp3',
-				'name': 'mail.jpg',
+				'name': 'customers.jpg',
 				'src': '/img/others/img-13.jpg',
 				'size': '36.1kb'
 			},
 			{
 				'id': 'xsb3HCejCM',
-				'name': 'mail.jpg',
+				'name': 'customers.jpg',
 				'src': '/img/others/img-14.jpg',
 				'size': '55.9kb'
 			}

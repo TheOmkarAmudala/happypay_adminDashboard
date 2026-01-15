@@ -12,7 +12,7 @@ import Flex from 'components/shared-components/Flex'
 
 const getIcon =  icon => {
 	switch (icon) {
-		case 'mail':
+		case 'customers':
 			return <MailOutlined />;
 		case 'alert':
 			return <WarningOutlined />;

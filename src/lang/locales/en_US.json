@@ -5,9 +5,10 @@
 	"sidenav.dashboard.default": "Default",
 	"sidenav.dashboard.analytic": "Commercial",
 	"sidenav.dashboard.sales": "KYC",
+	"sidenav.dashboard.customer": "Customer",
 
-	"sidenav.apps": "Apps",
-	"sidenav.apps.mail": "Mail",
+	"sidenav.apps": "User",
+	"sidenav.apps.mail": "Customer",
 	"sidenav.apps.chat": "Chat",
 	"sidenav.apps.calendar": "Calendar",
 	"sidenav.apps.project": "Project",

@@ -47,6 +47,9 @@ const KYCPage = () => {
 	const [showBankSection, setShowBankSection] = useState(false);
 
 
+	const [bankPhone, setBankPhone] = useState("");
+
+
 
 
 	/* -------------------- GET KYC STATUS -------------------- */
@@ -193,10 +196,10 @@ const KYCPage = () => {
 			setBankLoading(true);
 
 			const payload = {
-				bank_name: selectedBank,           // from dropdown
-				account_number: accountNumber,
-				account_holder_name: accountHolderName,
-				ifsc: ifsc
+				BankAccountNumber: accountNumber,
+				BankIFSC: ifsc,
+				Name: accountHolderName,
+				Phone: bankPhone
 			};
 
 			console.log("ADD BANK PAYLOAD:", payload);
@@ -208,54 +211,35 @@ const KYCPage = () => {
 
 			console.log("ADD BANK RESPONSE:", res.data);
 
-			// ✅ SUCCESS CASE
 			if (
 				res.data?.status === "SUCCESS" ||
 				res.data?.message?.toLowerCase().includes("success")
 			) {
-				message.success("Bank account added and verified successfully");
-				setBankModalOpen(false);
+				message.success("Bank account added successfully");
 
-				// optional reset
+				// reset
 				setAccountNumber("");
 				setConfirmAccountNumber("");
 				setAccountHolderName("");
 				setIfsc("");
+				setBankPhone("");
 				setSelectedBank(null);
-			}
-			// ⚠️ PENDING VERIFICATION
-			else if (res.data?.status === "PENDING") {
-				message.info("Bank account added. Verification pending.");
-				setBankModalOpen(false);
-			}
-			// ❌ FAILURE
-			else {
+				setShowBankSection(false);
+			} else {
 				message.error(res.data?.message || "Bank verification failed");
 			}
 
 		} catch (err) {
-			const status = err.response?.status;
-			const data = err.response?.data;
-
-			console.error("ADD BANK ERROR:", status, data);
-
-			if (status === 400) {
-				message.error(data?.message || "Invalid bank details");
-			} else if (status === 401) {
-				message.error("Authentication failed. Please login again.");
-			} else if (status === 409) {
-				message.error("Bank account already exists");
-			} else if (status === 422) {
-				message.error("Bank verification failed");
-			} else if (status >= 500) {
-				message.error("Bank verification service unavailable");
-			} else {
-				message.error(data?.message || "Failed to add bank account");
-			}
+			console.error("ADD BANK ERROR:", err.response?.data || err);
+			message.error(
+				err.response?.data?.message ||
+				"Bank verification service unavailable"
+			);
 		} finally {
 			setBankLoading(false);
 		}
 	};
+
 
 
 	const isBankFormValid =
@@ -263,7 +247,8 @@ const KYCPage = () => {
 		confirmAccountNumber &&
 		accountNumber === confirmAccountNumber &&
 		accountHolderName.length >= 3 &&
-		/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
+		/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc) &&
+		bankPhone.length === 10;
 
 
 	/* -------------------- UI -------------------- */
@@ -531,6 +516,19 @@ const KYCPage = () => {
 											/>
 										</Col>
 									</Row>
+
+									<Col xs={24} md={12}>
+										<Input
+											size="large"
+											placeholder="Phone Number"
+											maxLength={10}
+											value={bankPhone}
+											onChange={e =>
+												setBankPhone(e.target.value.replace(/\D/g, ""))
+											}
+										/>
+									</Col>
+
 
 									<Button
 										type="primary"

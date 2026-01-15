@@ -28,16 +28,16 @@ const MailCompose = () => {
 		<div className="mail-compose">
 			<h4 className="mb-4">New Message</h4>
 			<Form  name="nest-messages" onFinish={onFinish} >
-				<Form.Item name={['mail', 'to']}>
+				<Form.Item name={['customers', 'to']}>
 					<Input placeholder="To:"/>
 				</Form.Item>
-				<Form.Item name={['mail', 'cc']} >
+				<Form.Item name={['customers', 'cc']} >
 					<Input placeholder="Cc:"/>
 				</Form.Item>
-				<Form.Item name={['mail', 'subject']} >
+				<Form.Item name={['customers', 'subject']} >
 					<Input placeholder="Subject:"/>
 				</Form.Item>
-				<Form.Item name={['mail', 'content']}>
+				<Form.Item name={['customers', 'content']}>
 					<ReactQuill theme="snow" modules={modules}/>
 				</Form.Item>
 				<Form.Item>

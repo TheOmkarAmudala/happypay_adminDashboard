@@ -182,7 +182,7 @@ const MailItem = () => {
 			),
 			colSpan: 4,
 			dataIndex: 'name',
-			className: 'mail-list-sender',
+			className: 'customers-list-sender',
 			render: (_, elm) => (
 				<div className="d-flex align-items-center">
 					<div 
@@ -204,7 +204,7 @@ const MailItem = () => {
 		{
 			title: '',
 			colSpan: 0,
-			className: 'mail-list-content',
+			className: 'customers-list-content',
 			render: (_, elm) => (
 				<div className=" mail-list-content-msg">
 					<Badge color={getLabelColor(elm.label)}/>
@@ -217,7 +217,7 @@ const MailItem = () => {
 		{
 			title: '',
 			colSpan: 0,
-			className: 'mail-list-date',
+			className: 'customers-list-date',
 			render: (_, elm) => (
 				<div>{elm.date}</div>
 			)

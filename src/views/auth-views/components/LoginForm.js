@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { Button, Form, Input, Divider, Alert } from 'antd';
@@ -19,22 +20,22 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from "framer-motion"
 
 export const LoginForm = props => {
-	
+
 
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
-	const { 
-		otherSignIn, 
-		showForgetPassword, 
+	const {
+		otherSignIn,
+		showForgetPassword,
 		hideAuthMessage,
 		onForgetPasswordClick,
 		showLoading,
 		signInWithGoogle,
 		signInWithFacebook,
-		extra, 
-		signIn, 
-		token, 
+		extra,
+		signIn,
+		token,
 		loading,
 		redirect,
 		showMessage,
@@ -91,18 +92,18 @@ export const LoginForm = props => {
 				<span className="text-muted font-size-base font-weight-normal">or connect with</span>
 			</Divider>
 			<div className="d-flex justify-content-center">
-				<Button 
-					onClick={() => onGoogleLogin()} 
-					className="mr-2" 
-					disabled={loading} 
+				<Button
+					onClick={() => onGoogleLogin()}
+					className="mr-2"
+					disabled={loading}
 					icon={<CustomIcon svg={GoogleSVG}/>}
 				>
 					Google
 				</Button>
-				<Button 
-					onClick={() => onFacebookLogin()} 
+				<Button
+					onClick={() => onFacebookLogin()}
 					icon={<CustomIcon svg={FacebookSVG}/>}
-					disabled={loading} 
+					disabled={loading}
 				>
 					Facebook
 				</Button>
@@ -112,18 +113,18 @@ export const LoginForm = props => {
 
 	return (
 		<>
-			<motion.div 
-				initial={{ opacity: 0, marginBottom: 0 }} 
-				animate={{ 
+			<motion.div
+				initial={{ opacity: 0, marginBottom: 0 }}
+				animate={{
 					opacity: showMessage ? 1 : 0,
-					marginBottom: showMessage ? 20 : 0 
-				}}> 
+					marginBottom: showMessage ? 20 : 0
+				}}>
 				<Alert type="error" showIcon message={message}></Alert>
 
 			</motion.div>
-			<Form 
-				layout="vertical" 
-				name="login-form" 
+			<Form
+				layout="vertical"
+				name="login-form"
 				initialValues={initialCredential}
 				onFinish={onLogin}
 			>
@@ -156,18 +157,18 @@ export const LoginForm = props => {
 						<div className={`${showForgetPassword? 'd-flex justify-content-between w-100 align-items-center' : ''}`}>
 							<span>Password</span>
 							{
-								showForgetPassword && 
-								<span 
-									onClick={() => onForgetPasswordClick} 
+								showForgetPassword &&
+								<span
+									onClick={() => onForgetPasswordClick}
 									className="cursor-pointer font-size-sm font-weight-normal text-muted"
 								>
 									Forget Password?
 								</span>
-							} 
+							}
 						</div>
-					} 
+					}
 					rules={[
-						{ 
+						{
 							required: true,
 							message: 'Please input your password',
 						}
@@ -219,7 +220,7 @@ LoginForm.defaultProps = {
 
 const mapStateToProps = ({auth}) => {
 	const {loading, message, showMessage, token, redirect} = auth;
-  return {loading, message, showMessage, token, redirect}
+	return {loading, message, showMessage, token, redirect}
 }
 
 const mapDispatchToProps = {

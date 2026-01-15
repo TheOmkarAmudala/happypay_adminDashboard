@@ -87,18 +87,23 @@ export const protectedRoutes = [
         component: React.lazy(() => import('views/app-views/report')),
     },
     {
+        key: 'Add Customer',
+        path: `${APP_PREFIX_PATH}/addcustomer`,
+        component: React.lazy(() => import('views/app-views/report')),
+    },
+    {
         key: 'apps',
         path: `${APP_PREFIX_PATH}/apps`,
         component: React.lazy(() => import('views/app-views/apps')),
     },
     {
-        key: 'apps.mail',
-        path: `${APP_PREFIX_PATH}/apps/mail/*`,
-        component: React.lazy(() => import('views/app-views/apps/mail')),
+        key: 'apps.customers',
+        path: `${APP_PREFIX_PATH}/apps/customers`,
+        component: React.lazy(() => import('views/app-views/apps/customers')),
     },
     {
         key: 'apps.chat',
-        path: `${APP_PREFIX_PATH}/apps/chat/*`,
+        path: `${APP_PREFIX_PATH}/apps/referral-tree`,
         component: React.lazy(() => import('views/app-views/apps/chat')),
     },
     {

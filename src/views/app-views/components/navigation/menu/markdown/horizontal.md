@@ -20,7 +20,7 @@ import React, { useState } from 'react';
 const items = [
   {
     label: 'Navigation One',
-    key: 'mail',
+    key: 'customers',
     icon: <MailOutlined />,
   },
   {
@@ -74,7 +74,7 @@ const items = [
   },
 ];
 const Horizontal = () => {
-  const [current, setCurrent] = useState('mail');
+  const [current, setCurrent] = useState('customers');
   const onClick = (e) => {
     console.log('click ', e);
     setCurrent(e.key);

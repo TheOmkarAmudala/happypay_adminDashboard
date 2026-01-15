@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback,  } from "react";
 import {
     Modal,
     InputNumber,
@@ -12,6 +12,7 @@ import {
     Popover
 } from "antd";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
@@ -33,6 +34,8 @@ const ServiceChargeModal = ({
     const [customers, setCustomers] = useState([]);
     const [loadingCustomers, setLoadingCustomers] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const navigate = useNavigate();
+
 
     /* ================= EFFECTS ================= */
     useEffect(() => {
@@ -123,6 +126,7 @@ const ServiceChargeModal = ({
         if (value > 100000) return "Maximum amount is ₹1,00,000";
         return "";
     };
+
 
     /* ================= UI ================= */
     return (
@@ -355,14 +359,17 @@ const ServiceChargeModal = ({
                                             <div style={{ marginLeft: "auto" }}>
                                                 <Button
                                                     type="link"
-                                                    onClick={() =>
-                                                        kyc
-                                                            ? handleSelectCustomer(item)
-                                                            : message.info("Redirecting to KYC…")
-                                                    }
+                                                    onClick={() => {
+                                                        if (kyc) {
+                                                            handleSelectCustomer(item);
+                                                        } else {
+                                                            navigate("/app/apps/customers");
+                                                        }
+                                                    }}
                                                 >
                                                     {kyc ? "Add" : "Complete KYC →"}
                                                 </Button>
+
                                             </div>
                                         </div>
                                     );
