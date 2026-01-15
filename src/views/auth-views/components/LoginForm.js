@@ -1,39 +1,36 @@
-
 import React, { useEffect, useState } from 'react';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { Button, Form, Input, Divider, Alert } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 import { GoogleSVG, FacebookSVG } from 'assets/svg/icon';
-import CustomIcon from 'components/util-components/CustomIcon'
-import { useDispatch, useSelector } from 'react-redux';
+import CustomIcon from 'components/util-components/CustomIcon';
 import { resetRedirect } from 'store/slices/authSlice';
 import {
 	signIn,
 	showLoading,
-	showAuthMessage,
 	hideAuthMessage,
 	signInWithGoogle,
-	signInWithFacebook
+	signInWithFacebook,
+	showAuthMessage
 } from 'store/slices/authSlice';
-import { useNavigate } from 'react-router-dom'
-import { motion } from "framer-motion"
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export const LoginForm = props => {
-
-
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
+	const [form] = Form.useForm();
+
+	// 🔹 UI STATES
+	const [loginMode, setLoginMode] = useState('PASSWORD'); // PASSWORD | OTP
+	const [otpSent, setOtpSent] = useState(false);
+	const [otpLoading, setOtpLoading] = useState(false);
 
 	const {
 		otherSignIn,
 		showForgetPassword,
-		hideAuthMessage,
 		onForgetPasswordClick,
-		showLoading,
-		signInWithGoogle,
-		signInWithFacebook,
-		extra,
 		signIn,
 		token,
 		loading,
@@ -42,37 +39,103 @@ export const LoginForm = props => {
 		message,
 		isAuthenticated,
 		allowRedirect = true
-	} = props
+	} = props;
 
-	const initialCredential = {
-		phoneNumber: '',
-		passcode:''
-	}
-
+	// 🔹 PASSWORD LOGIN
 	const onLogin = values => {
-		showLoading()
-		signIn(values);
+		if (loginMode === 'PASSWORD') {
+			showLoading();
+			signIn(values);
+		} else {
+			verifyOtp(); // ✅ DO NOT pass values manually
+		}
 	};
 
+	// 🔹 SEND OTP
+	const sendOtp = async () => {
+		try {
+			const phone = form.getFieldValue('phoneNumber');
+			if (!phone) return;
+
+			setOtpLoading(true);
+			await fetch(
+				`https://test.happypay.live/users/getotp?phoneNumber=${phone}`
+			);
+			setOtpSent(true);
+		} catch (err) {
+			console.error(err);
+		} finally {
+			setOtpLoading(false);
+		}
+	};
+
+	// 🔹 VERIFY OTP
+	const verifyOtp = async () => {
+		try {
+			setOtpLoading(true);
+
+			const phoneNumber = form.getFieldValue('phoneNumber');
+			const otp = form.getFieldValue('otp');
+
+			const res = await fetch(
+				`https://test.happypay.live/users/loginWithOPT?phoneNumber=${encodeURIComponent(
+					phoneNumber
+				)}&otp=${encodeURIComponent(otp)}`,
+				{ method: 'GET' }
+			);
+
+			const result = await res.json();
+
+			// ❌ DO NOT treat message as error
+			if (result.status !== 'success') {
+				throw new Error(result.message || 'OTP verification failed');
+			}
+
+			// ✅ STORE TOKEN
+			const token = result?.data?.token;
+			if (!token) {
+				throw new Error('Token not received');
+			}
+
+			localStorage.setItem('AUTH_TOKEN', token);
+
+			// ✅ OPTIONAL: update redux auth
+			signIn({
+				token,
+				phoneNumber
+			});
+
+			// ✅ redirect
+			navigate(redirect || '/app');
+
+		} catch (err) {
+			console.error('OTP LOGIN ERROR:', err);
+			showAuthMessage(err.message || 'Login failed');
+		} finally {
+			setOtpLoading(false);
+		}
+	};
+
+
+	// 🔹 SOCIAL LOGIN
 	const onGoogleLogin = () => {
-		showLoading()
-		signInWithGoogle()
-	}
+		props.showLoading();
+		signInWithGoogle();
+	};
 
 	const onFacebookLogin = () => {
-		showLoading()
-		signInWithFacebook()
-	}
+		props.showLoading();
+		signInWithFacebook();
+	};
 
+	// 🔹 REDIRECT HANDLING
 	useEffect(() => {
 		if (token !== null && allowRedirect) {
-			navigate(redirect)
+			navigate(redirect);
 		}
 		if (showMessage) {
-			const timer = setTimeout(() => hideAuthMessage(), 3000)
-			return () => {
-				clearTimeout(timer);
-			};
+			const timer = setTimeout(() => hideAuthMessage(), 3000);
+			return () => clearTimeout(timer);
 		}
 	}, []);
 
@@ -83,33 +146,31 @@ export const LoginForm = props => {
 		}
 	}, [redirect, isAuthenticated, navigate, dispatch]);
 
-	const [loginMode, setLoginMode] = useState("PASSWORD"); // PASSWORD | OTP
-
-
+	// 🔹 SOCIAL UI
 	const renderOtherSignIn = (
 		<div>
 			<Divider>
-				<span className="text-muted font-size-base font-weight-normal">or connect with</span>
+				<span className="text-muted">or connect with</span>
 			</Divider>
 			<div className="d-flex justify-content-center">
 				<Button
-					onClick={() => onGoogleLogin()}
+					onClick={onGoogleLogin}
 					className="mr-2"
 					disabled={loading}
-					icon={<CustomIcon svg={GoogleSVG}/>}
+					icon={<CustomIcon svg={GoogleSVG} />}
 				>
 					Google
 				</Button>
 				<Button
-					onClick={() => onFacebookLogin()}
-					icon={<CustomIcon svg={FacebookSVG}/>}
+					onClick={onFacebookLogin}
 					disabled={loading}
+					icon={<CustomIcon svg={FacebookSVG} />}
 				>
 					Facebook
 				</Button>
 			</div>
 		</div>
-	)
+	);
 
 	return (
 		<>
@@ -118,99 +179,116 @@ export const LoginForm = props => {
 				animate={{
 					opacity: showMessage ? 1 : 0,
 					marginBottom: showMessage ? 20 : 0
-				}}>
-				<Alert type="error" showIcon message={message}></Alert>
-
+				}}
+			>
+				<Alert type="error" showIcon message={message} />
 			</motion.div>
+
 			<Form
+				form={form}
 				layout="vertical"
 				name="login-form"
-				initialValues={initialCredential}
 				onFinish={onLogin}
 			>
-
+				{/* 📱 PHONE */}
 				<Form.Item
 					name="phoneNumber"
 					label="Mobile Number"
 					rules={[
-						{
-							required: true,
-							message: 'Please input your mobile number',
-						},
+						{ required: true, message: 'Enter mobile number' },
 						{
 							pattern: /^[6-9]\d{9}$/,
-							message: 'Enter a valid 10-digit Indian mobile number',
-						},
+							message: 'Enter valid Indian mobile number'
+						}
 					]}
 				>
-
-
 					<Input
-						prefix={<MailOutlined className="text-primary" />}
+						prefix={<MailOutlined />}
 						maxLength={10}
 						inputMode="numeric"
 					/>
 				</Form.Item>
-				<Form.Item
-					name="passcode"
-					label={
-						<div className={`${showForgetPassword? 'd-flex justify-content-between w-100 align-items-center' : ''}`}>
-							<span>Password</span>
-							{
-								showForgetPassword &&
-								<span
-									onClick={() => onForgetPasswordClick}
-									className="cursor-pointer font-size-sm font-weight-normal text-muted"
-								>
-									Forget Password?
-								</span>
-							}
-						</div>
-					}
-					rules={[
-						{
-							required: true,
-							message: 'Please input your password',
-						}
-					]}
-				>
-					<Input.Password prefix={<LockOutlined className="text-primary" />}/>
-				</Form.Item>
-				<Form.Item>
-					<div className="d-flex justify-content-end">
-						<Button
-							type="default"
-							block
-							style={{ marginTop: 12 }}
-							onClick={() => navigate("/auth/login-otp")}
-						>
-							Login using OTP
-						</Button>
 
-					</div>
-				</Form.Item>
+				{/* 🔐 PASSWORD MODE */}
+				{loginMode === 'PASSWORD' && (
+					<Form.Item
+						name="passcode"
+						label="Password"
+						rules={[{ required: true, message: 'Enter password' }]}
+					>
+						<Input.Password prefix={<LockOutlined />} />
+					</Form.Item>
+				)}
 
-				<Form.Item>
-					<Button type="primary" htmlType="submit" block loading={loading}>
-						Sign In
+				{/* 🔢 OTP MODE */}
+				{loginMode === 'OTP' && otpSent && (
+					<Form.Item
+						name="otp"
+						label="OTP"
+						rules={[{ required: true, message: 'Enter OTP' }]}
+					>
+						<Input maxLength={6} />
+					</Form.Item>
+				)}
+
+				{/* 🔘 ACTION BUTTONS */}
+				{loginMode === 'OTP' && !otpSent && (
+					<Button
+						type="primary"
+						block
+						loading={otpLoading}
+						onClick={sendOtp}
+					>
+						Send OTP
 					</Button>
-				</Form.Item>
-				{
-					otherSignIn ? renderOtherSignIn : null
-				}
-				{ extra }
+				)}
+
+				{(loginMode === 'PASSWORD' || otpSent) && (
+					<Button
+						type="primary"
+						htmlType="submit"
+						block
+						loading={loading || otpLoading}
+					>
+						{loginMode === 'PASSWORD' ? 'Sign In' : 'Verify OTP'}
+					</Button>
+				)}
+
+				{/* 🔄 TOGGLE */}
+				<div className="d-flex justify-content-between mt-2">
+					<Button
+						type="link"
+						onClick={() => {
+							setLoginMode('OTP');
+							setOtpSent(false);
+							form.resetFields(['otp']);
+						}}
+					>
+						Login using OTP
+					</Button>
+
+					<Button
+						type="link"
+						onClick={() => {
+							setLoginMode('PASSWORD');
+							setOtpSent(false);
+							form.resetFields(['otp']);
+						}}
+					>
+						Login using Password
+					</Button>
+				</div>
+
+				{/* 🌐 SOCIAL */}
+				{otherSignIn && loginMode === 'PASSWORD' && renderOtherSignIn}
 			</Form>
 		</>
-	)
-}
+	);
+};
 
 LoginForm.propTypes = {
 	otherSignIn: PropTypes.bool,
-	showForgetPassword: PropTypes.bool,
-	extra: PropTypes.oneOfType([
-		PropTypes.string,
-		PropTypes.element
-	]),
+	showForgetPassword: PropTypes.bool
 };
 
 LoginForm.defaultProps = {
@@ -218,18 +296,17 @@ LoginForm.defaultProps = {
 	showForgetPassword: false
 };
 
-const mapStateToProps = ({auth}) => {
-	const {loading, message, showMessage, token, redirect} = auth;
-	return {loading, message, showMessage, token, redirect}
-}
+const mapStateToProps = ({ auth }) => {
+	const { loading, message, showMessage, token, redirect, isAuthenticated } = auth;
+	return { loading, message, showMessage, token, redirect, isAuthenticated };
+};
 
 const mapDispatchToProps = {
 	signIn,
-	showAuthMessage,
 	showLoading,
 	hideAuthMessage,
 	signInWithGoogle,
 	signInWithFacebook
-}
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(LoginForm)
+export default connect(mapStateToProps, mapDispatchToProps)(LoginForm);
