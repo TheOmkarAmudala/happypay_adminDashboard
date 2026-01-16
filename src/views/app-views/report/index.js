@@ -247,7 +247,7 @@ const Report = () => {
                     style={{ width: "100%" }}
                 >
                     <Input
-                        size="large"
+                        size="small"
                         prefix={<SearchOutlined />}
                         placeholder="Search ref / customer / gateway / amount"
                         value={searchText}

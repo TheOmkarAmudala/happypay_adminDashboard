@@ -316,19 +316,29 @@ export const DefaultDashboard = () => {
   return (
     <>
       <Row gutter={16}>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Row gutter={16}>
+        <Col xs={24} sm={24} md={12} lg={24}>
+          <Row gutter={[16, 16]}>
             {annualStatisticData.map((elm, i) => (
-                <Col xs={24} sm={24} md={24} lg={24} xl={6} key={i}>
-
+                <Col
+                    key={i}
+                    xs={12}   // 📱 2 boxes per row
+                    sm={12}
+                    md={8}    // 💻 3 boxes per row
+                    lg={8}
+                    xl={8}
+                    style={{ display: "flex" }} // important for content fit
+                >
                   <div
-                      style={{ cursor: "pointer", transition: "transform 0.2s" }}
+                      style={{
+                        flex: 1,
+                        cursor: "pointer",
+                        transition: "transform 0.2s",
+
+                      }}
                       onClick={() => handleStatClick(elm.route)}
                       onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
                       onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                   >
-
-
                     <StatisticWidget
                         title={elm.title}
                         value={elm.value}
@@ -339,40 +349,9 @@ export const DefaultDashboard = () => {
                 </Col>
             ))}
           </Row>
-
-          {/*  <Row gutter={16}>
-            <Col span={24}>
-                <ChartWidget 
-                  title="Unique Visitors" 
-                  series={visitorChartData.series} 
-                  xAxis={visitorChartData.categories} 
-                  height={'400px'}
-                  direction={direction}
-                />
-            </Col>
-          </Row>  */}
         </Col>
         <Col xs={24} sm={24} md={24} lg={6}>
 
-          {/*    <GoalWidget
-            title="Monthly Target"
-            value={87}
-            subtitle="You need abit more effort to hit monthly target"
-            extra={<Button type="primary">Learn More</Button>}
-          /> */}
-
-          {/*  <StatisticWidget
-            title={
-              <MembersChart 
-                options={memberChartOption}
-                series={activeMembersData}
-                height={145}
-              />
-            }
-            value='17,329'
-            status={3.7}
-            subtitle="Active members"
-          />*/}
 
         </Col>
       </Row>

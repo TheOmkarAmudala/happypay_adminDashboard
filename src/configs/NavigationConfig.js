@@ -99,7 +99,7 @@ const extraNavTree = [
         path: `${APP_PREFIX_PATH}`,
         title: 'sidenav.authentication',
         icon: SafetyOutlined,
-        breadcrumb: true,
+        breadcrumb: false,
         submenu: [
           {
             key: 'extra-auth-login-1',
@@ -234,9 +234,9 @@ const appsNavTree = [{
     {
       key: 'reports',
       path: `${APP_PREFIX_PATH}/reports`,
-      title: 'Reports',
       icon: CalendarOutlined,
-      breadcrumb: true,
+        title: 'Reports',
+      breadcrumb: false,
       submenu: []
     },
     {

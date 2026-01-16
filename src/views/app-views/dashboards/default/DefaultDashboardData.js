@@ -33,7 +33,29 @@ export const AnnualStatisticData = [
 		subtitle: "Total Pay In",
 		route: "/wallet"
 	},
+
 	{
+		title: "Domestic Cards",
+		value: "₹2,45,000",
+		status: 12.5,
+		subtitle: "Total Pay In",
+		route: "/domesticcards"
+	},
+	{
+		title: "Business/Corporate Cards",
+		value: "₹1,92,000",
+		status: -3.2,
+		subtitle: "Total Pay Out",
+		route: "/BusinessCards"
+	},
+
+	{
+		title: "Amex & Diner Cards",
+		value: "₹8,500",
+		status: 1.8,
+		subtitle: "Total Refunds",
+		route: "/Amex"
+	},{
 		title: "Pay-In",
 		value: "₹1,92,000",
 		status: -3.2,
@@ -47,41 +69,6 @@ export const AnnualStatisticData = [
 		subtitle: "Total Pay Out",
 		route: "/payout"
 	},
-	{
-		title: "Reports",
-		value: "₹8,500",
-		status: 1.8,
-		subtitle: "Total Refunds",
-		route: "/Reports"
-	},
-	{
-		title: "Domestic Cards",
-		value: "₹2,45,000",
-		status: 12.5,
-		subtitle: "Total Pay In",
-		route: "/domesticcards"
-	},
-	{
-		title: "Business Cards",
-		value: "₹1,92,000",
-		status: -3.2,
-		subtitle: "Total Pay Out",
-		route: "/BusinessCards"
-	},
-	{
-		title: "Corporate Cards",
-		value: "₹1,92,000",
-		status: -3.2,
-		subtitle: "Total Pay Out",
-		route: "/CorporateCards"
-	},
-	{
-		title: "Amex & Diner Cards",
-		value: "₹8,500",
-		status: 1.8,
-		subtitle: "Total Refunds",
-		route: "/Amex"
-	}
 ];
 
 
