@@ -2,11 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Input, Button, Tag, message, Divider, Typography } from "antd";
 import { Modal, Select } from "antd";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const { Title } = Typography;
 
 const KYCPage = () => {
-	const token = localStorage.getItem("AUTH_TOKEN");
+	const token = useSelector(state => state.auth.token);
+
+
 
 	const axiosAuth = axios.create({
 		baseURL: "https://test.happypay.live/",
@@ -123,7 +126,7 @@ const KYCPage = () => {
 		try {
 			setLoading(true);
 
-			const token = localStorage.getItem("AUTH_TOKEN");
+
 
 			const payload = {
 				otp: otp.trim(),               // string, 6 digits

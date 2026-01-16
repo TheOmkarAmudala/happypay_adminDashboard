@@ -1,98 +1,145 @@
-/* ================================
-   HappyPay Theme Tokens
-================================ */
+/* ======================================
+   HappyPay Commission Theme
+   Clean • Soft Blue • Fintech
+   ====================================== */
+
 :root {
-    --hp-blue: #2563eb;
-    --hp-blue-light: #eaf0ff;
-    --hp-border: #e5e7eb;
-    --hp-bg-soft: #f8fafc;
-    --hp-text-dark: #1f2937;
-    --hp-text-muted: #6b7280;
+    --hp-blue: #2563eb;          /* Primary blue */
+    --hp-blue-soft: #eff6ff;     /* Light background */
+    --hp-blue-border: #dbeafe;   /* Border blue */
+    --hp-text: #0f172a;
+    --hp-muted: #64748b;
 }
 
-/* ================================
+/* ===============================
    CARD
-================================ */
-.slab-card {
-    background: #ffffff !important;
-    border-radius: 14px;
-    color: var(--hp-text-dark);
-    border: 1px solid var(--hp-border);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+   =============================== */
 
-    /* ❌ REMOVE THIS */
-    /* min-height: 320px; */
+.slab-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid var(--hp-blue-border);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.06);
 }
 
-/* ================================
+/* ===============================
    HEADER
-================================ */
+   =============================== */
+
 .slab-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
 }
 
-/* ================================
-   TITLE
-================================ */
 .slab-title {
-    color: var(--hp-blue);
-    margin: 0;
+    font-size: 16px;
     font-weight: 600;
-    font-size: 17px;
+    color: var(--hp-text);
 }
 
-/* ================================
-   BADGES
-================================ */
-.slab-badges .ant-tag {
-    margin-left: 8px;
-    font-weight: 500;
+.slab-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ===============================
+   TABLE WRAPPER
+   =============================== */
+
+.slab-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* subtle scrollbar */
+.slab-table-wrap::-webkit-scrollbar {
+    height: 5px;
+}
+.slab-table-wrap::-webkit-scrollbar-thumb {
+    background: #c7d2fe;
     border-radius: 6px;
-    padding: 3px 10px;
-    background: #ffffff;
-    color: var(--hp-blue);
-    border: 1px solid var(--hp-blue);
 }
 
-/* ================================
+/* ===============================
    TABLE
-================================ */
+   =============================== */
+
 .slab-table {
     width: 100%;
+    min-width: 620px;
     border-collapse: collapse;
-}
-
-/* TABLE HEADER */
-.slab-table thead th {
-    background: var(--hp-bg-soft);
-    padding: 10px;
-    text-align: left;
-    font-weight: 600;
-    color: var(--hp-text-muted);
-    font-size: 12px;
-    border-bottom: 1px solid var(--hp-border);
-}
-
-/* TABLE BODY */
-.slab-table tbody td {
-    padding: 12px 10px;
-    border-bottom: 1px solid var(--hp-border);
-    color: var(--hp-text-dark);
     font-size: 14px;
 }
 
-/* ================================
-   RATE PILL
-================================ */
-.rate-pill {
-    background: var(--hp-blue-light);
-    color: var(--hp-blue);
-    padding: 4px 10px;
-    border-radius: 6px;
+.slab-table thead {
+    background: var(--hp-blue-soft);
+}
+
+.slab-table th,
+.slab-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--hp-blue-border);
+    white-space: nowrap;
+}
+
+.slab-table th {
+    font-size: 12.5px;
     font-weight: 600;
+    color: var(--hp-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.slab-table td {
+    color: var(--hp-text);
+}
+
+.slab-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* ===============================
+   HELPERS
+   =============================== */
+
+.muted {
+    color: var(--hp-muted);
+}
+
+/* ===============================
+   RATE PILL (Matches Button Blue)
+   =============================== */
+
+.rate-pill {
+    background: var(--hp-blue);
+    color: #ffffff;
+    padding: 5px 14px;
+    border-radius: 999px;
     font-size: 13px;
-    display: inline-block;
+    font-weight: 600;
+}
+
+/* ===============================
+   DESKTOP POLISH
+   =============================== */
+
+@media (min-width: 768px) {
+    .slab-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .slab-title {
+        font-size: 17px;
+    }
+
+    .slab-table {
+        min-width: 100%;
+    }
 }

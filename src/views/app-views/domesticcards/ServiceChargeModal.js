@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback,  } from "react";
+import React, { useState, useEffect, useCallback,   } from "react";
 import {
     Modal,
     InputNumber,
@@ -13,6 +13,7 @@ import {
 } from "antd";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {useSelector} from "react-redux";
 
 const { Text } = Typography;
 
@@ -45,11 +46,13 @@ const ServiceChargeModal = ({
         }
     }, [open]);
 
+    const token = useSelector(state => state.auth.token);
+
+
     /* ================= API ================= */
     const fetchCustomers = async () => {
         try {
             setLoadingCustomers(true);
-            const token = localStorage.getItem("AUTH_TOKEN");
 
             const res = await axios.get(
                 "https://test.happypay.live/customer/getAll",

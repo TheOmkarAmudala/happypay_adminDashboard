@@ -3,6 +3,7 @@ import { AUTH_TOKEN } from 'constants/AuthConstant';
 import FirebaseService from 'services/FirebaseService';
 import axios from "axios"
 
+
 /* -------------------- INITIAL STATE -------------------- */
 
 export const initialState = {
@@ -12,6 +13,7 @@ export const initialState = {
 	redirect: '',
 	token: localStorage.getItem(AUTH_TOKEN) || null,
 	isAuthenticated: !!localStorage.getItem(AUTH_TOKEN),
+
 };
 
 /* -------------------- HAPPY PAY LOGIN -------------------- */
@@ -49,7 +51,7 @@ export const signIn = createAsyncThunk(
 			}
 
 			// ✅ STORE TOKEN
-			localStorage.setItem("AUTH_TOKEN", token);
+			localStorage.setItem(AUTH_TOKEN, token);
 			console.log("🔐 Token stored successfully:", token);
 
 			return token;
@@ -92,7 +94,7 @@ export const signUp = createAsyncThunk(
 			console.log("📥 Response Data:", response.data);
 
 			if (response.data?.token) {
-				localStorage.setItem("AUTH_TOKEN", response.data.token);
+				localStorage.setItem(AUTH_TOKEN, response.data.token);
 				console.log("🔐 Token stored in localStorage");
 			}
 
@@ -173,124 +175,145 @@ export const signInWithFacebook = createAsyncThunk(
 );
 
 /* -------------------- SLICE -------------------- */
-
 export const authSlice = createSlice({
 	name: 'auth',
 	initialState,
 	reducers: {
-		authenticated: (state, action) => {
+		// 🔑 Generic login success (OTP / custom login)
+		signInSuccess: (state, action) => {
 			state.loading = false;
-			state.redirect = '/';
 			state.token = action.payload;
+			state.isAuthenticated = true;
+			state.redirect = '/app/dashboard';
+			localStorage.setItem('AUTH_TOKEN', action.payload);
 		},
+
+		// 🔄 Reset redirect after navigation
 		resetRedirect: (state) => {
 			state.redirect = '';
 		},
+
+		// ⚠️ Show auth error/info message
 		showAuthMessage: (state, action) => {
 			state.message = action.payload;
 			state.showMessage = true;
 			state.loading = false;
 		},
+
+		// ❌ Hide auth message
 		hideAuthMessage: (state) => {
 			state.message = '';
 			state.showMessage = false;
 		},
+
+		// 🚪 Logout
 		signOutSuccess: (state) => {
 			state.loading = false;
 			state.token = null;
+			state.isAuthenticated = false;
 			state.redirect = '/';
+			localStorage.removeItem('AUTH_TOKEN');
 		},
+
+		// ⏳ Global auth loading
 		showLoading: (state) => {
 			state.loading = true;
-		},
-		signInSuccess: (state, action) => {
-			state.loading = false;
-			state.token = action.payload;
 		}
 	},
+
 	extraReducers: (builder) => {
 		builder
-			/* ---- SIGN IN ---- */
+			/* -------- SIGN IN -------- */
 			.addCase(signIn.pending, (state) => {
 				state.loading = true;
 			})
 			.addCase(signIn.fulfilled, (state, action) => {
 				state.loading = false;
-				state.redirect = '/auth/login?redirect=/app/dashboards/default';
-				state.isAuthenticated = true;
 				state.token = action.payload;
+				state.isAuthenticated = true;
+				state.redirect = '/app/dashboard';
+				localStorage.setItem('AUTH_TOKEN', action.payload);
 			})
 			.addCase(signIn.rejected, (state, action) => {
+				state.loading = false;
 				state.message = action.payload;
 				state.showMessage = true;
-				state.loading = false;
 			})
 
-			/* ---- SIGN OUT ---- */
+			/* -------- SIGN OUT -------- */
 			.addCase(signOut.fulfilled, (state) => {
 				state.loading = false;
 				state.token = null;
+				state.isAuthenticated = false;
 				state.redirect = '/';
+				localStorage.removeItem('AUTH_TOKEN');
 			})
 
-			/* ---- GOOGLE ---- */
+			/* -------- GOOGLE -------- */
 			.addCase(signInWithGoogle.pending, (state) => {
 				state.loading = true;
 			})
 			.addCase(signInWithGoogle.fulfilled, (state, action) => {
 				state.loading = false;
-				state.redirect = '/';
 				state.token = action.payload;
+				state.isAuthenticated = true;
+				state.redirect = '/app/dashboard';
+				localStorage.setItem('AUTH_TOKEN', action.payload);
 			})
 			.addCase(signInWithGoogle.rejected, (state, action) => {
+				state.loading = false;
 				state.message = action.payload;
 				state.showMessage = true;
-				state.loading = false;
 			})
 
-			/* ---- FACEBOOK ---- */
+			/* -------- FACEBOOK -------- */
 			.addCase(signInWithFacebook.pending, (state) => {
 				state.loading = true;
 			})
 			.addCase(signInWithFacebook.fulfilled, (state, action) => {
 				state.loading = false;
-				state.redirect = '/';
 				state.token = action.payload;
+				state.isAuthenticated = true;
+				state.redirect = '/app/dashboard';
+				localStorage.setItem('AUTH_TOKEN', action.payload);
 			})
 			.addCase(signInWithFacebook.rejected, (state, action) => {
+				state.loading = false;
 				state.message = action.payload;
 				state.showMessage = true;
-				state.loading = false;
 			})
-			.addCase(signUp.pending, (state) => {
-			state.loading = true;
-			state.showMessage = false;
-		})
 
+			/* -------- SIGN UP -------- */
+			.addCase(signUp.pending, (state) => {
+				state.loading = true;
+				state.showMessage = false;
+			})
 			.addCase(signUp.fulfilled, (state, action) => {
-				state.loading = false;                 // 🔥 THIS FIXES INFINITE LOADING
+				state.loading = false;
 				state.showMessage = false;
 
-				// optional: if backend sends token
-				state.token = action.payload?.token || null;
+				// if backend returns token on signup
+				if (action.payload?.token) {
+					state.token = action.payload.token;
+					state.isAuthenticated = true;
+					localStorage.setItem('AUTH_TOKEN', action.payload.token);
+				}
 
-				// optional: redirect after signup
-				state.redirect = '/';
+				state.redirect = '/app/dashboard';
 			})
-
 			.addCase(signUp.rejected, (state, action) => {
-				state.loading = false;                 // 🔥 ALSO IMPORTANT
+				state.loading = false;
 				state.message = action.payload;
 				state.showMessage = true;
 			});
-
 	}
 });
+
+
 
 /* -------------------- EXPORTS -------------------- */
 
 export const {
-	authenticated,
 	showAuthMessage,
 	resetRedirect,
 	hideAuthMessage,

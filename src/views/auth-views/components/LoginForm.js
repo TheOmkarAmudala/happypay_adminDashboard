@@ -1,166 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { connect, useDispatch } from 'react-redux';
-import { Button, Form, Input, Divider, Alert } from 'antd';
-import { MailOutlined, LockOutlined } from '@ant-design/icons';
-import PropTypes from 'prop-types';
-import { GoogleSVG, FacebookSVG } from 'assets/svg/icon';
-import CustomIcon from 'components/util-components/CustomIcon';
-import { resetRedirect } from 'store/slices/authSlice';
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Button, Form, Input, Divider, Alert } from 'antd'
+import { MailOutlined, LockOutlined } from '@ant-design/icons'
+import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+
+import CustomIcon from 'components/util-components/CustomIcon'
+import { GoogleSVG, FacebookSVG } from 'assets/svg/icon'
+
 import {
 	signIn,
+	signInSuccess,
 	showLoading,
 	hideAuthMessage,
 	signInWithGoogle,
 	signInWithFacebook,
-	showAuthMessage
-} from 'store/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+	showAuthMessage,
+	resetRedirect
+} from 'store/slices/authSlice'
 
-export const LoginForm = props => {
-	const dispatch = useDispatch();
-	const navigate = useNavigate();
-	const [form] = Form.useForm();
+/* -------------------------------------------------------------------------- */
+/*                               LOGIN FORM                                   */
+/* -------------------------------------------------------------------------- */
 
-	// 🔹 UI STATES
-	const [loginMode, setLoginMode] = useState('PASSWORD'); // PASSWORD | OTP
-	const [otpSent, setOtpSent] = useState(false);
-	const [otpLoading, setOtpLoading] = useState(false);
+const LoginForm = () => {
+	const dispatch = useDispatch()
+	const navigate = useNavigate()
+	const [form] = Form.useForm()
 
+	/* ----------------------------- REDUX STATE ----------------------------- */
 	const {
-		otherSignIn,
-		showForgetPassword,
-		onForgetPasswordClick,
-		signIn,
 		token,
 		loading,
 		redirect,
 		showMessage,
 		message,
-		isAuthenticated,
-		allowRedirect = true
-	} = props;
+		isAuthenticated
+	} = useSelector(state => state.auth)
 
-	// 🔹 PASSWORD LOGIN
-	const onLogin = values => {
+	/* ----------------------------- UI STATE -------------------------------- */
+	const [loginMode, setLoginMode] = useState('PASSWORD') // PASSWORD | OTP
+	const [otpSent, setOtpSent] = useState(false)
+	const [otpLoading, setOtpLoading] = useState(false)
+
+	/* -------------------------------------------------------------------------- */
+	/*                               PASSWORD LOGIN                               */
+	/* -------------------------------------------------------------------------- */
+
+	const onLogin = (values) => {
 		if (loginMode === 'PASSWORD') {
-			showLoading();
-			signIn(values);
+			dispatch(showLoading())
+			dispatch(signIn(values))
 		} else {
-			verifyOtp(); // ✅ DO NOT pass values manually
+			verifyOtp()
 		}
-	};
+	}
 
-	// 🔹 SEND OTP
+	/* -------------------------------------------------------------------------- */
+	/*                                  SEND OTP                                  */
+	/* -------------------------------------------------------------------------- */
+
 	const sendOtp = async () => {
 		try {
-			const phone = form.getFieldValue('phoneNumber');
-			if (!phone) return;
+			const phone = form.getFieldValue('phoneNumber')
+			if (!phone) {
+				dispatch(showAuthMessage('Enter phone number'))
+				return
+			}
 
-			setOtpLoading(true);
-			await fetch(
+			setOtpLoading(true)
+
+			const res = await fetch(
 				`https://test.happypay.live/users/getotp?phoneNumber=${phone}`
-			);
-			setOtpSent(true);
-		} catch (err) {
-			console.error(err);
-		} finally {
-			setOtpLoading(false);
-		}
-	};
+			)
 
-	// 🔹 VERIFY OTP
+			const data = await res.json()
+
+			if (data.status !== 'success') {
+				throw new Error(data.message || 'Failed to send OTP')
+			}
+
+			setOtpSent(true)
+		} catch (err) {
+			dispatch(showAuthMessage(err.message))
+		} finally {
+			setOtpLoading(false)
+		}
+	}
+
+	/* -------------------------------------------------------------------------- */
+	/*                                 VERIFY OTP                                 */
+	/* -------------------------------------------------------------------------- */
+
 	const verifyOtp = async () => {
 		try {
-			setOtpLoading(true);
+			setOtpLoading(true)
 
-			const phoneNumber = form.getFieldValue('phoneNumber');
-			const otp = form.getFieldValue('otp');
+			const phoneNumber = form.getFieldValue('phoneNumber')
+			const otp = form.getFieldValue('otp')
+
+			if (!otp || otp.length !== 6) {
+				throw new Error('Enter valid 6-digit OTP')
+			}
 
 			const res = await fetch(
 				`https://test.happypay.live/users/loginWithOPT?phoneNumber=${encodeURIComponent(
 					phoneNumber
-				)}&otp=${encodeURIComponent(otp)}`,
-				{ method: 'GET' }
-			);
+				)}&otp=${encodeURIComponent(otp)}`
+			)
 
-			const result = await res.json();
+			const result = await res.json()
 
-			// ❌ DO NOT treat message as error
 			if (result.status !== 'success') {
-				throw new Error(result.message || 'OTP verification failed');
+				throw new Error(result.message || 'OTP verification failed')
 			}
 
-			// ✅ STORE TOKEN
-			const token = result?.data?.token;
+			const token = result?.data?.token
 			if (!token) {
-				throw new Error('Token not received');
+				throw new Error('Token not received')
 			}
 
-			localStorage.setItem('AUTH_TOKEN', token);
+			// ✅ Update Redux
+			dispatch(signInSuccess(token))
 
-			// ✅ OPTIONAL: update redux auth
-			signIn({
-				token,
-				phoneNumber
-			});
-
-			// ✅ redirect
-			navigate(redirect || '/app');
-
+			navigate('/app/dashboard')
 		} catch (err) {
-			console.error('OTP LOGIN ERROR:', err);
-			showAuthMessage(err.message || 'Login failed');
+			dispatch(showAuthMessage(err.message))
 		} finally {
-			setOtpLoading(false);
+			setOtpLoading(false)
 		}
-	};
+	}
 
+	/* -------------------------------------------------------------------------- */
+	/*                               SOCIAL LOGIN                                 */
+	/* -------------------------------------------------------------------------- */
 
-	// 🔹 SOCIAL LOGIN
 	const onGoogleLogin = () => {
-		props.showLoading();
-		signInWithGoogle();
-	};
+		dispatch(showLoading())
+		dispatch(signInWithGoogle())
+	}
 
 	const onFacebookLogin = () => {
-		props.showLoading();
-		signInWithFacebook();
-	};
+		dispatch(showLoading())
+		dispatch(signInWithFacebook())
+	}
 
-	// 🔹 REDIRECT HANDLING
-	useEffect(() => {
-		if (token !== null && allowRedirect) {
-			navigate(redirect);
-		}
-		if (showMessage) {
-			const timer = setTimeout(() => hideAuthMessage(), 3000);
-			return () => clearTimeout(timer);
-		}
-	}, []);
+	/* -------------------------------------------------------------------------- */
+	/*                                REDIRECT LOGIC                               */
+	/* -------------------------------------------------------------------------- */
 
 	useEffect(() => {
 		if (redirect && isAuthenticated) {
-			navigate(redirect);
-			dispatch(resetRedirect());
+			navigate(redirect)
+			dispatch(resetRedirect())
 		}
-	}, [redirect, isAuthenticated, navigate, dispatch]);
+	}, [redirect, isAuthenticated, navigate, dispatch])
 
-	// 🔹 SOCIAL UI
-	const renderOtherSignIn = (
+	useEffect(() => {
+		if (showMessage) {
+			const timer = setTimeout(() => {
+				dispatch(hideAuthMessage())
+			}, 3000)
+			return () => clearTimeout(timer)
+		}
+	}, [showMessage, dispatch])
+
+	/* -------------------------------------------------------------------------- */
+	/*                                 SOCIAL UI                                  */
+	/* -------------------------------------------------------------------------- */
+
+	const renderSocialLogin = (
 		<div>
 			<Divider>
 				<span className="text-muted">or connect with</span>
 			</Divider>
+
 			<div className="d-flex justify-content-center">
 				<Button
-					onClick={onGoogleLogin}
 					className="mr-2"
+					onClick={onGoogleLogin}
 					disabled={loading}
 					icon={<CustomIcon svg={GoogleSVG} />}
 				>
 					Google
 				</Button>
+
 				<Button
 					onClick={onFacebookLogin}
 					disabled={loading}
@@ -170,10 +194,15 @@ export const LoginForm = props => {
 				</Button>
 			</div>
 		</div>
-	);
+	)
+
+	/* -------------------------------------------------------------------------- */
+	/*                                   RENDER                                   */
+	/* -------------------------------------------------------------------------- */
 
 	return (
 		<>
+			{/* -------------------------- ERROR MESSAGE -------------------------- */}
 			<motion.div
 				initial={{ opacity: 0, marginBottom: 0 }}
 				animate={{
@@ -184,13 +213,14 @@ export const LoginForm = props => {
 				<Alert type="error" showIcon message={message} />
 			</motion.div>
 
+			{/* ------------------------------- FORM -------------------------------- */}
 			<Form
 				form={form}
 				layout="vertical"
 				name="login-form"
 				onFinish={onLogin}
 			>
-				{/* 📱 PHONE */}
+				{/* 📱 PHONE NUMBER */}
 				<Form.Item
 					name="phoneNumber"
 					label="Mobile Number"
@@ -227,7 +257,7 @@ export const LoginForm = props => {
 						label="OTP"
 						rules={[{ required: true, message: 'Enter OTP' }]}
 					>
-						<Input maxLength={6} />
+						<Input maxLength={6} inputMode="numeric" />
 					</Form.Item>
 				)}
 
@@ -254,14 +284,14 @@ export const LoginForm = props => {
 					</Button>
 				)}
 
-				{/* 🔄 TOGGLE */}
+				{/* 🔄 MODE TOGGLE */}
 				<div className="d-flex justify-content-between mt-2">
 					<Button
 						type="link"
 						onClick={() => {
-							setLoginMode('OTP');
-							setOtpSent(false);
-							form.resetFields(['otp']);
+							setLoginMode('OTP')
+							setOtpSent(false)
+							form.resetFields(['otp'])
 						}}
 					>
 						Login using OTP
@@ -270,43 +300,20 @@ export const LoginForm = props => {
 					<Button
 						type="link"
 						onClick={() => {
-							setLoginMode('PASSWORD');
-							setOtpSent(false);
-							form.resetFields(['otp']);
+							setLoginMode('PASSWORD')
+							setOtpSent(false)
+							form.resetFields(['otp'])
 						}}
 					>
 						Login using Password
 					</Button>
 				</div>
 
-				{/* 🌐 SOCIAL */}
-				{otherSignIn && loginMode === 'PASSWORD' && renderOtherSignIn}
+				{/* 🌐 SOCIAL LOGIN */}
+				{loginMode === 'PASSWORD' && renderSocialLogin}
 			</Form>
 		</>
-	);
-};
+	)
+}
 
-LoginForm.propTypes = {
-	otherSignIn: PropTypes.bool,
-	showForgetPassword: PropTypes.bool
-};
-
-LoginForm.defaultProps = {
-	otherSignIn: true,
-	showForgetPassword: false
-};
-
-const mapStateToProps = ({ auth }) => {
-	const { loading, message, showMessage, token, redirect, isAuthenticated } = auth;
-	return { loading, message, showMessage, token, redirect, isAuthenticated };
-};
-
-const mapDispatchToProps = {
-	signIn,
-	showLoading,
-	hideAuthMessage,
-	signInWithGoogle,
-	signInWithFacebook
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(LoginForm);
+export default LoginForm

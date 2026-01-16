@@ -9,17 +9,29 @@ import {
     Skeleton,
     Select,
     Space,
-    Statistic,
     Row,
     Col,
-    Divider
+    Grid,
+    Input
 } from "antd";
+import {
+    ArrowDownOutlined,
+    ArrowUpOutlined,
+    WalletOutlined,
+    SearchOutlined
+} from "@ant-design/icons";
 
 const { Option } = Select;
+const { useBreakpoint } = Grid;
 
 const WalletTransactionsPage = ({ onWalletTotalChange }) => {
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
+
     const [loading, setLoading] = useState(false);
     const [walletData, setWalletData] = useState([]);
+    const [search, setSearch] = useState("");
+
     const [detailLoading, setDetailLoading] = useState(false);
     const [selectedTx, setSelectedTx] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,26 +42,25 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
     const [totalCredit, setTotalCredit] = useState(0);
     const [totalDebit, setTotalDebit] = useState(0);
 
-    /* ================= FETCH TRANSACTIONS ================= */
+    /* ================= FETCH ================= */
     useEffect(() => {
         const fetchWalletTransactions = async () => {
             try {
                 setLoading(true);
                 const token = localStorage.getItem("AUTH_TOKEN");
 
-                const response = await axios.get(
+                const res = await axios.get(
                     "https://test.happypay.live/users/walletTransactions",
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
-                const transactions = response.data?.data || [];
-
+                const txs = res.data?.data || [];
                 let credit = 0;
                 let debit = 0;
 
-                const formatted = transactions.map((tx, index) => {
+                const formatted = txs.map((tx, index) => {
                     const isDebit = tx.to?.toLowerCase() === "external transfer";
-                    const amount = Number(tx.amount);
+                    const amount = Number(tx.amount || 0);
 
                     if (isDebit) debit += amount;
                     else credit += amount;
@@ -58,11 +69,9 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                         key: tx._id,
                         sn: index + 1,
                         referenceId: tx.extraInfo?.serviceReferenceId || "-",
-                        amount: amount,
-                        amountDisplay: `₹${amount.toFixed(2)}`,
+                        amount,
+                        amountDisplay: `₹${Math.round(amount)}`,
                         direction: isDebit ? "DEBIT" : "CREDIT",
-                        transactionType: "WALLET",
-                        serviceName: tx.description || tx.transactionType || "-",
                         status: tx.status,
                         transactionTime: new Date(tx.createdAt).toLocaleString()
                     };
@@ -71,10 +80,7 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                 setTotalCredit(credit);
                 setTotalDebit(debit);
                 onWalletTotalChange?.(credit - debit);
-
                 setWalletData(formatted);
-            } catch (e) {
-                console.error(e);
             } finally {
                 setLoading(false);
             }
@@ -83,62 +89,59 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
         fetchWalletTransactions();
     }, [onWalletTotalChange]);
 
-    /* ================= FILTER + SORT ================= */
+    /* ================= FILTER + SEARCH + SORT ================= */
     const processedData = useMemo(() => {
         let data = [...walletData];
 
-        // FILTER
+        if (search) {
+            const q = search.toLowerCase();
+            data = data.filter(tx =>
+                Object.values(tx).some(v =>
+                    String(v).toLowerCase().includes(q)
+                )
+            );
+        }
+
         if (directionFilter !== "ALL") {
             data = data.filter(tx => tx.direction === directionFilter);
         }
 
-        // SORT
         if (directionSort === "CREDIT_FIRST") {
-            data.sort((a, b) =>
-                a.direction === b.direction ? 0 : a.direction === "CREDIT" ? -1 : 1
-            );
+            data.sort((a, b) => (a.direction === "CREDIT" ? -1 : 1));
         }
 
         if (directionSort === "DEBIT_FIRST") {
-            data.sort((a, b) =>
-                a.direction === b.direction ? 0 : a.direction === "DEBIT" ? -1 : 1
-            );
+            data.sort((a, b) => (a.direction === "DEBIT" ? -1 : 1));
         }
 
         return data;
-    }, [walletData, directionFilter, directionSort]);
+    }, [walletData, search, directionFilter, directionSort]);
 
-    /* ================= COLUMNS ================= */
+    /* ================= TABLE ================= */
     const columns = [
-        { title: "S/N", dataIndex: "sn", width: 70 },
+        { title: "S/N", dataIndex: "sn", width: 60 },
+        { title: "Reference", dataIndex: "referenceId", width: 220 },
         {
-            title: "Reference ID",
-            dataIndex: "referenceId",
-            render: value =>
-                value !== "-" ? (
-                    <a onClick={() => fetchTransactionDetails(value)}>{value}</a>
-                ) : (
-                    "-"
-                )
+            title: "Amount",
+            dataIndex: "amountDisplay",
+            width: 120,
+            render: v => <strong>{v}</strong>
         },
-        { title: "Amount", dataIndex: "amountDisplay" },
         {
-            title: "Direction",
+            title: "Type",
             dataIndex: "direction",
-            render: v => <Tag color={v === "DEBIT" ? "red" : "green"}>{v}</Tag>
+            width: 100,
+            render: v => (
+                <Tag color={v === "DEBIT" ? "red" : "green"}>{v}</Tag>
+            )
         },
-        {
-            title: "Transaction Type",
-            dataIndex: "transactionType",
-            render: v => <Tag color="purple">{v}</Tag>
-        },
-        { title: "Service", dataIndex: "serviceName" },
         {
             title: "Status",
             dataIndex: "status",
+            width: 120,
             render: s => <Tag color="blue">{s?.toUpperCase()}</Tag>
         },
-        { title: "Transaction Time", dataIndex: "transactionTime" }
+        { title: "Time", dataIndex: "transactionTime", width: 200 }
     ];
 
     /* ================= DETAILS ================= */
@@ -158,197 +161,140 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
             setDetailLoading(false);
         }
     };
-    const maskAccount = (acc = "") => {
-        if (!acc || acc.length < 4) return "XXXX";
-        return `XXXX XXXX ${acc.slice(-4)}`;
-    };
 
-    /* ================= UI ================= */
     return (
-        <Card title="Wallet Transactions">
-            {/* ===== WALLET SUMMARY ===== */}
-            <Row gutter={16} style={{ marginBottom: 16 }}>
-                <Col span={8}>
-                    <Statistic title="Total Credit" value={`₹${totalCredit.toFixed(2)}`} />
+        <Card title="Wallet Transactions" bodyStyle={{ padding: 12 }}>
+            {/* ===== SUMMARY (MOBILE CLEAN) ===== */}
+            <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+                <Col xs={24} md={8}>
+                    <Card bordered={false} style={{ borderRadius: 12 }}>
+                        <Space align="center">
+                            <ArrowDownOutlined style={{ fontSize: 20, color: "#3f8600" }} />
+                            <div>
+                                <div style={{ fontSize: 12, color: "#999" }}>Total Credit</div>
+                                <div style={{ fontSize: 18, fontWeight: 600, color: "#3f8600" }}>
+                                    ₹{Math.round(totalCredit)}
+                                </div>
+                            </div>
+                        </Space>
+                    </Card>
                 </Col>
-                <Col span={8}>
-                    <Statistic title="Total Debit" value={`₹${totalDebit.toFixed(2)}`} />
+
+                <Col xs={24} md={8}>
+                    <Card bordered={false} style={{ borderRadius: 12 }}>
+                        <Space align="center">
+                            <ArrowUpOutlined style={{ fontSize: 20, color: "#cf1322" }} />
+                            <div>
+                                <div style={{ fontSize: 12, color: "#999" }}>Total Debit</div>
+                                <div style={{ fontSize: 18, fontWeight: 600, color: "#cf1322" }}>
+                                    ₹{Math.round(totalDebit)}
+                                </div>
+                            </div>
+                        </Space>
+                    </Card>
                 </Col>
-                <Col span={8}>
-                    <Statistic
-                        title="Wallet Balance"
-                        value={`₹${(totalCredit - totalDebit).toFixed(2)}`}
-                        valueStyle={{ color: "#3f8600" }}
-                    />
+
+                <Col xs={24} md={8}>
+                    <Card bordered={false} style={{ borderRadius: 12 }}>
+                        <Space align="center">
+                            <WalletOutlined style={{ fontSize: 20 }} />
+                            <div>
+                                <div style={{ fontSize: 12, color: "#999" }}>Balance</div>
+                                <div
+                                    style={{
+                                        fontSize: 18,
+                                        fontWeight: 600,
+                                        color:
+                                            totalCredit - totalDebit < 0
+                                                ? "#cf1322"
+                                                : "#3f8600"
+                                    }}
+                                >
+                                    ₹{Math.round(totalCredit - totalDebit)}
+                                </div>
+                            </div>
+                        </Space>
+                    </Card>
                 </Col>
             </Row>
 
             {/* ===== FILTERS ===== */}
-            <Space style={{ marginBottom: 16 }}>
-                <Select
-                    value={directionFilter}
-                    style={{ width: 160 }}
-                    onChange={setDirectionFilter}
-                >
-                    <Option value="ALL">All Transactions</Option>
-                    <Option value="CREDIT">Credit Only</Option>
-                    <Option value="DEBIT">Debit Only</Option>
-                </Select>
+            <Card bordered={false} style={{ background: "#fafafa", borderRadius: 12, marginBottom: 12 }}>
+                <Space direction="vertical" size="small" style={{ width: "100%" }}>
+                    <Input
+                        prefix={<SearchOutlined />}
+                        placeholder="Search reference, amount, status"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                    />
 
-                <Select
-                    value={directionSort}
-                    style={{ width: 180 }}
-                    onChange={setDirectionSort}
-                >
-                    <Option value="NONE">No Sorting</Option>
-                    <Option value="CREDIT_FIRST">Credit </Option>
-                    <Option value="DEBIT_FIRST">Debit </Option>
-                </Select>
-            </Space>
+                    <Row gutter={8}>
+                        <Col span={12}>
+                            <Select
+                                value={directionFilter}
+                                onChange={setDirectionFilter}
+                                style={{ width: "100%" }}
+                            >
+                                <Option value="ALL">All</Option>
+                                <Option value="CREDIT">Credit</Option>
+                                <Option value="DEBIT">Debit</Option>
+                            </Select>
+                        </Col>
+
+                        <Col span={12}>
+                            <Select
+                                value={directionSort}
+                                onChange={setDirectionSort}
+                                style={{ width: "100%" }}
+                            >
+                                <Option value="NONE">No Sorting</Option>
+                                <Option value="CREDIT_FIRST">Credit First</Option>
+                                <Option value="DEBIT_FIRST">Debit First</Option>
+                            </Select>
+                        </Col>
+                    </Row>
+                </Space>
+            </Card>
 
             {/* ===== TABLE ===== */}
             <Table
                 columns={columns}
                 dataSource={processedData}
                 loading={loading}
-                pagination={{ pageSize: 10 }}
+                pagination={{ pageSize: 8 }}
+                scroll={isMobile ? { x: 650 } : undefined}
+                size="small"
+                onRow={record => ({
+                    onClick: () => fetchTransactionDetails(record.referenceId)
+                })}
             />
 
-            {/* ===== DETAILS MODAL ===== */}
+            {/* ===== MODAL ===== */}
             <Modal
                 open={isModalOpen}
                 footer={null}
-                width={640}
+                width={isMobile ? "100%" : 600}
+                style={isMobile ? { top: 0 } : {}}
                 onCancel={() => setIsModalOpen(false)}
-                title={null}
             >
                 {detailLoading ? (
                     <Skeleton active />
-                ) : (
-                    <>
-                        {/* ================= HERO ================= */}
-                        <div style={{ textAlign: "center", marginBottom: 24 }}>
-                            <Tag
-                                color={
-                                    selectedTx?.paymentStatus === "success"
-                                        ? "green"
-                                        : "red"
-                                }
-                                style={{ fontSize: 14, padding: "4px 14px" }}
-                            >
-                                {selectedTx?.paymentStatus === "success"
-                                    ? "✅ Transfer Successful"
-                                    : "❌ Transfer Failed"}
+                ) : selectedTx && (
+                    <Descriptions bordered size="small" column={1}>
+                        <Descriptions.Item label="Reference ID">
+                            {selectedTx.serviceReferenceId}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Amount">
+                            ₹{Math.round(selectedTx.amount || 0)}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Status">
+                            <Tag color="green">
+                                {selectedTx.paymentStatus?.toUpperCase()}
                             </Tag>
-
-                            <h1 style={{ margin: "12px 0 4px", fontSize: 30 }}>
-                                ₹{selectedTx?.request?.transfer_amount?.toFixed(2)}
-                            </h1>
-
-                            <div style={{ color: "#888" }}>
-                                {new Date(selectedTx?.createdAt).toLocaleString()}
-                            </div>
-                        </div>
-
-                        {/* ================= BENEFICIARY ================= */}
-                        <Card
-                            bordered
-                            style={{
-                                marginBottom: 16,
-                                background: "#fafafa",
-                                borderRadius: 10
-                            }}
-                        >
-                            <Row justify="space-between" align="middle">
-                                <Col>
-                                    <div style={{ fontWeight: 600, fontSize: 16 }}>
-                                        {
-                                            selectedTx?.extraInfo?.bank_account
-                                                ?.beneficiary_name
-                                        }
-                                    </div>
-
-                                    <div style={{ color: "#666", marginTop: 4 }}>
-                                        {selectedTx?.extraInfo?.bank_account?.provider?.toUpperCase() ||
-                                            "BANK"}{" "}
-                                        •{" "}
-                                        {maskAccount(
-                                            selectedTx?.extraInfo?.bank_account
-                                                ?.bank_account_number
-                                        )}
-                                    </div>
-
-                                    <div style={{ color: "#888", marginTop: 2 }}>
-                                        IFSC:{" "}
-                                        {
-                                            selectedTx?.extraInfo?.bank_account
-                                                ?.bank_ifsc
-                                        }
-                                    </div>
-                                </Col>
-
-                                <Col>
-                                    <Tag color="blue">
-                                        {selectedTx?.response?.transfer_mode?.toUpperCase() ||
-                                            "IMPS"}
-                                    </Tag>
-                                </Col>
-                            </Row>
-                        </Card>
-
-                        {/* ================= AMOUNT BREAKDOWN ================= */}
-                        <Card
-                            bordered
-                            size="small"
-                            style={{ marginBottom: 16, borderRadius: 10 }}
-                        >
-                            <Row justify="space-between">
-                                <span>Amount</span>
-                                <span>₹{selectedTx?.amount?.toFixed(2)}</span>
-                            </Row>
-
-                            <Row justify="space-between" style={{ marginTop: 6 }}>
-                                <span>Charges</span>
-                                <span style={{ color: "#cf1322" }}>
-                        - ₹{selectedTx?.transactionCharges?.toFixed(2)}
-                    </span>
-                            </Row>
-
-                            <Divider style={{ margin: "10px 0" }} />
-
-                            <Row justify="space-between" style={{ fontWeight: 600 }}>
-                                <span>Total Sent</span>
-                                <span style={{ color: "#3f8600" }}>
-                        ₹{selectedTx?.request?.transfer_amount?.toFixed(2)}
-                    </span>
-                            </Row>
-                        </Card>
-
-                        {/* ================= TECHNICAL DETAILS ================= */}
-                        <Descriptions
-                            bordered
-                            size="small"
-                            column={1}
-                            title="Transaction Details"
-                        >
-                            <Descriptions.Item label="Reference ID">
-                                {selectedTx?.serviceReferenceId}
-                            </Descriptions.Item>
-
-                            <Descriptions.Item label="UTR">
-                                {selectedTx?.extraInfo?.payout_response?.transferutr || "-"}
-                            </Descriptions.Item>
-
-                            <Descriptions.Item label="Status">
-                                <Tag color="green">
-                                    {selectedTx?.paymentStatus?.toUpperCase()}
-                                </Tag>
-                            </Descriptions.Item>
-                        </Descriptions>
-                    </>
+                        </Descriptions.Item>
+                    </Descriptions>
                 )}
             </Modal>
-
         </Card>
     );
 };

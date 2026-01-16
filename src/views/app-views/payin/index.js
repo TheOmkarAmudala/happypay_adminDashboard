@@ -11,9 +11,18 @@ import {
     Statistic,
     Space
 } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import {
+    ReloadOutlined,
+    WalletOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CloseCircleOutlined,
+    SearchOutlined,
+    FilterOutlined
+} from "@ant-design/icons";
 import axios from "axios";
 import PayInStatusChart from "./PayInStatusChart";
+import { useSelector } from "react-redux";
 
 const { Option } = Select;
 
@@ -24,8 +33,9 @@ const statusColor = {
 };
 
 const PayInPage = () => {
+    const token = useSelector(state => state.auth.token);
+
     const [loading, setLoading] = useState(false);
-    const [payInData, setPayInData] = useState([]);
     const [rawData, setRawData] = useState([]);
 
     const [stats, setStats] = useState({
@@ -48,9 +58,8 @@ const PayInPage = () => {
     /* ================= FETCH PAYINS ================= */
     const fetchPayIns = useCallback(async () => {
         try {
-            setLoading(true);
-            const token = localStorage.getItem("AUTH_TOKEN");
             if (!token) return;
+            setLoading(true);
 
             const res = await axios.get(
                 "https://test.happypay.live/users/serviceTransactions",
@@ -80,50 +89,48 @@ const PayInPage = () => {
                     time: tx.createdAt
                         ? new Date(tx.createdAt).toLocaleString()
                         : "-",
-                    timestamp: tx.createdAt ? new Date(tx.createdAt).getTime() : 0
+                    timestamp: tx.createdAt
+                        ? new Date(tx.createdAt).getTime()
+                        : 0
                 };
             });
 
             setStats(countStats);
             setAmountStats(amtStats);
             setRawData(formatted);
-            setPayInData(formatted);
         } catch (e) {
             console.error("Failed to fetch pay-ins", e);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [token]);
 
     useEffect(() => {
         fetchPayIns();
     }, [fetchPayIns]);
 
-    /* ================= FILTER + SORT + SEARCH ================= */
+    /* ================= SEARCH + FILTER + SORT ================= */
     const processedData = useMemo(() => {
         let data = [...rawData];
 
-        // SEARCH
         if (search) {
+            const q = search.toLowerCase();
             data = data.filter(tx =>
-                tx.referenceId.toLowerCase().includes(search.toLowerCase())
+                Object.values(tx).some(val =>
+                    String(val).toLowerCase().includes(q)
+                )
             );
         }
 
-        // FILTER
         if (statusFilter !== "ALL") {
             data = data.filter(tx => tx.status === statusFilter);
         }
 
-        // SORT
         if (sortBy === "AMOUNT_ASC") {
             data.sort((a, b) => a.amount - b.amount);
         }
         if (sortBy === "AMOUNT_DESC") {
             data.sort((a, b) => b.amount - a.amount);
-        }
-        if (sortBy === "TIME_ASC") {
-            data.sort((a, b) => a.timestamp - b.timestamp);
         }
         if (sortBy === "TIME_DESC") {
             data.sort((a, b) => b.timestamp - a.timestamp);
@@ -135,18 +142,27 @@ const PayInPage = () => {
     /* ================= TABLE ================= */
     const columns = [
         { title: "S/N", dataIndex: "sn", width: 60 },
-        { title: "Reference ID", dataIndex: "referenceId" },
-        { title: "Amount", dataIndex: "amountDisplay" },
+        { title: "Reference ID", dataIndex: "referenceId", width: 220 },
+        {
+            title: "Amount",
+            dataIndex: "amountDisplay",
+            width: 140,
+            render: val => <strong>{val}</strong>
+        },
         {
             title: "Status",
             dataIndex: "status",
+            width: 120,
             render: status => (
-                <Tag color={statusColor[status] || "default"}>
+                <Tag
+                    style={{ borderRadius: 12, padding: "2px 10px" }}
+                    color={statusColor[status]}
+                >
                     {status.toUpperCase()}
                 </Tag>
             )
         },
-        { title: "Transaction Time", dataIndex: "time" }
+        { title: "Transaction Time", dataIndex: "time", width: 200 }
     ];
 
     return (
@@ -167,57 +183,117 @@ const PayInPage = () => {
                 </Col>
             </Row>
 
-            {/* SUMMARY */}
-            <Row gutter={16} style={{ marginBottom: 16 }}>
-                <Col span={6}>
-                    <Statistic title="Total Amount" value={`₹${amountStats.total.toFixed(2)}`} />
+            {/* ===== SUMMARY (EQUAL HEIGHT) ===== */}
+            <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
+                        <Statistic
+                            title="Total"
+                            value={`₹${Math.round(amountStats.total)}`}
+                            prefix={<WalletOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{ fontSize: 18, fontWeight: 600 }}
+                        />
+                    </Card>
                 </Col>
-                <Col span={6}>
-                    <Statistic title="Success Amount" value={`₹${amountStats.success.toFixed(2)}`} />
+
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card
+                        bordered={false}
+                        style={{ flex: 1, borderRadius: 12, background: "#f6ffed" }}
+                    >
+                        <Statistic
+                            title="Success"
+                            value={`₹${Math.round(amountStats.success)}`}
+                            prefix={<CheckCircleOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: "#389e0d"
+                            }}
+                        />
+                    </Card>
                 </Col>
-                <Col span={6}>
-                    <Statistic title="Pending Amount" value={`₹${amountStats.pending.toFixed(2)}`} />
+
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card
+                        bordered={false}
+                        style={{ flex: 1, borderRadius: 12, background: "#fffbe6" }}
+                    >
+                        <Statistic
+                            title="Pending"
+                            value={`₹${Math.round(amountStats.pending)}`}
+                            prefix={<ClockCircleOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: "#d48806"
+                            }}
+                        />
+                    </Card>
                 </Col>
-                <Col span={6}>
-                    <Statistic title="Failed Amount" value={`₹${amountStats.failed.toFixed(2)}`} />
+
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card
+                        bordered={false}
+                        style={{ flex: 1, borderRadius: 12, background: "#fff1f0" }}
+                    >
+                        <Statistic
+                            title="Failed"
+                            value={`₹${Math.round(amountStats.failed)}`}
+                            prefix={<CloseCircleOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: "#cf1322"
+                            }}
+                        />
+                    </Card>
                 </Col>
             </Row>
 
-            {/* FILTERS */}
-            <Space style={{ marginBottom: 16 }} wrap>
-                <Input
-                    placeholder="Search Reference ID"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    style={{ width: 220 }}
-                />
 
-                <Select
-                    value={statusFilter}
-                    onChange={setStatusFilter}
-                    style={{ width: 160 }}
-                >
-                    <Option value="ALL">All Status</Option>
-                    <Option value="success">Success</Option>
-                    <Option value="pending">Pending</Option>
-                    <Option value="failed">Failed</Option>
-                </Select>
+            {/* ===== FILTERS ===== */}
+            <Card bordered={false} style={{ borderRadius: 12, background: "#fafafa", marginBottom: 16 }}>
+                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                    <Input
+                        size="large"
+                        prefix={<SearchOutlined />}
+                        placeholder="Search reference, amount, status…"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                    />
 
-                <Select
-                    value={sortBy}
-                    onChange={setSortBy}
-                    style={{ width: 180 }}
-                >
-                    <Option value="NONE">No Sorting</Option>
-                    <Option value="AMOUNT_ASC">Amount ↑</Option>
-                    <Option value="AMOUNT_DESC">Amount ↓</Option>
-                    <Option value="TIME_ASC">Oldest First</Option>
-                    <Option value="TIME_DESC">Newest First</Option>
-                </Select>
-            </Space>
+                    <Space style={{ width: "100%" }}>
+                        <Select
+                            size="large"
+                            value={statusFilter}
+                            onChange={setStatusFilter}
+                            style={{ flex: 1 }}
+                            suffixIcon={<FilterOutlined />}
+                        >
+                            <Option value="ALL">All Status</Option>
+                            <Option value="success">Success</Option>
+                            <Option value="pending">Pending</Option>
+                            <Option value="failed">Failed</Option>
+                        </Select>
 
+                        <Select
+                            size="large"
+                            value={sortBy}
+                            onChange={setSortBy}
+                            style={{ flex: 1 }}
+                        >
+                            <Option value="NONE">No Sorting</Option>
+                            <Option value="AMOUNT_ASC">Amount ↑</Option>
+                            <Option value="AMOUNT_DESC">Amount ↓</Option>
+                            <Option value="TIME_DESC">Newest</Option>
+                        </Select>
+                    </Space>
+                </Space>
+            </Card>
+
+            {/* ===== CONTENT ===== */}
             <Row gutter={16}>
-                {/* TABLE */}
                 <Col xs={24} lg={16}>
                     <Card>
                         <Table
@@ -225,12 +301,12 @@ const PayInPage = () => {
                             dataSource={processedData}
                             loading={loading}
                             pagination={{ pageSize: 10 }}
-                            scroll={{ x: true }}
+                            scroll={{ x: 700 }}
+                            size="small"
                         />
                     </Card>
                 </Col>
 
-                {/* STATUS CHART */}
                 <Col xs={24} lg={8}>
                     <PayInStatusChart
                         success={stats.success}

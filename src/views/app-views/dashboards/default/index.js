@@ -197,6 +197,7 @@ export const DefaultDashboard = () => {
   const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   const navigate = useNavigate();
+  const token = useSelector(state => state.auth.token);
 
 
 
@@ -216,10 +217,7 @@ export const DefaultDashboard = () => {
       try {
         setLoadingTransactions(true);
 
-        const token = localStorage.getItem("AUTH_TOKEN");
-        console.log("🔐 Token read inside useEffect:", token);
-
-        if (!token) {
+         if (!token) {
           console.warn("❌ No token found, user not logged in");
           return;
         }
