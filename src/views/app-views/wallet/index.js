@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+
 import {
     Card,
     Table,
@@ -9,17 +10,26 @@ import {
     Skeleton,
     Select,
     Space,
+    Statistic,
     Row,
     Col,
+    Divider,
     Grid,
-    Input
+    Input,
+    Typography
 } from "antd";
+
 import {
     ArrowDownOutlined,
     ArrowUpOutlined,
     WalletOutlined,
-    SearchOutlined
+    SearchOutlined,
+    FilterOutlined
 } from "@ant-design/icons";
+
+
+
+const { Text, Title } = Typography;
 
 const { Option } = Select;
 const { useBreakpoint } = Grid;
@@ -55,6 +65,7 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                 );
 
                 const txs = res.data?.data || [];
+
                 let credit = 0;
                 let debit = 0;
 
@@ -70,8 +81,9 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                         sn: index + 1,
                         referenceId: tx.extraInfo?.serviceReferenceId || "-",
                         amount,
-                        amountDisplay: `₹${Math.round(amount)}`,
+                        amountDisplay: `₹${amount.toFixed(2)}`,
                         direction: isDebit ? "DEBIT" : "CREDIT",
+                        serviceName: tx.description || tx.transactionType || "-",
                         status: tx.status,
                         transactionTime: new Date(tx.createdAt).toLocaleString()
                     };
@@ -124,15 +136,17 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
         {
             title: "Amount",
             dataIndex: "amountDisplay",
-            width: 120,
+            width: 140,
             render: v => <strong>{v}</strong>
         },
         {
             title: "Type",
             dataIndex: "direction",
-            width: 100,
+            width: 120,
             render: v => (
-                <Tag color={v === "DEBIT" ? "red" : "green"}>{v}</Tag>
+                <Tag color={v === "DEBIT" ? "red" : "green"}>
+                    {v}
+                </Tag>
             )
         },
         {
@@ -164,95 +178,76 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
 
     return (
         <Card title="Wallet Transactions" bodyStyle={{ padding: 12 }}>
-            {/* ===== SUMMARY (MOBILE CLEAN) ===== */}
-            <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-                <Col xs={24} md={8}>
-                    <Card bordered={false} style={{ borderRadius: 12 }}>
-                        <Space align="center">
-                            <ArrowDownOutlined style={{ fontSize: 20, color: "#3f8600" }} />
-                            <div>
-                                <div style={{ fontSize: 12, color: "#999" }}>Total Credit</div>
-                                <div style={{ fontSize: 18, fontWeight: 600, color: "#3f8600" }}>
-                                    ₹{Math.round(totalCredit)}
-                                </div>
-                            </div>
-                        </Space>
+            {/* ===== SUMMARY (EQUAL HEIGHT) ===== */}
+            <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
+                <Col xs={24} md={8} style={{ display: "flex" }}>
+                    <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
+                        <Statistic
+                            title="Total Credit"
+                            value={`₹${totalCredit.toFixed(2)}`}
+                            valueStyle={{ color: "#3f8600" }}
+                            prefix={<ArrowDownOutlined />}
+                        />
                     </Card>
                 </Col>
 
-                <Col xs={24} md={8}>
-                    <Card bordered={false} style={{ borderRadius: 12 }}>
-                        <Space align="center">
-                            <ArrowUpOutlined style={{ fontSize: 20, color: "#cf1322" }} />
-                            <div>
-                                <div style={{ fontSize: 12, color: "#999" }}>Total Debit</div>
-                                <div style={{ fontSize: 18, fontWeight: 600, color: "#cf1322" }}>
-                                    ₹{Math.round(totalDebit)}
-                                </div>
-                            </div>
-                        </Space>
+                <Col xs={24} md={8} style={{ display: "flex" }}>
+                    <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
+                        <Statistic
+                            title="Total Debit"
+                            value={`₹${totalDebit.toFixed(2)}`}
+                            valueStyle={{ color: "#cf1322" }}
+                            prefix={<ArrowUpOutlined />}
+                        />
                     </Card>
                 </Col>
 
-                <Col xs={24} md={8}>
-                    <Card bordered={false} style={{ borderRadius: 12 }}>
-                        <Space align="center">
-                            <WalletOutlined style={{ fontSize: 20 }} />
-                            <div>
-                                <div style={{ fontSize: 12, color: "#999" }}>Balance</div>
-                                <div
-                                    style={{
-                                        fontSize: 18,
-                                        fontWeight: 600,
-                                        color:
-                                            totalCredit - totalDebit < 0
-                                                ? "#cf1322"
-                                                : "#3f8600"
-                                    }}
-                                >
-                                    ₹{Math.round(totalCredit - totalDebit)}
-                                </div>
-                            </div>
-                        </Space>
+                <Col xs={24} md={8} style={{ display: "flex" }}>
+                    <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
+                        <Statistic
+                            title="Balance"
+                            value={`₹${(totalCredit - totalDebit).toFixed(2)}`}
+                            prefix={<WalletOutlined />}
+                        />
                     </Card>
                 </Col>
             </Row>
 
-            {/* ===== FILTERS ===== */}
-            <Card bordered={false} style={{ background: "#fafafa", borderRadius: 12, marginBottom: 12 }}>
-                <Space direction="vertical" size="small" style={{ width: "100%" }}>
+            {/* ===== FILTERS (MOBILE FIRST) ===== */}
+            <Card bordered={false} style={{ background: "#fafafa", borderRadius: 12, marginBottom: 16 }}>
+                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
                     <Input
+                        size="large"
                         prefix={<SearchOutlined />}
-                        placeholder="Search reference, amount, status"
+                        placeholder="Search reference, amount, status…"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
 
-                    <Row gutter={8}>
-                        <Col span={12}>
-                            <Select
-                                value={directionFilter}
-                                onChange={setDirectionFilter}
-                                style={{ width: "100%" }}
-                            >
-                                <Option value="ALL">All</Option>
-                                <Option value="CREDIT">Credit</Option>
-                                <Option value="DEBIT">Debit</Option>
-                            </Select>
-                        </Col>
+                    <Space style={{ width: "100%" }}>
+                        <Select
+                            size="large"
+                            value={directionFilter}
+                            onChange={setDirectionFilter}
+                            style={{ flex: 1 }}
+                            suffixIcon={<FilterOutlined />}
+                        >
+                            <Option value="ALL">All</Option>
+                            <Option value="CREDIT">Credit</Option>
+                            <Option value="DEBIT">Debit</Option>
+                        </Select>
 
-                        <Col span={12}>
-                            <Select
-                                value={directionSort}
-                                onChange={setDirectionSort}
-                                style={{ width: "100%" }}
-                            >
-                                <Option value="NONE">No Sorting</Option>
-                                <Option value="CREDIT_FIRST">Credit First</Option>
-                                <Option value="DEBIT_FIRST">Debit First</Option>
-                            </Select>
-                        </Col>
-                    </Row>
+                        <Select
+                            size="large"
+                            value={directionSort}
+                            onChange={setDirectionSort}
+                            style={{ flex: 1 }}
+                        >
+                            <Option value="NONE">No Sorting</Option>
+                            <Option value="CREDIT_FIRST">Credit First</Option>
+                            <Option value="DEBIT_FIRST">Debit First</Option>
+                        </Select>
+                    </Space>
                 </Space>
             </Card>
 
@@ -261,40 +256,148 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                 columns={columns}
                 dataSource={processedData}
                 loading={loading}
-                pagination={{ pageSize: 8 }}
-                scroll={isMobile ? { x: 650 } : undefined}
+                pagination={{ pageSize: 10 }}
+                scroll={isMobile ? { x: 700 } : undefined}
                 size="small"
-                onRow={record => ({
-                    onClick: () => fetchTransactionDetails(record.referenceId)
+                onRow={(record) => ({
+                    onClick: () => fetchTransactionDetails(record.referenceId),
+                    style: { cursor: "pointer" }
                 })}
             />
 
+
+            {/* ===== MODAL ===== */}
             {/* ===== MODAL ===== */}
             <Modal
                 open={isModalOpen}
                 footer={null}
-                width={isMobile ? "100%" : 600}
-                style={isMobile ? { top: 0 } : {}}
+                width={isMobile ? "100%" : 720}
+                style={isMobile ? { top: 20 } : {}}
+                bodyStyle={{
+                    padding: isMobile ? 14 : 24,
+                    maxHeight: isMobile ? "85vh" : "none",
+                    overflowY: "auto"
+                }}
                 onCancel={() => setIsModalOpen(false)}
             >
                 {detailLoading ? (
                     <Skeleton active />
-                ) : selectedTx && (
-                    <Descriptions bordered size="small" column={1}>
-                        <Descriptions.Item label="Reference ID">
-                            {selectedTx.serviceReferenceId}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Amount">
-                            ₹{Math.round(selectedTx.amount || 0)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Status">
-                            <Tag color="green">
-                                {selectedTx.paymentStatus?.toUpperCase()}
-                            </Tag>
-                        </Descriptions.Item>
-                    </Descriptions>
+                ) : (
+                    selectedTx && (
+                        <div style={{ maxWidth: 560, margin: "0 auto" }}>
+                            {/* ===== STATUS ===== */}
+                            <div style={{ textAlign: "center", marginBottom: 12 }}>
+                                <Tag
+                                    color="green"
+                                    style={{
+                                        padding: "6px 14px",
+                                        fontSize: 13,
+                                        borderRadius: 20
+                                    }}
+                                >
+                                    ✓ Transfer Successful
+                                </Tag>
+                            </div>
+
+                            {/* ===== AMOUNT ===== */}
+                            <div style={{ textAlign: "center", marginBottom: 12 }}>
+                                <div style={{ fontSize: isMobile ? 28 : 34, fontWeight: 600 }}>
+                                    ₹{selectedTx.amount?.toFixed(2)}
+                                </div>
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                    {new Date(selectedTx.createdAt).toLocaleString()}
+                                </Text>
+                            </div>
+
+                            {/* ===== BENEFICIARY ===== */}
+                            <Card
+                                size="small"
+                                style={{
+                                    borderRadius: 12,
+                                    marginBottom: 12
+                                }}
+                            >
+                                <Row justify="space-between" align="top" gutter={8}>
+                                    <Col flex="auto">
+                                        <Text strong>{selectedTx.beneficiaryName || "Beneficiary"}</Text>
+                                        <br />
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            {selectedTx.bankName || "BANK"} • XXXX{" "}
+                                            {selectedTx.accountNumber?.slice(-4)}
+                                        </Text>
+                                        <br />
+                                        <Text type="secondary" style={{ fontSize: 12 }}>
+                                            IFSC: {selectedTx.ifsc}
+                                        </Text>
+                                    </Col>
+                                    <Col>
+                                        <Tag color="blue" style={{ margin: 0 }}>
+                                            Bank Transfer
+                                        </Tag>
+                                    </Col>
+                                </Row>
+                            </Card>
+
+                            {/* ===== AMOUNT BREAKDOWN ===== */}
+                            <Card
+                                size="small"
+                                style={{
+                                    borderRadius: 12,
+                                    marginBottom: 16
+                                }}
+                            >
+                                <Row justify="space-between">
+                                    <Text>Amount</Text>
+                                    <Text>₹{selectedTx.amount?.toFixed(2)}</Text>
+                                </Row>
+
+                                <Row justify="space-between" style={{ marginTop: 6 }}>
+                                    <Text>Charges</Text>
+                                    <Text type="danger">
+                                        -₹{selectedTx.chargeAmount?.toFixed(2) || "0.00"}
+                                    </Text>
+                                </Row>
+
+                                <Divider style={{ margin: "10px 0" }} />
+
+                                <Row justify="space-between">
+                                    <Text strong>Total Sent</Text>
+                                    <Text strong style={{ color: "#3f8600" }}>
+                                        ₹{selectedTx.amount?.toFixed(2)}
+                                    </Text>
+                                </Row>
+                            </Card>
+
+                            {/* ===== DETAILS ===== */}
+                            <Title level={5} style={{ marginBottom: 8 }}>
+                                Transaction Details
+                            </Title>
+
+                            <Descriptions
+                                bordered
+                                size="small"
+                                column={1}
+                                style={{ borderRadius: 12 }}
+                            >
+                                <Descriptions.Item label="UTR">
+                                    {selectedTx?.extraInfo?.payout_response?.transferutr || "-"}
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="UTR">
+                                    {selectedTx.utr || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Status">
+                                    <Tag color="green" style={{ margin: 0 }}>
+                                        {selectedTx.paymentStatus?.toUpperCase()}
+                                    </Tag>
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </div>
+                    )
                 )}
             </Modal>
+
+
         </Card>
     );
 };
