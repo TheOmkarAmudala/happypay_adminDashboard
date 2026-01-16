@@ -89,7 +89,7 @@ export const protectedRoutes = [
     {
         key: 'Add Customer',
         path: `${APP_PREFIX_PATH}/addcustomer`,
-        component: React.lazy(() => import('views/app-views/report')),
+        component: React.lazy(() => import('views/app-views/apps/customers')),
     },
     {
         key: 'apps',
@@ -106,11 +106,7 @@ export const protectedRoutes = [
         path: `${APP_PREFIX_PATH}/apps/referral-tree`,
         component: React.lazy(() => import('views/app-views/apps/chat')),
     },
-    {
-        key: 'apps.calendar',
-        path: `${APP_PREFIX_PATH}/apps/calendar`,
-        component: React.lazy(() => import('views/app-views/apps/calendar')),
-    },
+
     {
         key: 'apps.project',
         path: `${APP_PREFIX_PATH}/apps/project`,

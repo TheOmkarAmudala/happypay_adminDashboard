@@ -183,7 +183,7 @@ const dashBoardNavTree = [{
     {
       key: 'dashboards-default',
       path: `${APP_PREFIX_PATH}/dashboards/default`,
-      title: 'sidenav.dashboard.default',
+      title: 'Dashboard',
       icon: DashboardOutlined,
       breadcrumb: false,
       submenu: []
@@ -232,9 +232,9 @@ const appsNavTree = [{
       submenu: []
     },
     {
-      key: 'apps-calendar',
-      path: `${APP_PREFIX_PATH}/apps/calendar`,
-      title: 'sidenav.apps.calendar',
+      key: 'reports',
+      path: `${APP_PREFIX_PATH}/reports`,
+      title: 'Reports',
       icon: CalendarOutlined,
       breadcrumb: true,
       submenu: []

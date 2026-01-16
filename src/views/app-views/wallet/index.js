@@ -64,6 +64,8 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
+                console.log(res);
+
                 const txs = res.data?.data || [];
 
                 let credit = 0;
@@ -317,21 +319,28 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                                     marginBottom: 12
                                 }}
                             >
-                                <Row justify="space-between" align="top" gutter={8}>
-                                    <Col flex="auto">
-                                        <Text strong>{selectedTx.beneficiaryName || "Beneficiary"}</Text>
-                                        <br />
-                                        <Text type="secondary" style={{ fontSize: 12 }}>
-                                            {selectedTx.bankName || "BANK"} • XXXX{" "}
-                                            {selectedTx.accountNumber?.slice(-4)}
-                                        </Text>
-                                        <br />
-                                        <Text type="secondary" style={{ fontSize: 12 }}>
-                                            IFSC: {selectedTx.ifsc}
+                                <Row gutter={[0, 6]}>
+                                    <Col span={24}>
+                                        <Text strong>
+                                            {selectedTx?.extraInfo?.bank_account?.beneficiary_name || "Beneficiary"}
                                         </Text>
                                     </Col>
-                                    <Col>
-                                        <Tag color="blue" style={{ margin: 0 }}>
+
+                                    <Col span={24}>
+                                        <Text type="secondary">
+                                         Bank Account Number:   XXXX{" "}
+                                            {selectedTx?.extraInfo?.bank_account?.bank_account_number?.slice(-4)}
+                                        </Text>
+                                    </Col>
+
+                                    <Col span={24}>
+                                        <Text type="secondary">
+                                            IFSC: {selectedTx?.extraInfo?.bank_account?.bank_ifsc || "-"}
+                                        </Text>
+                                    </Col>
+
+                                    <Col span={24}>
+                                        <Tag color="blue" style={{ marginTop: 4 }}>
                                             Bank Transfer
                                         </Tag>
                                     </Col>
@@ -373,26 +382,27 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
                                 Transaction Details
                             </Title>
 
-                            <Descriptions
-                                bordered
-                                size="small"
-                                column={1}
-                                style={{ borderRadius: 12 }}
-                            >
-                                <Descriptions.Item label="UTR">
-                                    {selectedTx?.extraInfo?.payout_response?.transferutr || "-"}
+                            <Descriptions bordered size="small" column={1}>
+                                <Descriptions.Item label="Reference ID">
+                                    {selectedTx.serviceReferenceId}
                                 </Descriptions.Item>
 
                                 <Descriptions.Item label="UTR">
-                                    {selectedTx.utr || "-"}
+                                    {selectedTx?.extraInfo?.payout_response?.transferutr ||
+                                        selectedTx?.response?.transfer_utr ||
+                                        "-"}
                                 </Descriptions.Item>
+
+                                <Descriptions.Item label="Transfer Mode">
+                                    {selectedTx?.extraInfo?.payout_response?.transfermode?.toUpperCase()}
+                                </Descriptions.Item>
+
                                 <Descriptions.Item label="Status">
-                                    <Tag color="green" style={{ margin: 0 }}>
-                                        {selectedTx.paymentStatus?.toUpperCase()}
+                                    <Tag color="green">
+                                        {selectedTx?.extraInfo?.payout_response?.statuscode}
                                     </Tag>
                                 </Descriptions.Item>
-                            </Descriptions>
-                        </div>
+                            </Descriptions> </div>
                     )
                 )}
             </Modal>

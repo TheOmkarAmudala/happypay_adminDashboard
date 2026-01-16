@@ -63,7 +63,7 @@ const Report = () => {
                         key: item.id || index,
                         referenceId: item.serviceReferenceId ?? "-",
                         customer: item.accountId ?? "-",
-                        gateway: item.provider ?? "-",
+                        gateway: item.provider && item.provider.trim() !== "" ? item.provider : "N/A",
                         paymentType: item.paymentType ?? "wallet",
                         amount,
                         amountDisplay: `₹${amount.toFixed(2)}`,
@@ -132,7 +132,7 @@ const Report = () => {
     const columns = [
         { title: "Ref ID", dataIndex: "referenceId", width: 220 },
         { title: "Customer", dataIndex: "customer", width: 160 },
-        { title: "Gateway", dataIndex: "gateway", width: 120 },
+
         {
             title: "Amount",
             dataIndex: "amountDisplay",
@@ -162,7 +162,7 @@ const Report = () => {
             dataIndex: "date",
             width: 200,
             sorter: (a, b) => a.timestamp - b.timestamp
-        }
+        },  { title: "Gateway", dataIndex: "gateway", width: 120 }
     ];
 
     return (
