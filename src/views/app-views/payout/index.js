@@ -42,14 +42,14 @@ const PayoutPage = () => {
 
     /* ================= TABLE COLUMNS ================= */
     const columns = [
-        { title: "S/N", dataIndex: "sn", width: 60, fixed: "left" },
+        { title: "S/N", dataIndex: "sn", width: 40, fixed: "left" },
 
-        { title: "Reference ID", dataIndex: "serviceTxnRefId", width: 220 },
+        { title: "Reference ID", dataIndex: "serviceTxnRefId", width: 80 },
 
         {
             title: "Amount",
             dataIndex: "payoutAmountDisplay",
-            width: 140,
+            width: 30,
             render: val => (
                 <span style={{ fontWeight: 600 }}>{val}</span>
             )
@@ -58,7 +58,7 @@ const PayoutPage = () => {
         {
             title: "Status",
             dataIndex: "payoutStatus",
-            width: 120,
+            width: 50,
             render: status => (
                 <Tag
                     style={{ borderRadius: 12, padding: "2px 10px" }}
@@ -75,11 +75,7 @@ const PayoutPage = () => {
             )
         },
 
-        { title: "Beneficiary", dataIndex: "beneficiaryName", width: 200 },
-        { title: "Account", dataIndex: "beneficiaryAccount", width: 180 },
-        { title: "IFSC", dataIndex: "beneficiaryIfsc", width: 160 },
-        { title: "Mode", dataIndex: "transferMode", width: 120 },
-        { title: "UTR", dataIndex: "utr", width: 180 },
+
         { title: "Time", dataIndex: "transactionTime", width: 200 }
     ];
 
@@ -266,21 +262,25 @@ const PayoutPage = () => {
 
             {/* ===== FILTERS ===== */}
             <Card bordered={false} style={{ borderRadius: 12, background: "#fafafa", marginBottom: 16 }}>
-                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                    <Input
-                        size="large"
-                        prefix={<SearchOutlined />}
-                        placeholder="Search reference, amount, UTR, name…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
+                <Row gutter={[12, 12]} align="middle">
+                    {/* SEARCH */}
+                    <Col xs={24} md={12} lg={10}>
+                        <Input
+                            size="large"
+                            prefix={<SearchOutlined />}
+                            placeholder="Search reference, amount, UTR, name…"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </Col>
 
-                    <Space style={{ width: "100%" }}>
+                    {/* STATUS FILTER */}
+                    <Col xs={12} md={6} lg={7}>
                         <Select
                             size="large"
                             value={statusFilter}
                             onChange={setStatusFilter}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                             suffixIcon={<FilterOutlined />}
                         >
                             <Option value="ALL">All Status</Option>
@@ -288,20 +288,24 @@ const PayoutPage = () => {
                             <Option value="PENDING">Pending</Option>
                             <Option value="FAILED">Failed</Option>
                         </Select>
+                    </Col>
 
+                    {/* SORT */}
+                    <Col xs={12} md={6} lg={7}>
                         <Select
                             size="large"
                             value={sortBy}
                             onChange={setSortBy}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                         >
                             <Option value="NONE">No Sorting</Option>
                             <Option value="AMOUNT_ASC">Amount ↑</Option>
                             <Option value="AMOUNT_DESC">Amount ↓</Option>
                             <Option value="TIME_DESC">Newest</Option>
                         </Select>
-                    </Space>
-                </Space>
+                    </Col>
+                </Row>
+
             </Card>
 
             {/* ===== TABLE ===== */}

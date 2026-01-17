@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { AUTH_TOKEN } from 'constants/AuthConstant';
 import FirebaseService from 'services/FirebaseService';
 import axios from "axios"
+import { fetchUserProfile } from "./profileSlice";
 
 
 /* -------------------- INITIAL STATE -------------------- */
@@ -9,6 +10,8 @@ import axios from "axios"
 export const initialState = {
 	loading: false,
 	message: '',
+	profile: null,
+
 	showMessage: false,
 	redirect: '',
 	token: localStorage.getItem(AUTH_TOKEN) || null,
@@ -20,7 +23,7 @@ export const initialState = {
 
 export const signIn = createAsyncThunk(
 	"auth/signIn",
-	async ({ phoneNumber, passcode }, { rejectWithValue }) => {
+	async ({ phoneNumber, passcode }, { dispatch, rejectWithValue }) => {
 		try {
 			const response = await fetch(
 				"https://test.happypay.live/users/login",
@@ -37,29 +40,30 @@ export const signIn = createAsyncThunk(
 			);
 
 			const data = await response.json();
-			console.log("🟦 Login API response:", data);
 
 			if (!response.ok) {
 				return rejectWithValue(data.message || "Login failed");
 			}
 
-			// ✅ CORRECT TOKEN EXTRACTION
+			// ✅ Extract token
 			const token = data?.data?.token;
 
 			if (!token) {
 				return rejectWithValue("Token not found in login response");
 			}
 
-			// ✅ STORE TOKEN
 			localStorage.setItem(AUTH_TOKEN, token);
-			console.log("🔐 Token stored successfully:", token);
 
+			dispatch(fetchUserProfile());
+
+			// Return token for auth slice
 			return token;
 		} catch (err) {
 			return rejectWithValue("Server not reachable");
 		}
 	}
 );
+
 
 /* -------------------- OPTIONAL: SIGN UP (IF NOT USED, CAN REMOVE) -------------------- */
 
@@ -187,6 +191,10 @@ export const authSlice = createSlice({
 			state.redirect = '/app/dashboard';
 			localStorage.setItem('AUTH_TOKEN', action.payload);
 		},
+		setUserProfile: (state, action) => {
+			state.profile = action.payload
+		},
+
 
 		// 🔄 Reset redirect after navigation
 		resetRedirect: (state) => {
@@ -319,8 +327,9 @@ export const {
 	hideAuthMessage,
 	signOutSuccess,
 	showLoading,
-	signInSuccess
-} = authSlice.actions;
+	signInSuccess,
+
+	setUserProfile} = authSlice.actions;
 
 
 export default authSlice.reducer;

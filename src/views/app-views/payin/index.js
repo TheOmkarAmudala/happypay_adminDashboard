@@ -254,42 +254,50 @@ const PayInPage = () => {
 
             {/* ===== FILTERS ===== */}
             <Card bordered={false} style={{ borderRadius: 12, background: "#fafafa", marginBottom: 16 }}>
-                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                    <Input
-                        size="large"
-                        prefix={<SearchOutlined />}
-                        placeholder="Search reference, amount, status…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
+                <Row gutter={[12, 12]} align="middle">
+                    {/* SEARCH */}
+                    <Col xs={24} md={12} lg={10}>
+                        <Input
+                            size="large"
+                            prefix={<SearchOutlined />}
+                            placeholder="Search reference, amount, UTR, name…"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </Col>
 
-                    <Space style={{ width: "100%" }}>
+                    {/* STATUS FILTER */}
+                    <Col xs={12} md={6} lg={7}>
                         <Select
                             size="large"
                             value={statusFilter}
                             onChange={setStatusFilter}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                             suffixIcon={<FilterOutlined />}
                         >
                             <Option value="ALL">All Status</Option>
-                            <Option value="success">Success</Option>
-                            <Option value="pending">Pending</Option>
-                            <Option value="failed">Failed</Option>
+                            <Option value="SUCCESS">Success</Option>
+                            <Option value="PENDING">Pending</Option>
+                            <Option value="FAILED">Failed</Option>
                         </Select>
+                    </Col>
 
+                    {/* SORT */}
+                    <Col xs={12} md={6} lg={7}>
                         <Select
                             size="large"
                             value={sortBy}
                             onChange={setSortBy}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                         >
                             <Option value="NONE">No Sorting</Option>
                             <Option value="AMOUNT_ASC">Amount ↑</Option>
                             <Option value="AMOUNT_DESC">Amount ↓</Option>
                             <Option value="TIME_DESC">Newest</Option>
                         </Select>
-                    </Space>
-                </Space>
+                    </Col>
+                </Row>
+
             </Card>
 
             {/* ===== CONTENT ===== */}

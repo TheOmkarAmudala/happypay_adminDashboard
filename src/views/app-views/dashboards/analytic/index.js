@@ -107,6 +107,24 @@ const CommissionSlabs = () => {
         { mode: "CC", cardType: "-", network: "-", type: "Consumer", total: "1.33%" },
         { mode: "CC", cardType: "-", network: "-", type: "Business", total: "1.80%" }
       ]
+    },
+    {
+      title: "Slpe Gold Travel Prime",
+      commissions: 2,
+      maxLimit: "40,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "Consumer", total: "1.33%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Business", total: "1.80%" }
+      ]
+    },
+    {
+      title: "Slpe Gold Travel Prime",
+      commissions: 2,
+      maxLimit: "40,000.000",
+      rows: [
+        { mode: "CC", cardType: "-", network: "-", type: "Consumer", total: "1.33%" },
+        { mode: "CC", cardType: "-", network: "-", type: "Business", total: "1.80%" }
+      ]
     }
   ];
 

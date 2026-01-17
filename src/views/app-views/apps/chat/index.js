@@ -13,6 +13,8 @@ const ChildrenByLevel = () => {
 	const [loading, setLoading] = useState(false);
 	const [children, setChildren] = useState([]);
 	const requestIdRef = useRef(0);
+	const customerCount = children.length;
+
 
 
 	const fetchChildren = async (selectedLevel) => {
@@ -59,6 +61,38 @@ const ChildrenByLevel = () => {
 				<Title level={4} style={{ marginBottom: 8 }}>
 					Referral Tree – Level {level}
 				</Title>
+
+				<Row
+					justify="space-between"
+					align="middle"
+					style={{ marginTop: 12 }}
+				>
+					{/* Left side: hint */}
+					<Col>
+    <span style={{ color: "#8c8c8c", fontSize: 13 }}>
+      Showing results based on selected filters
+    </span>
+					</Col>
+
+					{/* Right side: count */}
+					<Col>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								background: "#f0f5ff",
+								padding: "6px 14px",
+								borderRadius: 20,
+								fontWeight: 600,
+								color: "#1d39c4",
+								fontSize: 14
+							}}
+						>
+							👥 {customerCount} Customers
+						</div>
+					</Col>
+				</Row>
+
 
 				{/* ===== Level Selector ===== */}
 				<div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

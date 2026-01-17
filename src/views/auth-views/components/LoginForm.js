@@ -4,6 +4,7 @@ import { Button, Form, Input, Divider, Alert } from 'antd'
 import { MailOutlined, LockOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { setUserProfile } from 'store/slices/authSlice'
 
 import CustomIcon from 'components/util-components/CustomIcon'
 import { GoogleSVG, FacebookSVG } from 'assets/svg/icon'
@@ -88,6 +89,46 @@ const LoginForm = () => {
 		}
 	}
 
+	const fetchAndStoreProfile = async (token) => {
+		try {
+			console.log("📡 CALLING PROFILE API WITH TOKEN:", token);
+
+			const res = await fetch(
+				"https://test.happypay.live/users/profile",
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+
+			console.log("📥 PROFILE HTTP STATUS:", res.status);
+
+			const data = await res.json();
+			console.log("📥 PROFILE RESPONSE BODY:", data);
+
+			if (data.status !== "success") {
+				throw new Error("Failed to fetch profile");
+			}
+
+			dispatch(setUserProfile(data.data));
+			console.log("✅ PROFILE SAVED TO REDUX:", data.data);
+		} catch (err) {
+			console.error("❌ PROFILE FETCH ERROR:", err);
+		}
+	};
+
+
+
+	useEffect(() => {
+		if (token) {
+			console.log("🔐 TOKEN DETECTED → FETCHING PROFILE");
+			fetchAndStoreProfile(token);
+		}
+	}, [token]);
+
+
+
 	/* -------------------------------------------------------------------------- */
 	/*                                 VERIFY OTP                                 */
 	/* -------------------------------------------------------------------------- */
@@ -122,7 +163,7 @@ const LoginForm = () => {
 
 			// ✅ Update Redux
 			dispatch(signInSuccess(token))
-
+			await fetchAndStoreProfile(token)
 			navigate('/app/dashboard')
 		} catch (err) {
 			dispatch(showAuthMessage(err.message))

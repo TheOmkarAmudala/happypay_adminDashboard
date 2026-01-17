@@ -241,48 +241,52 @@ const Report = () => {
                 bordered={false}
                 style={{ background: "#fafafa", borderRadius: 12, marginBottom: 16 }}
             >
-                <Space
-                    direction="vertical"
-                    size="middle"
-                    style={{ width: "100%" }}
-                >
-                    <Input
-                        size="small"
-                        prefix={<SearchOutlined />}
-                        placeholder="Search ref / customer / gateway / amount"
-                        value={searchText}
-                        onChange={e => setSearchText(e.target.value)}
-                    />
+                <Row gutter={[16, 16]} align="middle">
+                    {/* 🔍 Search */}
+                    <Col xs={24} sm={24} md={10} lg={10}>
+                        <Input
+                            size="middle"
+                            prefix={<SearchOutlined />}
+                            placeholder="Search ref / customer / gateway / amount"
+                            value={searchText}
+                            onChange={e => setSearchText(e.target.value)}
+                        />
+                    </Col>
 
-                    <Space direction={isMobile ? "vertical" : "horizontal"} style={{ width: "100%" }}>
+                    {/* 📌 Status Filter */}
+                    <Col xs={24} sm={12} md={7} lg={7}>
                         <Select
-                            size="large"
+                            size="middle"
                             value={statusFilter}
                             onChange={setStatusFilter}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                         >
                             <Option value="ALL">All Status</Option>
                             <Option value="success">Success</Option>
                             <Option value="pending">Pending</Option>
                             <Option value="failed">Failed</Option>
                         </Select>
+                    </Col>
 
+                    {/* 🧾 Type Filter */}
+                    <Col xs={24} sm={12} md={7} lg={7}>
                         <Select
-                            size="large"
+                            size="middle"
                             value={typeFilter}
                             onChange={setTypeFilter}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                         >
                             <Option value="ALL">All Types</Option>
                             <Option value="card">Card</Option>
                             <Option value="upi">UPI</Option>
                             <Option value="wallet">Wallet</Option>
                         </Select>
-                    </Space>
+                    </Col>
+                </Row>
 
                     <RangePicker
                         size="large"
-                        style={{ width: "100%" }}
+                        style={{ width: "50%", marginTop: 16 }}
                         onChange={setDateRange}
                         presets={[
                             { label: "This Month", value: [dayjs().startOf("month"), dayjs()] },
@@ -290,7 +294,7 @@ const Report = () => {
                             { label: "Last 90 Days", value: [dayjs().subtract(90, "day"), dayjs()] }
                         ]}
                     />
-                </Space>
+
             </Card>
 
             {/* ===== TABLE ===== */}

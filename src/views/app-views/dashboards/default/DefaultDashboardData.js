@@ -25,51 +25,55 @@ export const VisitorChartData = {
 	]
 }
 
-export const AnnualStatisticData = [
+
+export const getAnnualStatisticData = (profile) => [
 	{
 		title: "Wallet",
-		value: "₹2,45,000",
+		value: profile?.mainWallet !== undefined
+			? `₹${Number(profile.mainWallet).toFixed(2)}`
+			: "₹0.00",
 		status: 12.5,
 		subtitle: "Total Pay In",
-		route: "/wallet"
-	},
+		route: "/wallet",
 
+	},
 	{
-		title: "Domestic Cards",
+		title: "Domestic/Corporate Cards",
 		value: "₹2,45,000",
 		status: 12.5,
 		subtitle: "Total Pay In",
-		route: "/domesticcards"
+		route: "/domesticcards",
 	},
 	{
-		title: "Business/Corporate Cards",
+		title: "Business Cards",
 		value: "₹1,92,000",
 		status: -3.2,
 		subtitle: "Total Pay Out",
-		route: "/BusinessCards"
+		route: "/BusinessCards",
 	},
-
 	{
 		title: "Amex & Diner Cards",
 		value: "₹8,500",
 		status: 1.8,
 		subtitle: "Total Refunds",
-		route: "/Amex"
-	},{
+		route: "/Amex",
+	},
+	{
 		title: "Pay-In",
 		value: "₹1,92,000",
 		status: -3.2,
 		subtitle: "Total Pay Out",
-		route: "/payin"
+		route: "/payin",
 	},
 	{
 		title: "Pay-Out",
 		value: "₹1,92,000",
 		status: -3.2,
 		subtitle: "Total Pay Out",
-		route: "/payout"
+		route: "/payout",
 	},
 ];
+
 
 
 export const ActiveMembersData = [{

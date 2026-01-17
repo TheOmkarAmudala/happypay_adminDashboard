@@ -182,75 +182,133 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
         <Card title="Wallet Transactions" bodyStyle={{ padding: 12 }}>
             {/* ===== SUMMARY (EQUAL HEIGHT) ===== */}
             <Row gutter={[12, 12]} style={{ marginBottom: 20 }}>
-                <Col xs={24} md={8} style={{ display: "flex" }}>
+                {/* TOTAL TRANSACTIONS */}
+                <Col xs={12} md={6} style={{ display: "flex" }}>
                     <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
                         <Statistic
-                            title="Total Credit"
-                            value={`₹${totalCredit.toFixed(2)}`}
-                            valueStyle={{ color: "#3f8600" }}
-                            prefix={<ArrowDownOutlined />}
+                            title="Total"
+                            value={`₹${Math.round(totalCredit + totalDebit)}`}
+                            prefix={<WalletOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{ fontSize: 18, fontWeight: 600 }}
                         />
                     </Card>
                 </Col>
 
-                <Col xs={24} md={8} style={{ display: "flex" }}>
-                    <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
+                {/* CREDIT */}
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card
+                        bordered={false}
+                        style={{
+                            flex: 1,
+                            borderRadius: 12,
+                            background: "#f6ffed"
+                        }}
+                    >
                         <Statistic
-                            title="Total Debit"
-                            value={`₹${totalDebit.toFixed(2)}`}
-                            valueStyle={{ color: "#cf1322" }}
-                            prefix={<ArrowUpOutlined />}
+                            title="Credit"
+                            value={`₹${Math.round(totalCredit)}`}
+                            prefix={<ArrowDownOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: "#389e0d"
+                            }}
                         />
                     </Card>
                 </Col>
 
-                <Col xs={24} md={8} style={{ display: "flex" }}>
-                    <Card bordered={false} style={{ flex: 1, borderRadius: 12 }}>
+                {/* DEBIT */}
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card
+                        bordered={false}
+                        style={{
+                            flex: 1,
+                            borderRadius: 12,
+                            background: "#fff1f0"
+                        }}
+                    >
+                        <Statistic
+                            title="Debit"
+                            value={`₹${Math.round(totalDebit)}`}
+                            prefix={<ArrowUpOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: "#cf1322"
+                            }}
+                        />
+                    </Card>
+                </Col>
+
+                {/* BALANCE */}
+                <Col xs={12} md={6} style={{ display: "flex" }}>
+                    <Card
+                        bordered={false}
+                        style={{
+                            flex: 1,
+                            borderRadius: 12,
+                            background: "#e6f4ff"
+                        }}
+                    >
                         <Statistic
                             title="Balance"
-                            value={`₹${(totalCredit - totalDebit).toFixed(2)}`}
-                            prefix={<WalletOutlined />}
+                            value={`₹${Math.round(totalCredit - totalDebit)}`}
+                            prefix={<WalletOutlined style={{ marginRight: 8 }} />}
+                            valueStyle={{
+                                fontSize: 18,
+                                fontWeight: 600,
+                                color: "#1677ff"
+                            }}
                         />
                     </Card>
                 </Col>
             </Row>
 
-            {/* ===== FILTERS (MOBILE FIRST) ===== */}
-            <Card bordered={false} style={{ background: "#fafafa", borderRadius: 12, marginBottom: 16 }}>
-                <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                    <Input
-                        size="large"
-                        prefix={<SearchOutlined />}
-                        placeholder="Search reference, amount, status…"
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
 
-                    <Space style={{ width: "100%" }}>
+            {/* ===== FILTERS (MOBILE FIRST) ===== */}
+            <Card bordered={false} style={{flex:3, background: "#fafafa", borderRadius: 12, marginBottom: 16 }}>
+                <Row gutter={[12, 12]} align="middle">
+                    {/* SEARCH */}
+                    <Col xs={24} md={10} lg={8}>
+                        <Input
+                            size="middle"
+                            prefix={<SearchOutlined />}
+                            placeholder="Search reference, amount, status…"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
+                    </Col>
+
+                    {/* DIRECTION FILTER */}
+                    <Col xs={12} md={5} lg={4}>
                         <Select
-                            size="large"
+                            size="middle"
                             value={directionFilter}
                             onChange={setDirectionFilter}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                             suffixIcon={<FilterOutlined />}
                         >
                             <Option value="ALL">All</Option>
                             <Option value="CREDIT">Credit</Option>
                             <Option value="DEBIT">Debit</Option>
                         </Select>
+                    </Col>
 
+                    {/* SORT */}
+                    <Col xs={12} md={5} lg={4}>
                         <Select
-                            size="large"
+                            size="middle"
                             value={directionSort}
                             onChange={setDirectionSort}
-                            style={{ flex: 1 }}
+                            style={{ width: "100%" }}
                         >
                             <Option value="NONE">No Sorting</Option>
                             <Option value="CREDIT_FIRST">Credit First</Option>
                             <Option value="DEBIT_FIRST">Debit First</Option>
                         </Select>
-                    </Space>
-                </Space>
+                    </Col>
+                </Row>
+
             </Card>
 
             {/* ===== TABLE ===== */}

@@ -13,7 +13,11 @@ import {
 } from "antd";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import {useSelector} from "react-redux";
+
+import { SERVICE_CHARGE_CONFIG } from "./ServiceChargeConfig";
+import { useSelector } from "react-redux";
+
+
 
 const { Text } = Typography;
 
@@ -21,12 +25,12 @@ const { Text } = Typography;
 const MIN_AMOUNT = 1000;
 const MAX_AMOUNT = 100000;
 const DEFAULT_PERCENTAGE = 1.8;
-const PRESET_RATES = [1.4, 1.8, 2.2, 3];
 
 /* ================= COMPONENT ================= */
 const ServiceChargeModal = ({
                                 open,
                                 baseAmount,
+                                selectedMode,
                                 setBaseAmount,
                                 onClose,
                                 onApply
@@ -36,6 +40,11 @@ const ServiceChargeModal = ({
     const [loadingCustomers, setLoadingCustomers] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const navigate = useNavigate();
+
+    const userLevel = useSelector(
+        (state) => state.auth?.data?.userLevel
+    );
+
 
 
     /* ================= EFFECTS ================= */
@@ -47,6 +56,29 @@ const ServiceChargeModal = ({
     }, [open]);
 
     const token = useSelector(state => state.auth.token);
+
+
+    useEffect(() => {
+        if (!open || !selectedMode || !userLevel) return;
+
+        const modeName = selectedMode.name;
+        const modeConfig = SERVICE_CHARGE_CONFIG[modeName];
+
+        if (!modeConfig) {
+            message.error("Pricing not configured for this mode");
+            return;
+        }
+
+        const derivedPercentage = modeConfig[userLevel];
+
+        if (!derivedPercentage) {
+            message.error("Invalid user level pricing");
+            return;
+        }
+
+        setPercentage(derivedPercentage);
+    }, [open, selectedMode, userLevel]);
+
 
 
     /* ================= API ================= */

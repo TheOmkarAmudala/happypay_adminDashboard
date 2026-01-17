@@ -9,9 +9,13 @@ import Flex from 'components/shared-components/Flex';
 import { AUTH_TOKEN } from "constants/AuthConstant";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
+import { getAnnualStatisticData } from "./DefaultDashboardData";
+import axios from "../../../../utils/axios"; // ✅ NOT from 'axios'
+
+
 import {
-  VisitorChartData, 
-  AnnualStatisticData, 
+  VisitorChartData,
+  AnnualStatisticData,
   ActiveMembersData,
   NewMembersData,
   RecentTransactionData
@@ -19,7 +23,7 @@ import {
 import ApexChart from 'react-apexcharts';
 import { apexLineChartDefaultOption, COLOR_2 } from 'constants/ChartConstant';
 import { SPACER } from 'constants/ThemeConstant'
-import { 
+import {
   UserAddOutlined,
   FileExcelOutlined,
   PrinterOutlined,
@@ -30,14 +34,12 @@ import {
 } from '@ant-design/icons';
 import utils from 'utils';
 import { useSelector } from 'react-redux';
-import axios from 'axios';
-
 
 
 
 
 const MembersChart = props => (
-  <ApexChart {...props}/>
+    <ApexChart {...props}/>
 )
 
 const memberChartOption = {
@@ -56,28 +58,28 @@ const latestTransactionOption = [
   {
     key: 'Refresh',
     label: (
-      <Flex alignItems="center" gap={SPACER[2]}>
-        <ReloadOutlined />
-        <span className="ml-2">Refresh</span>
-      </Flex>
+        <Flex alignItems="center" gap={SPACER[2]}>
+          <ReloadOutlined />
+          <span className="ml-2">Refresh</span>
+        </Flex>
     ),
   },
   {
     key: 'Print',
     label: (
-      <Flex alignItems="center" gap={SPACER[2]}>
-        <PrinterOutlined />
-        <span className="ml-2">Print</span>
-      </Flex>
+        <Flex alignItems="center" gap={SPACER[2]}>
+          <PrinterOutlined />
+          <span className="ml-2">Print</span>
+        </Flex>
     ),
   },
   {
     key: 'Export',
     label: (
-      <Flex alignItems="center" gap={SPACER[2]}>
-        <FileExcelOutlined />
-        <span className="ml-2">Export</span>
-      </Flex>
+        <Flex alignItems="center" gap={SPACER[2]}>
+          <FileExcelOutlined />
+          <span className="ml-2">Export</span>
+        </Flex>
     ),
   },
 ]
@@ -86,11 +88,11 @@ const latestTransactionOption = [
 const CardDropdown = ({items}) => {
 
   return (
-    <Dropdown menu={{items}} trigger={['click']} placement="bottomRight">
-      <a href="/#" className="text-gray font-size-lg" onClick={e => e.preventDefault()}>
-        <EllipsisOutlined />
-      </a>
-    </Dropdown>
+      <Dropdown menu={{items}} trigger={['click']} placement="bottomRight">
+        <a href="/#" className="text-gray font-size-lg" onClick={e => e.preventDefault()}>
+          <EllipsisOutlined />
+        </a>
+      </Dropdown>
   )
 }
 
@@ -189,8 +191,7 @@ const tableColumns = [
 
 export const DefaultDashboard = () => {
   const [visitorChartData] = useState(VisitorChartData);
-  const [annualStatisticData] = useState(AnnualStatisticData);
-  const [activeMembersData] = useState(ActiveMembersData);
+   const [activeMembersData] = useState(ActiveMembersData);
   const [newMembersData] = useState(NewMembersData)
   const { direction } = useSelector(state => state.theme)
   const [recentTransactionData, setRecentTransactionData] = useState([]);
@@ -198,6 +199,10 @@ export const DefaultDashboard = () => {
 
   const navigate = useNavigate();
   const token = useSelector(state => state.auth.token);
+  const profile = useSelector((state) => state.profile.data);
+  const annualStatisticData = getAnnualStatisticData(profile);
+
+
 
 
 
@@ -214,30 +219,15 @@ export const DefaultDashboard = () => {
 
   useEffect(() => {
     const fetchTransactions = async () => {
+      if (!token) return;
+
       try {
         setLoadingTransactions(true);
 
-         if (!token) {
-          console.warn("❌ No token found, user not logged in");
-          return;
-        }
-
-        const response = await axios.get(
-            "https://test.happypay.live/users/serviceTransactions",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-        );
-
-        // 🔍 LOG RAW RESPONSE
-        console.log("🟦 Raw API response:", response.data);
+        const response = await axios.get("/users/serviceTransactions");
 
         const transactions = response.data?.data || [];
-        console.log("🟩 Transactions array:", transactions);
 
-        // ✅ FORMAT + REVERSE (LATEST FIRST)
         const formattedData = transactions
             .map((item, index) => {
               const bankAccount = item?.extraInfo?.bank_account ?? {};
@@ -245,149 +235,117 @@ export const DefaultDashboard = () => {
 
               return {
                 key: item.id,
-
                 sn: index + 1,
-
-                // 2. Customer Details
                 customerDetails: item.accountId ?? "-",
-
-                // 3. Service Txn Ref ID
                 serviceTxnRefId: item.serviceReferenceId ?? "-",
-
-                // 4. Transaction Time
                 transactionTime: item.createdAt
                     ? new Date(item.createdAt).toLocaleString()
                     : "-",
-
-                // 5. Gateway Name
                 gatewayName: "Razorpay",
-
-                // 6. Order / PayIn Amount
                 orderAmount: item.amount ? `₹${item.amount}` : "-",
-
-                // 7. Payment Status
                 paymentStatus: item.paymentStatus ?? "-",
-
-                // 8. PayOut Amount
                 payoutAmount: payoutResponse.transferamount
                     ? `₹${payoutResponse.transferamount}`
                     : "-",
-
-                // 9. PayOut Status
                 payoutStatus: payoutResponse.status ?? "-",
-
-                // 10. Beneficiary A/c Number
                 beneficiaryAccount: bankAccount.bank_account_number ?? "-",
-
-                // 11. Beneficiary IFSC
                 beneficiaryIfsc: bankAccount.bank_ifsc ?? "-",
-
-                // 12. Transaction Status
                 transactionStatus: item.status ?? "-"
               };
             })
-            .reverse(); // latest first
-
-// 🔥 latest on top
-
-        // 🔍 LOG FORMATTED DATA
-        console.log("🟨 Formatted table data:", formattedData);
-
+            .reverse();
 
         setRecentTransactionData(formattedData);
-
-
       } catch (error) {
-        console.error(
-            "❌ Failed to fetch transactions:",
-            error.response?.data || error
-        );
+        console.error("❌ Failed to fetch transactions", error);
       } finally {
         setLoadingTransactions(false);
       }
     };
 
     fetchTransactions();
-  }, []);
+  }, [token]); // ✅ token added
 
 
   const [visibleCount, setVisibleCount] = useState(10);
 
   return (
-    <>
-      <Row gutter={16}>
-        <Col xs={24} sm={24} md={12} lg={24}>
-          <Row gutter={[16, 16]}>
-            {annualStatisticData.map((elm, i) => (
-                <Col
-                    key={i}
-                    xs={12}   // 📱 2 boxes per row
-                    sm={12}
-                    md={8}    // 💻 3 boxes per row
-                    lg={8}
-                    xl={8}
-                    style={{ display: "flex" }} // important for content fit
-                >
-                  <div
-                      style={{
-                        flex: 1,
-                        cursor: "pointer",
-                        transition: "transform 0.2s",
-
-                      }}
-                      onClick={() => handleStatClick(elm.route)}
-                      onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      <>
+        <Row gutter={16}>
+          <Col xs={24} sm={24} md={12} lg={24}>
+            <Row gutter={[16, 16]}>
+              {annualStatisticData.map((elm, i) => (
+                  <Col
+                      key={i}
+                      xs={12}   // 📱 2 boxes per row
+                      sm={12}
+                      md={8}    // 💻 3 boxes per row
+                      lg={8}
+                      xl={8}
+                      style={{ display: "flex" }} // important for content fit
                   >
-                    <StatisticWidget
-                        title={elm.title}
-                        value={elm.value}
-                        status={elm.status}
-                        subtitle={elm.subtitle}
-                    />
-                  </div>
-                </Col>
-            ))}
-          </Row>
-        </Col>
-        <Col xs={24} sm={24} md={24} lg={6}>
+                    <div
+                        style={{
+                          flex: 1,
+                          cursor: "pointer",
+                          transition: "transform 0.2s",
+
+                        }}
+                        onClick={() => handleStatClick(elm.route)}
+                        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                    >
+                      <StatisticWidget
+                          title={elm.title}
+                          value={elm.value}
+                          status={elm.status}
+                          subtitle={elm.subtitle}
+                      />
+                    </div>
+                  </Col>
+              ))}
+            </Row>
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={6}>
 
 
-        </Col>
-      </Row>
-      <Row gutter={16}>
+          </Col>
+        </Row>
+        <Row gutter={16}>
 
 
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
-            <Table
-                columns={tableColumns}
-                dataSource={recentTransactionData}
-                rowKey="key"
-                pagination={false}
-            />
+          <Col xs={24} sm={24} md={24} lg={24}>
+            <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
+              <Table
+                  columns={tableColumns}
+                  dataSource={recentTransactionData.slice(0, visibleCount)}
+                  rowKey="key"
+                  pagination={false}
+                  loading={loadingTransactions}
+              />
 
-            <div style={{ textAlign: "center", marginTop: 16 }}>
-              {visibleCount < recentTransactionData.length && (
-                  <Button
-                      onClick={() => setVisibleCount(prev => prev + 10)}
-                      style={{ marginRight: 8 }}
-                  >
-                    Load More
-                  </Button>
-              )}
 
-              {visibleCount > 10 && (
-                  <Button onClick={() => setVisibleCount(10)}>
-                    Load Less
-                  </Button>
-              )}
-            </div>
-          </Card>
+              <div style={{ textAlign: "center", marginTop: 16 }}>
+                {visibleCount < recentTransactionData.length && (
+                    <Button
+                        onClick={() => setVisibleCount(prev => prev + 10)}
+                        style={{ marginRight: 8 }}
+                    >
+                      Load More
+                    </Button>
+                )}
 
-        </Col>
-      </Row>
-    </>
+                {visibleCount > 10 && (
+                    <Button onClick={() => setVisibleCount(10)}>
+                      Load Less
+                    </Button>
+                )}
+              </div>
+            </Card>
+
+          </Col>
+        </Row>
+      </>
   )
 }
 

@@ -12,15 +12,17 @@ const StatisticWidget = ({ title, value, status, subtitle, prefix }) => {
 				<div>
 					<div className="d-flex align-items-center">
 						<h1 className="mb-0 font-weight-bold">{value}</h1>
-						{
-							status ? 
-							<span className={`font-size-md font-weight-bold ml-3 ${status !== 0 && status > 0 ? 'text-success' : 'text-danger'}`} >
-								{status}
-								{status !== 0 && status > 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-							</span> 
-							: 
-							null
-						}
+						{typeof status === "number" && (
+							<span
+								className={`font-size-md font-weight-bold ml-3 ${
+									status > 0 ? "text-success" : "text-danger"
+								}`}
+							>
+    {status}
+								{status > 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+  </span>
+						)}
+
 					</div>
 					{subtitle && <div className="text-gray-light mt-1">{subtitle}</div>}
 				</div>
@@ -34,7 +36,11 @@ StatisticWidget.propTypes = {
 		PropTypes.string,
 		PropTypes.element
 	]),
-	value: PropTypes.string,
+	value: PropTypes.oneOfType([
+		PropTypes.string,
+		PropTypes.number
+	]),
+
 	subtitle: PropTypes.string,
 	status: PropTypes.number,
 	prefix: PropTypes.element

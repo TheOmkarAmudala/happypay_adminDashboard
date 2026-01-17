@@ -9,14 +9,20 @@ const PaymentPage = () => {
     const [open, setOpen] = useState(false);
     const [baseAmount, setBaseAmount] = useState(10001);
     const [finalAmount, setFinalAmount] = useState(10001);
+    const [selectedMode, setSelectedMode] = useState(null);
 
     return (
         <>
 
-            <SlpePaymentModesCards onSelect={() => setOpen(true)} />
-
+            <SlpePaymentModesCards
+                onSelect={(mode) => {
+                    setSelectedMode(mode);
+                    setOpen(true);
+                }}
+            />
             <ServiceChargeModal
                 open={open}
+                selectedMode={selectedMode}
                 baseAmount={baseAmount}
                 setBaseAmount={(val) => {
                     setBaseAmount(val);
