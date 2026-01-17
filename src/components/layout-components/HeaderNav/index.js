@@ -94,7 +94,7 @@ export const HeaderNav = props => {
 								</NavItem>
 							)
 						}
-						{isMobile ?
+						{/*{isMobile ?
                             <div className="ant-menu-item ant-menu-item-only-child" onClick={() => {onSearchActive()}}>
                                 <SearchOutlined />
                             </div>
@@ -102,7 +102,7 @@ export const HeaderNav = props => {
                             <div className="ant-menu-item ant-menu-item-only-child" style={{cursor: 'auto'}}>
                                 <SearchInput mode={navMode} isMobile={isMobile} />
                             </div>
-                        }
+                        } */}
 					</NavEdge>
 					<NavEdge right>
 						<NavNotification mode={navMode} />
@@ -110,13 +110,13 @@ export const HeaderNav = props => {
 						<NavPanel direction={direction} mode={navMode} />
 						<NavProfile mode={navMode} />
 					</NavEdge>
-					<NavSearch 
+					{/*	<NavSearch
 						active={searchActive} 
 						close={onSearchClose} 
 						headerNavColor={headerNavColor}
 						currentTheme={currentTheme}
 						mode={navMode}
-					/>
+					/> */}
 				</Nav>
 			</HeaderWrapper>
 		</Header>

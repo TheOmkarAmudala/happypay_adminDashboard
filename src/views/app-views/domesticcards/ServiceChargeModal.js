@@ -277,37 +277,13 @@ const ServiceChargeModal = ({
                         Service Charge
                     </Text>
 
-                    <Space align="center" size={8} wrap>
-                        {PRESET_RATES.map((rate) => (
-                            <Button
-                                key={rate}
-                                size="middle"
-                                type={percentage === rate ? "primary" : "default"}
-                                onClick={() => setPercentage(rate)}
-                                style={{ borderRadius: 8 }}
-                            >
-                                {rate}%
-                            </Button>
-                        ))}
+                    <InputNumber
+                        value={percentage}
+                        disabled
+                        addonAfter="%"
+                        style={{ width: 120 }}
+                    />
 
-                        {/* Editable percentage input */}
-                        <InputNumber
-                            min={0}
-                            step={0.1}
-                            value={percentage}
-                            controls={false}
-                            style={{
-                                width: 80,
-                                height: 36,
-                                borderRadius: 8,
-                                border: "1px solid #d9d9d9",
-                                background: "#fff"
-                            }}
-                            onChange={(v) =>
-                                setPercentage(Number(v) || DEFAULT_PERCENTAGE)
-                            }
-                        />
-                    </Space>
                 </div>
 
                 {/* ===== Fee Breakdown ===== */}

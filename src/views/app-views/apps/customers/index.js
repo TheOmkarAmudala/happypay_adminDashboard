@@ -1,21 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
 	Card,
 	Button,
-	Spin,
 	Typography,
 	Modal,
 	Input,
 	Space,
 	Row,
 	Col,
+	Tag,
+	Select,
+	Divider,
+	Skeleton,
 	message
 } from "antd";
-import { CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
+import {
+	CheckCircleFilled,
+	CloseCircleFilled
+} from "@ant-design/icons";
 import axios from "axios";
 
-
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { Option } = Select;
 
 const API_BASE = "https://test.happypay.live";
 
@@ -25,13 +31,19 @@ const CustomerKycManagement = () => {
 	const [customers, setCustomers] = useState([]);
 	const [loading, setLoading] = useState(true);
 
+	// UI filters
+	const [search, setSearch] = useState("");
+	const [kycFilter, setKycFilter] = useState("all"); // all | verified | pending
+	const [sortOrder, setSortOrder] = useState("new"); // new | old
+
+	// Add customer
 	const [addOpen, setAddOpen] = useState(false);
 	const [adding, setAdding] = useState(false);
 
+	// KYC modal
 	const [kycOpen, setKycOpen] = useState(false);
 	const [currentCustomer, setCurrentCustomer] = useState(null);
-	const [currentStep, setCurrentStep] = useState(0); // 0=Aadhaar,1=PAN,2=Bank
-
+	const [currentStep, setCurrentStep] = useState(0);
 
 	const [form, setForm] = useState({
 		name: "",
@@ -39,25 +51,20 @@ const CustomerKycManagement = () => {
 		email: ""
 	});
 
-	/* ================= KYC CHECK ================= */
+	/* ================= KYC STATUS ================= */
 	const isKycVerified = (c) =>
 		Array.isArray(c?.kyc) &&
 		c.kyc.some(k => k.verified === true);
 
-	/* ================= FETCH CUSTOMERS ================= */
+	/* ================= FETCH ================= */
 	const loadCustomers = async () => {
 		try {
 			setLoading(true);
-
 			const res = await axios.get(`${API_BASE}/customer/getAll`, {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
+				headers: { Authorization: `Bearer ${token}` }
 			});
-
 			setCustomers(res.data?.data || []);
-		} catch (err) {
-			console.error(err);
+		} catch {
 			message.error("Failed to load customers");
 		} finally {
 			setLoading(false);
@@ -68,6 +75,36 @@ const CustomerKycManagement = () => {
 		loadCustomers();
 	}, []);
 
+	/* ================= FILTER + SORT ================= */
+	const filteredCustomers = useMemo(() => {
+		return customers
+			.filter((c) => {
+				const q = search.toLowerCase();
+
+				const matchSearch =
+					c.name?.toLowerCase().includes(q) ||
+					c.phone?.includes(q) ||
+					c.email?.toLowerCase().includes(q);
+
+				const verified = isKycVerified(c);
+
+				const matchKyc =
+					kycFilter === "all"
+						? true
+						: kycFilter === "verified"
+							? verified
+							: !verified;
+
+				return matchSearch && matchKyc;
+			})
+			.sort((a, b) => {
+				if (sortOrder === "new") {
+					return new Date(b.createdAt) - new Date(a.createdAt);
+				}
+				return new Date(a.createdAt) - new Date(b.createdAt);
+			});
+	}, [customers, search, kycFilter, sortOrder]);
+
 	/* ================= ADD CUSTOMER ================= */
 	const handleAddCustomer = async () => {
 		if (!form.name || !form.phone) {
@@ -77,13 +114,9 @@ const CustomerKycManagement = () => {
 
 		try {
 			setAdding(true);
-
 			await axios.post(`${API_BASE}/customer`, form, {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
+				headers: { Authorization: `Bearer ${token}` }
 			});
-
 			message.success("Customer added");
 			setAddOpen(false);
 			setForm({ name: "", phone: "", email: "" });
@@ -94,110 +127,125 @@ const CustomerKycManagement = () => {
 			setAdding(false);
 		}
 	};
+
 	const openKycModal = (customer) => {
 		setCurrentCustomer(customer);
 		setCurrentStep(0);
 		setKycOpen(true);
 	};
 
+	/* ================= SKELETON ================= */
+	const SkeletonGrid = () => (
+		<Row gutter={[16, 16]}>
+			{Array.from({ length: 6 }).map((_, i) => (
+				<Col key={i} xs={24} sm={12} lg={8}>
+					<Card style={{ borderRadius: 16 }}>
+						<Skeleton active title paragraph={{ rows: 3 }} />
+					</Card>
+				</Col>
+			))}
+		</Row>
+	);
+
 	/* ================= UI ================= */
 	return (
 		<>
 			<Title level={3}>Customer Management</Title>
 
-			<Button
-				type="primary"
-				style={{ marginBottom: 20 }}
-				onClick={() => setAddOpen(true)}
-			>
-				Add Customer
-			</Button>
+			{/* ===== CONTROLS ===== */}
+			<Row gutter={[12, 12]} align="middle">
+				<Col xs={24} md={8}>
+					<Input.Search
+						placeholder="Search name, phone or email"
+						allowClear
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</Col>
 
-			<div style={{ marginTop: 20 }}>
-				{loading ? (
-					<Spin />
-				) : (
-					<Row gutter={[16, 16]}>
-						{customers.map((c) => {
-							const verified = isKycVerified(c);
+				<Col xs={12} md={4}>
+					<Select value={kycFilter} onChange={setKycFilter} style={{ width: "100%" }}>
+						<Option value="all">All KYC</Option>
+						<Option value="verified">Verified</Option>
+						<Option value="pending">Pending</Option>
+					</Select>
+				</Col>
 
-							return (
-								<Col key={c.id} xs={24} sm={12} lg={8}>
-									<Card
-										bordered={false}
-										style={{
-											borderRadius: 16,
-											boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-											position: "relative",
-											height: "100%"
-										}}
-									>
-										{/* STATUS ICON */}
-										{verified ? (
-											<CheckCircleFilled
-												style={{
-													position: "absolute",
-													top: 14,
-													right: 14,
-													fontSize: 22,
-													color: "#22c55e"
-												}}
-											/>
-										) : (
-											<CloseCircleFilled
-												style={{
-													position: "absolute",
-													top: 14,
-													right: 14,
-													fontSize: 22,
-													color: "#ef4444"
-												}}
-											/>
-										)}
+				<Col xs={12} md={4}>
+					<Select value={sortOrder} onChange={setSortOrder} style={{ width: "100%" }}>
+						<Option value="new">Newest</Option>
+						<Option value="old">Oldest</Option>
+					</Select>
+				</Col>
 
-										<div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-											<div style={{ fontSize: 16, fontWeight: 600 }}>{c.name}</div>
-											<div style={{ fontSize: 14, color: "#555" }}>{c.phone}</div>
-											<div style={{ fontSize: 14, color: "#777" }}>
-												{c.email || "—"}
-											</div>
+				<Col xs={24} md={8} style={{ textAlign: "right" }}>
+					<Button type="primary" onClick={() => setAddOpen(true)}>
+						Add Customer
+					</Button>
+				</Col>
+			</Row>
 
-											{!verified && (
-												<Button
-													danger
-													type="default"
-													style={{ marginTop: 12, width: "fit-content" }}
-													onClick={() => openKycModal(c)}
-												>
-													Complete KYC →
-												</Button>
-											)}
-										</div>
-									</Card>
-								</Col>
-							);
-						})}
-					</Row>
-				)}
-			</div>
+			<Divider />
 
-			{/* KYC MODAL */}
+			{/* ===== LIST ===== */}
+			{loading ? (
+				<SkeletonGrid />
+			) : (
+				<Row gutter={[16, 16]}>
+					{filteredCustomers.map((c) => {
+						const verified = isKycVerified(c);
+
+						return (
+							<Col key={c.id} xs={24} sm={12} lg={8}>
+								<Card
+									hoverable
+									style={{
+										borderRadius: 16,
+										position: "relative",
+										height: "100%"
+									}}
+								>
+									{verified ? (
+										<CheckCircleFilled style={{ color: "#22c55e", fontSize: 22, position: "absolute", top: 16, right: 16 }} />
+									) : (
+										<CloseCircleFilled style={{ color: "#ef4444", fontSize: 22, position: "absolute", top: 16, right: 16 }} />
+									)}
+
+									<Title level={5}>{c.name}</Title>
+									<Text>{c.phone}</Text><br />
+									<Text type="secondary">{c.email || "—"}</Text>
+
+									<div style={{ marginTop: 10 }}>
+										<Tag color={verified ? "green" : "red"}>
+											{verified ? "KYC Verified" : "KYC Pending"}
+										</Tag>
+									</div>
+
+									{!verified && (
+										<Button
+											danger
+											style={{ marginTop: 12 }}
+											onClick={() => openKycModal(c)}
+										>
+											Complete KYC →
+										</Button>
+									)}
+								</Card>
+							</Col>
+						);
+					})}
+				</Row>
+			)}
+
+			{/* ===== KYC MODAL ===== */}
 			<Modal
 				open={kycOpen}
 				footer={null}
 				width={600}
 				onCancel={() => setKycOpen(false)}
-				destroyOnClose
-				title={
-					["Aadhaar Verification", "PAN Verification", "Bank Verification"][currentStep]
-				}
+				title={["Aadhaar Verification", "PAN Verification", "Bank Verification"][currentStep]}
 			>
-				{currentStep === 0 && (
-					<AadhaarStep onSuccess={() => setCurrentStep(1)} />
-				)}
-				{currentStep === 1 && (
-					<PanStep onSuccess={() => setCurrentStep(2)} />
-				)}
+				{currentStep === 0 && <AadhaarStep onSuccess={() => setCurrentStep(1)} />}
+				{currentStep === 1 && <PanStep onSuccess={() => setCurrentStep(2)} />}
 				{currentStep === 2 && (
 					<BankStep
 						onSuccess={() => {
@@ -209,42 +257,24 @@ const CustomerKycManagement = () => {
 				)}
 			</Modal>
 
+			{/* ===== ADD MODAL ===== */}
 			<Modal
 				title="Add Customer"
 				open={addOpen}
 				onCancel={() => setAddOpen(false)}
 				onOk={handleAddCustomer}
 				confirmLoading={adding}
-				okText="Add"
 			>
 				<Space direction="vertical" style={{ width: "100%" }}>
-					<Input
-						placeholder="Customer Name"
-						value={form.name}
-						onChange={(e) =>
-							setForm({ ...form, name: e.target.value })
-						}
-					/>
-					<Input
-						placeholder="Phone Number"
-						value={form.phone}
-						onChange={(e) =>
-							setForm({ ...form, phone: e.target.value })
-						}
-					/>
-					<Input
-						placeholder="Email (optional)"
-						value={form.email}
-						onChange={(e) =>
-							setForm({ ...form, email: e.target.value })
-						}
-					/>
+					<Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+					<Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+					<Input placeholder="Email (optional)" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
 				</Space>
 			</Modal>
-
 		</>
 	);
 };
+
 
 export default CustomerKycManagement;
 const AadhaarStep = ({ onSuccess }) => {

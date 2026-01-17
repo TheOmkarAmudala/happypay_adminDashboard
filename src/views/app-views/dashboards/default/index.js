@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Row, Col, Button, Avatar, Dropdown, Table, Menu, Tag } from 'antd';
-import StatisticWidget from 'components/shared-components/StatisticWidget';
+import StatisticWidget from './StatisticWidget';
 import ChartWidget from 'components/shared-components/ChartWidget';
 import AvatarStatus from 'components/shared-components/AvatarStatus';
 import GoalWidget from 'components/shared-components/GoalWidget';
@@ -10,9 +10,8 @@ import { AUTH_TOKEN } from "constants/AuthConstant";
 import { useNavigate } from "react-router-dom";
 import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { getAnnualStatisticData } from "./DefaultDashboardData";
-import axios from "../../../../utils/axios"; // ✅ NOT from 'axios'
-
-
+import axios from "../../../../utils/axios";
+import icon from "../../../../assets/img.png";
 import {
   VisitorChartData,
   AnnualStatisticData,
@@ -35,7 +34,31 @@ import {
 import utils from 'utils';
 import { useSelector } from 'react-redux';
 
+import { Skeleton } from "antd";
 
+const TableSkeleton = ({ rows = 5 }) => {
+  return (
+      <div>
+        {Array.from({ length: rows }).map((_, i) => (
+            <div
+                key={i}
+                style={{
+                  display: "flex",
+                  gap: 16,
+                  marginBottom: 12,
+                }}
+            >
+              <Skeleton.Input active style={{ width: 40 }} />
+              <Skeleton.Input active style={{ width: 180 }} />
+              <Skeleton.Input active style={{ width: 200 }} />
+              <Skeleton.Input active style={{ width: 160 }} />
+              <Skeleton.Input active style={{ width: 120 }} />
+              <Skeleton.Input active style={{ width: 120 }} />
+            </div>
+        ))}
+      </div>
+  );
+};
 
 
 const MembersChart = props => (
@@ -84,7 +107,6 @@ const latestTransactionOption = [
   },
 ]
 
-
 const CardDropdown = ({items}) => {
 
   return (
@@ -96,12 +118,12 @@ const CardDropdown = ({items}) => {
   )
 }
 
-
 const tableColumns = [
   {
     title: "S/N",
     dataIndex: "sn",
-    key: "sn"
+    key: "sn",
+    icon: icon
   },
   {
     title: "Customer Details",
@@ -151,31 +173,6 @@ const tableColumns = [
     }
   },
   {
-    title: "PayOut Amount",
-    dataIndex: "payoutAmount",
-    key: "payoutAmount"
-  },
-  {
-    title: "PayOut Status",
-    dataIndex: "payoutStatus",
-    key: "payoutStatus",
-    render: (status) => (
-        <Tag color={status === "SUCCESS" ? "green" : "orange"}>
-          {status || "-"}
-        </Tag>
-    )
-  },
-  {
-    title: "Beneficiary A/c Number",
-    dataIndex: "beneficiaryAccount",
-    key: "beneficiaryAccount"
-  },
-  {
-    title: "Beneficiary IFSC",
-    dataIndex: "beneficiaryIfsc",
-    key: "beneficiaryIfsc"
-  },
-  {
     title: "Transaction Status",
     dataIndex: "transactionStatus",
     key: "transactionStatus",
@@ -186,8 +183,6 @@ const tableColumns = [
     )
   }
 ];
-
-
 
 export const DefaultDashboard = () => {
   const [visitorChartData] = useState(VisitorChartData);
@@ -244,16 +239,9 @@ export const DefaultDashboard = () => {
                 gatewayName: "Razorpay",
                 orderAmount: item.amount ? `₹${item.amount}` : "-",
                 paymentStatus: item.paymentStatus ?? "-",
-                payoutAmount: payoutResponse.transferamount
-                    ? `₹${payoutResponse.transferamount}`
-                    : "-",
-                payoutStatus: payoutResponse.status ?? "-",
-                beneficiaryAccount: bankAccount.bank_account_number ?? "-",
-                beneficiaryIfsc: bankAccount.bank_ifsc ?? "-",
-                transactionStatus: item.status ?? "-"
+                  transactionStatus: item.status ?? "-"
               };
-            })
-            .reverse();
+            });
 
         setRecentTransactionData(formattedData);
       } catch (error) {
@@ -264,16 +252,22 @@ export const DefaultDashboard = () => {
     };
 
     fetchTransactions();
-  }, [token]); // ✅ token added
+  }, [token]);
 
 
   const [visibleCount, setVisibleCount] = useState(10);
+  const sortedTransactions = useMemo(() => {
+    return [...recentTransactionData].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }, [recentTransactionData]);
+
 
   return (
       <>
         <Row gutter={16}>
           <Col xs={24} sm={24} md={12} lg={24}>
-            <Row gutter={[16, 16]}>
+            <Row gutter={[16, 16]} className="mb-3">
               {annualStatisticData.map((elm, i) => (
                   <Col
                       key={i}
@@ -288,7 +282,8 @@ export const DefaultDashboard = () => {
                         style={{
                           flex: 1,
                           cursor: "pointer",
-                          transition: "transform 0.2s",
+                          transition: "transform 0.2s"
+
 
                         }}
                         onClick={() => handleStatClick(elm.route)}
@@ -298,8 +293,9 @@ export const DefaultDashboard = () => {
                       <StatisticWidget
                           title={elm.title}
                           value={elm.value}
-                          status={elm.status}
                           subtitle={elm.subtitle}
+                          icon={elm.icon}
+
                       />
                     </div>
                   </Col>
@@ -316,40 +312,42 @@ export const DefaultDashboard = () => {
 
           <Col xs={24} sm={24} md={24} lg={24}>
             <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
-              <Table
-                  columns={tableColumns}
-                  dataSource={recentTransactionData.slice(0, visibleCount)}
-                  rowKey="key"
-                  pagination={false}
-                  loading={loadingTransactions}
-              />
+              {loadingTransactions ? (
+                  <TableSkeleton rows={5} />
+              ) : (
+                  <Table
+                      columns={tableColumns}
+                      dataSource={sortedTransactions.slice(0, visibleCount)}
+                      rowKey="key"
+                      pagination={false}
+                  />
+              )}
 
+              {!loadingTransactions && (
+                  <div style={{ textAlign: "center", marginTop: 16 }}>
+                    {visibleCount < recentTransactionData.length && (
+                        <Button
+                            onClick={() => setVisibleCount(prev => prev + 10)}
+                            style={{ marginRight: 8 }}
+                        >
+                          Load More
+                        </Button>
+                    )}
 
-              <div style={{ textAlign: "center", marginTop: 16 }}>
-                {visibleCount < recentTransactionData.length && (
-                    <Button
-                        onClick={() => setVisibleCount(prev => prev + 10)}
-                        style={{ marginRight: 8 }}
-                    >
-                      Load More
-                    </Button>
-                )}
-
-                {visibleCount > 10 && (
-                    <Button onClick={() => setVisibleCount(10)}>
-                      Load Less
-                    </Button>
-                )}
-              </div>
+                    {visibleCount > 10 && (
+                        <Button onClick={() => setVisibleCount(10)}>
+                          Load Less
+                        </Button>
+                    )}
+                  </div>
+              )}
             </Card>
+
 
           </Col>
         </Row>
       </>
   )
 }
-
-
-
 
 export default DefaultDashboard;

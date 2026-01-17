@@ -173,9 +173,9 @@ const extraNavTree = [
 ]
 
 const dashBoardNavTree = [{
-  key: 'dashboards',
+  key: '',
   path: `${APP_PREFIX_PATH}/dashboards`,
-  title: 'sidenav.dashboard',
+  title: '',
   icon: DashboardOutlined,
   breadcrumb: false,
   isGroupTitle: true,
@@ -187,12 +187,29 @@ const dashBoardNavTree = [{
       icon: DashboardOutlined,
       breadcrumb: false,
       submenu: []
+    }
+    ,
+    {
+      key: 'apps-customers',
+      path: `${APP_PREFIX_PATH}/apps/customers`,
+      title: 'Customers',
+      icon: MailOutlined,
+      breadcrumb: false,
+      submenu: []
     },
     {
-      key: 'dashboards-analytic',
-      path: `${APP_PREFIX_PATH}/dashboards/commercials`,
-      title: 'sidenav.dashboard.analytic',
-      icon: DotChartOutlined,
+      key: 'apps-chat',
+      path: `${APP_PREFIX_PATH}/apps/referral-tree`,
+      title: 'Referal Tree',
+      icon: MessageOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'reports',
+      path: `${APP_PREFIX_PATH}/reports`,
+      icon: CalendarOutlined,
+      title: 'Reports',
       breadcrumb: false,
       submenu: []
     },
@@ -201,6 +218,14 @@ const dashBoardNavTree = [{
       path: `${APP_PREFIX_PATH}/dashboards/kyc`,
       title: 'KYC',
       icon: FundOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'dashboards-analytic',
+      path: `${APP_PREFIX_PATH}/dashboards/commercials`,
+      title: 'sidenav.dashboard.analytic',
+      icon: DotChartOutlined,
       breadcrumb: false,
       submenu: []
     }
@@ -308,6 +333,9 @@ const appsNavTree = [{
   ]
 }]
 
+
+
+
 const componentsNavTree = [
   {
     key: 'components',
@@ -324,14 +352,7 @@ const componentsNavTree = [
         icon: InfoCircleOutlined,
         breadcrumb: true,
         submenu: [
-          {
-            key: 'components-general-button',
-            path: `${APP_PREFIX_PATH}/components/general/button`,
-            title: 'sidenav.components.general.button',
-            icon: '',
-            breadcrumb: true,
-            submenu: []
-          },
+
           {
             key: 'components-general-icon',
             path: `${APP_PREFIX_PATH}/components/general/icon`,
@@ -906,6 +927,7 @@ const componentsNavTree = [
   }
 ]
 
+
 const docsNavTree = [{
   key: 'docs',
   path: `${APP_PREFIX_PATH}/docs`,
@@ -935,10 +957,15 @@ const docsNavTree = [{
 
 const navigationConfig = [
   ...dashBoardNavTree,
+]
+{/*
+const navigationConfig = [
+  ...dashBoardNavTree,
+
   ...appsNavTree,
   ...componentsNavTree,
   ...extraNavTree,
   ...docsNavTree
 ]
-
+ */}
 export default navigationConfig;

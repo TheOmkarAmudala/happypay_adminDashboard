@@ -1,3 +1,11 @@
+import icon from "../../../../assets/img.png";
+import domestics from "../../../../assets/domesticcard.jpg";
+import coporate from "../../../../assets/coporate.jpg"
+
+import payin from "../../../../assets/payin.png"
+import payout from "../../../../assets/payout.png"
+import amex from "../../../../assets/amex.jpg"
+
 export const VisitorChartData = {
   	series: [
 		{
@@ -28,35 +36,39 @@ export const VisitorChartData = {
 
 export const getAnnualStatisticData = (profile) => [
 	{
-		title: "Wallet",
+		title: "Wallet Balance",
 		value: profile?.mainWallet !== undefined
 			? `₹${Number(profile.mainWallet).toFixed(2)}`
 			: "₹0.00",
 		status: 12.5,
 		subtitle: "Total Pay In",
 		route: "/wallet",
+		icon: icon
 
 	},
 	{
 		title: "Domestic/Corporate Cards",
-		value: "₹2,45,000",
+
 		status: 12.5,
 		subtitle: "Total Pay In",
 		route: "/domesticcards",
+		icon: domestics
 	},
 	{
 		title: "Business Cards",
-		value: "₹1,92,000",
+
 		status: -3.2,
 		subtitle: "Total Pay Out",
 		route: "/BusinessCards",
+		icon: coporate
 	},
 	{
 		title: "Amex & Diner Cards",
-		value: "₹8,500",
+
 		status: 1.8,
 		subtitle: "Total Refunds",
 		route: "/Amex",
+		icon: amex
 	},
 	{
 		title: "Pay-In",
@@ -64,6 +76,7 @@ export const getAnnualStatisticData = (profile) => [
 		status: -3.2,
 		subtitle: "Total Pay Out",
 		route: "/payin",
+		icon: payin
 	},
 	{
 		title: "Pay-Out",
@@ -71,6 +84,7 @@ export const getAnnualStatisticData = (profile) => [
 		status: -3.2,
 		subtitle: "Total Pay Out",
 		route: "/payout",
+		icon: payout
 	},
 ];
 
