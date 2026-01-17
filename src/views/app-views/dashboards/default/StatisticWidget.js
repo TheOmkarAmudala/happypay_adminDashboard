@@ -1,7 +1,6 @@
 import { Card, Avatar, Typography } from "antd";
 import { RightOutlined } from "@ant-design/icons";
 
-
 const { Text, Title } = Typography;
 
 const StatisticWidget = ({ title, value, subtitle, icon }) => {
@@ -13,39 +12,70 @@ const StatisticWidget = ({ title, value, subtitle, icon }) => {
                 height: "100%",
             }}
             bodyStyle={{
-                padding: 16,
+                padding: 14,
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
-                marginTop: 15
+                gap: 12,
             }}
         >
-            {/* Top section */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* ===== TOP: ICON + VALUE ===== */}
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                }}
+            >
                 <Avatar
-                    size={64}
+                    size={48}                 // ✅ mobile-friendly
                     src={icon}
                     style={{
                         backgroundColor: "#f5f5f5",
+                        flexShrink: 0,
                     }}
                 />
 
-                <div>
-                    <Title level={3} style={{ margin: "12px 0 0" }}>
+                <div style={{ flex: 1 }}>
+                    <Title
+                        level={4}               // ✅ smaller on mobile
+                        style={{
+                            margin: 0,
+                            fontSize: "clamp(16px, 4vw, 22px)", // responsive text
+                        }}
+                    >
                         {value}
                     </Title>
                 </div>
 
-                <RightOutlined style={{ marginLeft: "auto", color: "#999" }} />
+                <RightOutlined
+                    style={{
+                        color: "#999",
+                        fontSize: 14,
+                    }}
+                />
             </div>
 
-            {/* Value */}
-            <div className="gap-4 ml-2 mt-2">
-            <Text className="text-[30px]" style={{ fontSize: 18 }} strong>{title}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 12 }}>
-                {subtitle}
-            </Text></div>
+            {/* ===== BOTTOM: TITLE + SUBTITLE ===== */}
+            <div>
+                <Text
+                    strong
+                    style={{
+                        fontSize: "clamp(13px, 3.5vw, 15px)",
+                        display: "block",
+                    }}
+                >
+                    {title}
+                </Text>
+
+                <Text
+                    type="secondary"
+                    style={{
+                        fontSize: 12,
+                    }}
+                >
+                    {subtitle}
+                </Text>
+            </div>
         </Card>
     );
 };
