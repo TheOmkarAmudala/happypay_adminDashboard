@@ -3,6 +3,7 @@ import { AUTH_TOKEN } from 'constants/AuthConstant';
 import FirebaseService from 'services/FirebaseService';
 import axios from "axios"
 import { fetchUserProfile } from "./profileSlice";
+import { fetchCustomers } from './customerSlice';
 
 
 /* -------------------- INITIAL STATE -------------------- */
@@ -55,6 +56,7 @@ export const signIn = createAsyncThunk(
 			localStorage.setItem(AUTH_TOKEN, token);
 
 			dispatch(fetchUserProfile());
+			dispatch(fetchCustomers());
 
 			// Return token for auth slice
 			return token;
@@ -194,6 +196,7 @@ export const authSlice = createSlice({
 		setUserProfile: (state, action) => {
 			state.profile = action.payload
 		},
+
 
 
 		// 🔄 Reset redirect after navigation

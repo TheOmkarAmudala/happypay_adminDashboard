@@ -2,6 +2,7 @@ import { combineReducers } from 'redux'
 import theme from './slices/themeSlice'
 import auth from './slices/authSlice'
 import profile from './slices/profileSlice'
+import customers from './slices/customerSlice'
 
 
 const rootReducer = (asyncReducers) => (state, action) => {
@@ -9,6 +10,7 @@ const rootReducer = (asyncReducers) => (state, action) => {
         theme,
         auth,
         profile,
+        customers,
         ...asyncReducers,
     })
     return combinedReducer(state, action)
