@@ -280,7 +280,21 @@ export const DefaultDashboard = () => {
                       xl={8}
                       style={{ display: "flex" }}
                   >
-                    <div style={{ flex: 1 }}>
+                    <div
+                        style={{
+                          flex: 1,
+                          cursor: loading ? "default" : "pointer",
+                          pointerEvents: loading ? "none" : "auto",
+                          transition: "transform 0.2s ease",
+                        }}
+                        onClick={() => !loading && handleStatClick(elm.route)}
+                        onMouseEnter={(e) =>
+                            !loading && (e.currentTarget.style.transform = "scale(1.02)")
+                        }
+                        onMouseLeave={(e) =>
+                            (e.currentTarget.style.transform = "scale(1)")
+                        }
+                    >
                       {loading ? (
                           <StatisticWidgetSkeleton />
                       ) : (
@@ -289,13 +303,13 @@ export const DefaultDashboard = () => {
                               value={elm.value}
                               subtitle={elm.subtitle}
                               icon={elm.icon}
-                              onClick={() => handleStatClick(elm.route)}
                           />
                       )}
                     </div>
                   </Col>
               ))}
             </Row>
+
 
           </Col>
           <Col xs={24} sm={24} md={24} lg={6}>
