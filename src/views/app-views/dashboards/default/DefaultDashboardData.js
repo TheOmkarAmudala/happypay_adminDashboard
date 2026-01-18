@@ -37,9 +37,9 @@ export const VisitorChartData = {
 export const getAnnualStatisticData = (profile) => [
 	{
 		title: "Wallet Balance",
-		value: profile?.mainWallet !== undefined
+		value:   profile && profile.mainWallet != null
 			? `₹${Number(profile.mainWallet).toFixed(2)}`
-			: "₹0.00",
+			: null,
 		status: 12.5,
 		subtitle: "Total Pay In",
 		route: "/wallet",
@@ -47,7 +47,7 @@ export const getAnnualStatisticData = (profile) => [
 
 	},
 	{
-		title: "Domestic/Corporate Cards",
+		title: "Domestic Cards",
 
 		status: 12.5,
 		subtitle: "Total Pay In",

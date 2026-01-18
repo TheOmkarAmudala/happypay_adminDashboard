@@ -12,6 +12,7 @@ import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { getAnnualStatisticData } from "./DefaultDashboardData";
 import axios from "../../../../utils/axios";
 import icon from "../../../../assets/img.png";
+import StatisticWidgetSkeleton from "./StatisticWidgetSkeleton";
 import {
   VisitorChartData,
   AnnualStatisticData,
@@ -194,7 +195,8 @@ export const DefaultDashboard = () => {
 
   const navigate = useNavigate();
   const token = useSelector(state => state.auth.token);
-  const profile = useSelector((state) => state.profile.data);
+  const { data: profile, loading } = useSelector(state => state.profile);
+
   const annualStatisticData = getAnnualStatisticData(profile);
 
 
@@ -268,39 +270,33 @@ export const DefaultDashboard = () => {
         <Row gutter={16}>
           <Col xs={24} sm={24} md={12} lg={24}>
             <Row gutter={[16, 16]} className="mb-3">
-              {annualStatisticData.map((elm, i) => (
+              {(loading ? Array.from({ length: 6 }) : annualStatisticData).map((elm, i) => (
                   <Col
                       key={i}
-                      xs={12}   // 📱 2 boxes per row
+                      xs={12}
                       sm={12}
-                      md={8}    // 💻 3 boxes per row
+                      md={8}
                       lg={8}
                       xl={8}
-                      style={{ display: "flex" }} // important for content fit
+                      style={{ display: "flex" }}
                   >
-                    <div
-                        style={{
-                          flex: 1,
-                          cursor: "pointer",
-                          transition: "transform 0.2s"
-
-
-                        }}
-                        onClick={() => handleStatClick(elm.route)}
-                        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-                    >
-                      <StatisticWidget
-                          title={elm.title}
-                          value={elm.value}
-                          subtitle={elm.subtitle}
-                          icon={elm.icon}
-
-                      />
+                    <div style={{ flex: 1 }}>
+                      {loading ? (
+                          <StatisticWidgetSkeleton />
+                      ) : (
+                          <StatisticWidget
+                              title={elm.title}
+                              value={elm.value}
+                              subtitle={elm.subtitle}
+                              icon={elm.icon}
+                              onClick={() => handleStatClick(elm.route)}
+                          />
+                      )}
                     </div>
                   </Col>
               ))}
             </Row>
+
           </Col>
           <Col xs={24} sm={24} md={24} lg={6}>
 

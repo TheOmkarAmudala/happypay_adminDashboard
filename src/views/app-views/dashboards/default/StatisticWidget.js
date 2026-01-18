@@ -1,82 +1,96 @@
-import { Card, Avatar, Typography } from "antd";
+import { Card, Avatar, Typography, Grid } from "antd";
 import { RightOutlined } from "@ant-design/icons";
+const { useBreakpoint } = Grid;
 
 const { Text, Title } = Typography;
 
 const StatisticWidget = ({ title, value, subtitle, icon }) => {
+    const screens = useBreakpoint();
+    const isMobile = !screens.md;
     return (
         <Card
-            hoverable
             style={{
-                borderRadius: 16,
+                borderRadius: 18,
                 height: "100%",
-            }}
-            bodyStyle={{
-                padding: 14,
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
+                position: "relative",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+                overflow: "hidden",
             }}
         >
-            {/* ===== TOP: ICON + VALUE ===== */}
+            <div
+                style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    width: "100%",
+                    height: 6,
+                    background:
+                        "linear-gradient(to top, rgba(22,119,255,0.25), transparent)",
+                }}
+            />
+            {/* ===== TOP ===== */}
             <div
                 style={{
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
                     gap: 12,
                 }}
             >
                 <Avatar
-                    size={48}                 // ✅ mobile-friendly
+                    size={48}
                     src={icon}
                     style={{
                         backgroundColor: "#f5f5f5",
-                        flexShrink: 0,
+                        padding: 8,
                     }}
                 />
 
-                <div style={{ flex: 1 }}>
-                    <Title
-                        level={4}               // ✅ smaller on mobile
-                        style={{
-                            margin: 0,
-                            fontSize: "clamp(16px, 4vw, 22px)", // responsive text
-                        }}
-                    >
-                        {value}
-                    </Title>
-                </div>
-
-                <RightOutlined
+                <Title
+                    level={4}
                     style={{
-                        color: "#999",
-                        fontSize: 14,
+                        margin: 0,
+                        fontSize: 22,
+                        fontWeight: 600,
+                        lineHeight: 1.1,
                     }}
-                />
+                >
+                    {value}
+                </Title>
+
+                {!isMobile && (
+                    <RightOutlined
+                        style={{
+                            marginLeft: "auto",
+                            color: "#bfbfbf",
+                            fontSize: 14,
+                        }}
+                    />
+                )}
             </div>
 
-            {/* ===== BOTTOM: TITLE + SUBTITLE ===== */}
+            {/* ===== BOTTOM ===== */}
             <div>
                 <Text
                     strong
                     style={{
-                        fontSize: "clamp(13px, 3.5vw, 15px)",
+                        fontSize: 16,
                         display: "block",
+                        marginBottom: 4,
                     }}
                 >
                     {title}
                 </Text>
 
-                <Text
-                    type="secondary"
-                    style={{
-                        fontSize: 12,
-                    }}
-                >
+                <Text type="secondary" style={{ fontSize: 13 }}>
                     {subtitle}
                 </Text>
             </div>
+
+
         </Card>
+
+
     );
 };
 

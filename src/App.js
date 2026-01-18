@@ -7,6 +7,7 @@ import history from './history'
 import Layouts from './layouts'
 import { THEME_CONFIG } from './configs/AppConfig';
 import './lang'
+import BootstrapApp from './BootstrapApp';
 
 const themes = {
   dark: `${process.env.PUBLIC_URL}/css/dark-theme.css`,
@@ -15,19 +16,21 @@ const themes = {
 
 function App() {
   return (
-    <div className="App">
-      <Provider store={store}>
-        <BrowserRouter history={history}>
-          <ThemeSwitcherProvider 
-            themeMap={themes} 
-            defaultTheme={THEME_CONFIG.currentTheme} 
-            insertionPoint="styles-insertion-point"
-          >
-            <Layouts />
-          </ThemeSwitcherProvider>
-        </BrowserRouter>  
-      </Provider>
-    </div>
+      <div className="App">
+        <Provider store={store}>
+          <BrowserRouter>
+            <ThemeSwitcherProvider
+                themeMap={themes}
+                defaultTheme={THEME_CONFIG.currentTheme}
+                insertionPoint="styles-insertion-point"
+            >
+              <BootstrapApp>
+                <Layouts />
+              </BootstrapApp>
+            </ThemeSwitcherProvider>
+          </BrowserRouter>
+        </Provider>
+      </div>
   );
 }
 
