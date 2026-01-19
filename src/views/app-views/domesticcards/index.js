@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Button, Space } from "antd";
 import axios from "axios";
-import { MODE_CONFIG } from "./modeConfig"; // or same file
-import PaymentModeCardSkeleton from "./PaymentModeCardSkeleton";
-
-
+import { MODE_CONFIG } from "./config/modeConfig";
+import PaymentModeCardSkeleton from "./skeleton/PaymentModeCardSkeleton";
+import { CheckCircleFilled } from "@ant-design/icons";
 
 const { Text } = Typography;
 
-const SlpePaymentModesCards = ({ onSelect }) => {
+const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
     const [modes, setModes] = useState([]);
-    const [category, setCategory] = useState("edu"); // edu | travel
+    const [category, setCategory] = useState("edu");
     const [loading, setLoading] = useState(true);
-
 
     useEffect(() => {
         setLoading(true);
@@ -28,13 +26,10 @@ const SlpePaymentModesCards = ({ onSelect }) => {
             .finally(() => setLoading(false));
     }, []);
 
-
     const getCategoryFromName = (name = "") => {
         const lower = name.toLowerCase();
-
         if (lower.includes("edu")) return "edu";
         if (lower.includes("travel")) return "travel";
-
         return "other";
     };
 
@@ -42,10 +37,9 @@ const SlpePaymentModesCards = ({ onSelect }) => {
         (mode) => getCategoryFromName(mode.name) === category
     );
 
-
     return (
         <>
-            {/* 🔘 CATEGORY TOGGLE */}
+            {/* CATEGORY TOGGLE */}
             <Space style={{ marginBottom: 16 }}>
                 <Button
                     type={category === "edu" ? "primary" : "default"}
@@ -74,16 +68,27 @@ const SlpePaymentModesCards = ({ onSelect }) => {
                     const config = MODE_CONFIG[mode.name];
                     if (!config) return null;
 
+                    const isSelected = selectedMode?.id === mode.id;
+
                     return (
-                        <Col xs={24} sm={12} md={8} lg={6} key={mode.id}>
+                        <Col xs={24} sm={12} md={8} lg={6}   style={{ overflow: "visible" }}  key={mode.id}>
                             <Card
                                 hoverable
                                 onClick={() => onSelect(mode)}
                                 style={{
                                     borderRadius: 16,
-                                    height: 140,
+                                    height: 150,
                                     cursor: "pointer",
-                                    boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+                                    border: isSelected
+                                        ? "2px solid #52c41a"
+                                        : "1px solid #f0f0f0",
+                                    background: isSelected ? "#f6ffed" : "#fff",
+                                    transform: isSelected ? "scale(1.06)" : "scale(1)",
+                                    boxShadow: isSelected
+                                        ? "0 10px 30px rgba(82,196,26,0.35)"
+                                        : "0 6px 18px rgba(0,0,0,0.06)",
+                                    transition: "all 0.25s ease",
+                                    position: "relative"
                                 }}
                                 bodyStyle={{
                                     padding: 16,
@@ -93,12 +98,26 @@ const SlpePaymentModesCards = ({ onSelect }) => {
                                     height: "100%",
                                 }}
                             >
-                                {/* 🔝 TOP */}
+                                {/* SELECTED ICON */}
+                                {isSelected && (
+                                    <CheckCircleFilled
+                                        style={{
+                                            position: "absolute",
+                                            top: 10,
+                                            right: 10,
+                                            fontSize: 20,
+                                            color: "#52c41a"
+                                        }}
+                                    />
+                                )}
+
+                                {/* TOP */}
                                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+
                                     <img
                                         src={config.icon}
                                         alt={config.pg}
-                                        style={{ height: 28, width: "auto" }}
+                                        style={{ height: 28 }}
                                     />
                                     <div style={{ fontSize: 12, fontWeight: 600, color: "#555" }}>
                                         {config.pg}
@@ -110,7 +129,7 @@ const SlpePaymentModesCards = ({ onSelect }) => {
                                     {mode.name.replace("Slpe ", "")}
                                 </Text>
 
-                                {/* BADGE */}
+                                {/* CATEGORY BADGE */}
                                 <div
                                     style={{
                                         alignSelf: "flex-start",
@@ -118,8 +137,10 @@ const SlpePaymentModesCards = ({ onSelect }) => {
                                         borderRadius: 12,
                                         fontSize: 11,
                                         fontWeight: 600,
-                                        background: category === "edu" ? "#e6f4ff" : "#f6ffed",
-                                        color: category === "edu" ? "#1677ff" : "#389e0d",
+                                        background:
+                                            category === "edu" ? "#e6f4ff" : "#f6ffed",
+                                        color:
+                                            category === "edu" ? "#1677ff" : "#389e0d",
                                     }}
                                 >
                                     {category.toUpperCase()}
@@ -129,7 +150,6 @@ const SlpePaymentModesCards = ({ onSelect }) => {
                     );
                 })}
             </Row>
-
         </>
     );
 };

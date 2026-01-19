@@ -1,158 +1,167 @@
-import { Card, Typography, Tag, Button, Row, Col } from "antd";
+import React, { useState, useMemo } from "react";
+import {
+    Card,
+    Typography,
+    Tag,
+    Button,
+    Row,
+    Col,
+    Input,
+    Space
+} from "antd";
+import {
+    SearchOutlined,
+    CheckCircleFilled,
+    CloseCircleFilled
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
-
-const { Text } = Typography;
+const { Title, Text } = Typography;
 
 const SelectCustomerSection = ({
-                                   customers,
+                                   customers = [],
                                    loading,
                                    selectedCustomer,
                                    onSelect,
                                    onChangeCustomer
                                }) => {
     const navigate = useNavigate();
+    const [search, setSearch] = useState("");
 
-    // If customer already selected → show highlighted card only
+    /* ================= HELPERS ================= */
+    const isKycVerified = (c) =>
+        Array.isArray(c?.kyc) && c.kyc.some(k => k.verified === true);
+
+    const filteredCustomers = useMemo(() => {
+        const q = search.toLowerCase();
+        return customers.filter(c =>
+            c.name?.toLowerCase().includes(q) ||
+            c.phone?.includes(q)
+        );
+    }, [customers, search]);
+
+    /* ================= SELECTED VIEW ================= */
     if (selectedCustomer) {
-
         return (
             <Card
-                size="small"
                 style={{
+                    borderRadius: 16,
+                    border: "2px solid #22c55e",
                     background: "#f6ffed",
-                    border: "1px solid #b7eb8f",
-                    borderRadius: 10,
-                    marginBottom: 20
-                }}
-                bodyStyle={{
-                    padding: "10px 14px"
+                    marginBottom: 24,
+                    maxWidth: 720
                 }}
             >
-                <div
-                    style={{
-                        display: "flex",
+                <Space align="center" style={{ width: "100%" }}>
+                    <CheckCircleFilled style={{ color: "#22c55e", fontSize: 22 }} />
 
-                        gap: 12,
-
-                    }}
-                >
-                    {/* LEFT: NAME + PHONE */}
-                    <div style={{ lineHeight: 1.2 }}>
-                        <Text strong>{selectedCustomer.name}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {selectedCustomer.phone}
-                        </Text>
+                    <div>
+                        <Text strong>{selectedCustomer.name}</Text><br />
+                        <Text type="secondary">{selectedCustomer.phone}</Text>
                     </div>
 
-                    {/* KYC TAG */}
-                    <Tag color="green" style={{ marginLeft: 8 }}>
-                        KYC
-                    </Tag>
+                    <Tag color="green">KYC Verified</Tag>
 
-                    {/* RIGHT: CHANGE */}
                     <Button
                         type="link"
-                        size="small"
                         danger
-                        style={{ marginLeft: "auto", padding: 0 }}
                         onClick={onChangeCustomer}
+                        style={{ marginLeft: "auto" }}
                     >
                         Change
                     </Button>
-                </div>
+                </Space>
             </Card>
         );
     }
 
-
-    // Else → show list
+    /* ================= LIST VIEW ================= */
     return (
-        <div
-            style={{
-                marginBottom: 24,
-                display: "flex",
-                padding: "0 12px"
+        <div style={{ maxWidth: 960 }}>
+            <Title level={5}>Select Customer</Title>
 
-            }}
-        >
-            <div
-                style={{
-                    width: "100%",
-                    maxWidth: 720   // 👈 KEY VALUE (desktop sweet spot)
-                }}
-            >
-
-            <Text strong style={{ display: "block", marginBottom: 12 }}>
-                Select Customer
-            </Text>
+            {/* SEARCH */}
+            <Input
+                allowClear
+                prefix={<SearchOutlined />}
+                placeholder="Search name or phone"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ maxWidth: 360, marginBottom: 20 }}
+            />
 
             {loading ? (
-                <div>Loading customers…</div>
+                <Text>Loading customers…</Text>
             ) : (
                 <Row gutter={[16, 16]}>
-                    {customers.map((customer) => {
-                        const kycVerified = customer?.kyc?.some(k => k.verified);
+                    {filteredCustomers.map((customer) => {
+                        const verified = isKycVerified(customer);
 
                         return (
-                            <Col
-                                key={customer.id}
-                                xs={24}   // 📱 Mobile: 1 per row
-                                sm={24}
-                                md={12}   // 💻 Desktop: 2 per row
-                                lg={12}
-                            >
-
+                            <Col key={customer.id} xs={24} sm={12} lg={8}>
                                 <Card
                                     hoverable
                                     onClick={() => {
-                                        if (kycVerified) {
-                                            onSelect(customer);
-                                        } else {
-                                            navigate("/app/apps/customers");
-                                        }
+                                        if (verified) onSelect(customer);
+                                        else navigate("/app/apps/customers");
                                     }}
                                     style={{
-                                        width: "100%",
-                                        height: 72,
-                                        borderRadius: 10,
-                                        cursor: kycVerified ? "pointer" : "pointer",
-                                        opacity: kycVerified ? 1 : 0.5
+                                        borderRadius: 16,
+                                        position: "relative",
+                                        height: "100%",
+                                        opacity: verified ? 1 : 0.6
                                     }}
-                                    bodyStyle={{ padding: "12px 16px" }}
                                 >
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "space-between"
-                                        }}
-                                    >
-                                        {/* LEFT: Name + Phone */}
-                                        <div style={{ lineHeight: 1.2 }}>
-                                            <Text strong style={{ display: "block" }}>
-                                                {customer.name}
-                                            </Text>
-                                            <Text type="secondary" style={{ fontSize: 12 }}>
-                                                {customer.phone}
-                                            </Text>
-                                        </div>
+                                    {/* KYC ICON */}
+                                    {verified ? (
+                                        <CheckCircleFilled
+                                            style={{
+                                                color: "#22c55e",
+                                                fontSize: 22,
+                                                position: "absolute",
+                                                top: 16,
+                                                right: 16
+                                            }}
+                                        />
+                                    ) : (
+                                        <CloseCircleFilled
+                                            style={{
+                                                color: "#ef4444",
+                                                fontSize: 22,
+                                                position: "absolute",
+                                                top: 16,
+                                                right: 16
+                                            }}
+                                        />
+                                    )}
 
-                                        {/* RIGHT: KYC */}
-                                        <Tag color={kycVerified ? "green" : "red"}>
-                                            {kycVerified ? "KYC" : "No KYC"}
+                                    <Title level={5} style={{ marginBottom: 4 }}>
+                                        {customer.name}
+                                    </Title>
+
+                                    <Text>{customer.phone}</Text><br />
+
+                                    <div style={{ marginTop: 10 }}>
+                                        <Tag color={verified ? "green" : "red"}>
+                                            {verified ? "KYC Verified" : "KYC Pending"}
                                         </Tag>
                                     </div>
-                                </Card>
 
+                                    {!verified && (
+                                        <Button
+                                            danger
+                                            size="small"
+                                            style={{ marginTop: 12 }}
+                                            >
+                                            Complete KYC →
+                                        </Button>
+                                    )}
+                                </Card>
                             </Col>
                         );
                     })}
                 </Row>
-
             )}
-        </div>
         </div>
     );
 };

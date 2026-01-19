@@ -1,6 +1,6 @@
-import RazorpayIcon from "../../../assets/razorpay.png";
-import CashfreeIcon from "../../../assets/cashfree.png";
-import PayUIcon from "../../../assets/payu.png";
+import RazorpayIcon from "../../../../assets/razorpay.png";
+import CashfreeIcon from "../../../../assets/cashfree.png";
+import PayUIcon from "../../../../assets/payu.png";
 
 export const MODE_CONFIG = {
     "Slpe Silver Prime EDU": {

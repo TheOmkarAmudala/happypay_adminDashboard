@@ -73,7 +73,7 @@ const KYCPage = () => {
 		try {
 			setBankLoading(true);
 
-			const res = await axiosAuth.get("payout/getAllBankAccounts");
+			const res = await axiosAuth.get("/payout/bankAccounts");
 
 			console.log("BANK LIST RESPONSE:", res.data);
 
@@ -102,21 +102,26 @@ const KYCPage = () => {
 				`cashfree/aadhaar/sendotp?aadhaar=${aadhaar.trim()}`
 			);
 
-			console.log("AADHAAR OTP RESPONSE:", res.data);
 
 			if (res.data?.message === "OTP sent successfully") {
-				setAadhaarTxnId(res.data?.data?.txnId);
+				const refId =
+					res.data?.data?.ref_id ||
+					res.data?.data?.refId ||
+					res.data?.refId;
+
+				if (!refId) {
+					message.error("Failed to get Aadhaar reference ID");
+					return;
+				}
+
+				setAadhaarTxnId(refId);
+
 				setOtpSent(true);
 				message.success("OTP sent to registered mobile");
 			} else {
 				message.error(res.data?.message || "Failed to send OTP");
 			}
 		} catch (err) {
-			console.error(
-				"AADHAAR OTP ERROR:",
-				err.response?.status,
-				err.response?.data
-			);
 			message.error(err.response?.data?.message || "Failed to send OTP");
 		} finally {
 			setLoading(false);
@@ -134,7 +139,6 @@ const KYCPage = () => {
 				aadhaar: aadhaar.trim()         // same Aadhaar used in send OTP
 			};
 
-			console.log("VERIFY PAYLOAD:", payload);
 
 			const res = await axios.post(
 				"https://test.happypay.live/cashfree/aadhaar/verifyotp",
@@ -147,7 +151,6 @@ const KYCPage = () => {
 				}
 			);
 
-			console.log("AADHAAR VERIFY RESPONSE:", res.data);
 
 			if (res.data?.message === "Aadhaar verified successfully") {
 				setAadhaarVerified(true);
