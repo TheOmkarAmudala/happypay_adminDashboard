@@ -17,6 +17,7 @@ export const publicRoutes = [
         path: `${AUTH_PREFIX_PATH}/login-2`,
         component: React.lazy(() => import('views/auth-views/authentication/login-2')),
     },
+
     {
         key: 'register-1',
         path: `${AUTH_PREFIX_PATH}/register-1`,
@@ -65,6 +66,12 @@ export const protectedRoutes = [
         path: `${APP_PREFIX_PATH}/payout`,
         component: React.lazy(() => import('views/app-views/payout')),
     },
+    {
+        key: 'businesscards',
+        path: `${APP_PREFIX_PATH}/businesscards`,
+        component: React.lazy(() => import('views/app-views/businesscards/PaymentPage')),
+    },
+
     {
         key: 'payin',
         path: `${APP_PREFIX_PATH}/payin`,

@@ -16,7 +16,7 @@ import {
 } from "antd";
 import {
 	CheckCircleFilled,
-	CloseCircleFilled
+	ClockCircleFilled
 } from "@ant-design/icons";
 import axios from "axios";
 
@@ -207,7 +207,7 @@ const CustomerKycManagement = () => {
 									{verified ? (
 										<CheckCircleFilled style={{ color: "#22c55e", fontSize: 22, position: "absolute", top: 16, right: 16 }} />
 									) : (
-										<CloseCircleFilled style={{ color: "#ef4444", fontSize: 22, position: "absolute", top: 16, right: 16 }} />
+										<ClockCircleFilled style={{ color: "#f97316", fontSize: 22, position: "absolute", top: 16, right: 16 }} />
 									)}
 
 									<Title level={5}>{c.name}</Title>
@@ -215,7 +215,7 @@ const CustomerKycManagement = () => {
 									<Text type="secondary">{c.email || "—"}</Text>
 
 									<div style={{ marginTop: 10 }}>
-										<Tag color={verified ? "green" : "red"}>
+										<Tag color={verified ? "green" : "orange"}>
 											{verified ? "KYC Verified" : "KYC Pending"}
 										</Tag>
 									</div>

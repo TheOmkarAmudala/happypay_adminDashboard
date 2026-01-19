@@ -1,9 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Row, Col, Tag, Spin, Divider } from "antd";
+import {
+    Modal,
+    Row,
+    Col,
+    Tag,
+    Divider,
+    Typography,
+    Card,
+    Avatar,
+    Space
+} from "antd";
+import { useSelector } from "react-redux";
 import axios from "axios";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import ProfileSkeleton from "./ProfileSkeleton";
+import {
+    UserOutlined,
+    SafetyOutlined
+} from "@ant-design/icons";
 
-const KycModal = ({ open, onClose }) => {
-    const token = localStorage.getItem("AUTH_TOKEN");
+dayjs.extend(customParseFormat);
+
+const { Text, Title } = Typography;
+
+const ProfileModal = ({ open, onClose }) => {
+    const token = useSelector((state) => state.auth.token);
+    const profile = useSelector((state) => state.profile.data);
 
     const [loading, setLoading] = useState(false);
     const [kycData, setKycData] = useState([]);
@@ -14,16 +37,12 @@ const KycModal = ({ open, onClose }) => {
         const fetchKyc = async () => {
             try {
                 setLoading(true);
-
                 const res = await axios.get(
                     "https://test.happypay.live/users/kyc",
                     {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
+                        headers: { Authorization: `Bearer ${token}` }
                     }
                 );
-
                 setKycData(res.data?.data || []);
             } catch (err) {
                 console.error("KYC FETCH ERROR:", err);
@@ -33,78 +52,226 @@ const KycModal = ({ open, onClose }) => {
         };
 
         fetchKyc();
-    }, [open]);
+    }, [open, token]);
 
-    const aadhaar = kycData.find(k => k.type === "aadhaar");
-    const pan = kycData.find(k => k.type === "pan");
+    const aadhaar = kycData.find((k) => k.type === "aadhaar");
+    const pan = kycData.find((k) => k.type === "pan");
+
+    const joinedDate = profile?.createdAt
+        ? dayjs(profile.createdAt).format("DD MMM YYYY")
+        : "-";
+
+    const aadhaarDob = aadhaar?.response?.dob;
+
+    const profileDobValid =
+        profile?.dob &&
+        dayjs(profile.dob).isValid() &&
+        profile.dob !== "0001-01-01T00:00:00Z";
+
+    const dob = profileDobValid
+        ? dayjs(profile.dob).format("DD MMM YYYY")
+        : aadhaarDob && dayjs(aadhaarDob, "DD-MM-YYYY", true).isValid()
+            ? dayjs(aadhaarDob, "DD-MM-YYYY").format("DD MMM YYYY")
+            : "Not Provided";
 
     return (
         <Modal
-            title="Profile"
             open={open}
             onCancel={onClose}
             footer={null}
-            width={600}
+            title={null}
+            width={500}
+            bodyStyle={{ padding: 20 }}
         >
-            {loading ? (
-                <Spin />
+            {!profile || loading ? (
+                <ProfileSkeleton />
             ) : (
                 <>
-                    {/* USER BASIC INFO */}
-                    <Row gutter={[16, 16]}>
-                        <Col span={24}>
-                            <h3 style={{ marginBottom: 0 }}>
-                                {aadhaar?.response?.name ||
-                                    pan?.response?.registered_name ||
-                                    "User"}
-                            </h3>
-                        </Col>
+                    {/* ================= BOX 1: HEADER ================= */}
+                    <Card
+                        bordered={false}
+                        style={{
+                            background: "#1890ff",
+                            borderRadius: 12,
+                            marginBottom: 12
+                        }}
+                        bodyStyle={{ padding: "12px 16px" }}
+                    >
+                        <Row align="middle">
+                            <Col span={12}>
+                                <Space size={10}>
+                                    <Avatar
+                                        size={42}
+                                        icon={<UserOutlined />}
+                                        style={{
+                                            background: "#fff",
+                                            color: "#1890ff"
+                                        }}
+                                    />
+                                    <Title
+                                        level={5}
+                                        style={{
+                                            color: "#fff",
+                                            margin: 0,
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        {profile.username}
+                                    </Title>
+                                </Space>
+                            </Col>
 
-                        <Col span={12}>
-                            <strong>Gender:</strong>{" "}
-                            {aadhaar?.response?.gender === "M"
-                                ? "Male"
-                                : aadhaar?.response?.gender === "F"
-                                    ? "Female"
-                                    : "-"}
-                        </Col>
+                            <Col span={12} style={{ textAlign: "right" }}>
+                                <Text
+                                    style={{
+                                        color: "rgba(255,255,255,0.9)",
+                                        fontSize: 14,
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    {profile.phoneNumber}
+                                </Text>
+                            </Col>
+                        </Row>
+                    </Card>
 
-                        <Col span={12}>
-                            <strong>Year of Birth:</strong>{" "}
-                            {aadhaar?.response?.year_of_birth || "-"}
-                        </Col>
+                    {/* ================= BOX 2: MAIN INFO ================= */}
+                    <Card
+                        bordered={false}
+                        style={{ borderRadius: 12, marginBottom: 12, marginRight:22 }}
+                        bodyStyle={{ padding: "14px 16px" }}
+                    >
+                        <Row gutter={[24, 12]}>
+                            {/* LEFT: REFERRAL */}
+                            <Col span={12}>
+                                <Title level={5} style={{ marginBottom: 10 }}>
+                                    Referral
+                                </Title>
 
-                        <Col span={24}>
-                            <strong>Location:</strong>{" "}
-                            {aadhaar?.response?.split_address?.dist},{" "}
-                            {aadhaar?.response?.split_address?.state}
-                        </Col>
-                    </Row>
+                                <Space direction="vertical" size={8}>
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>
+                                            Referral Code
+                                        </Text>
+                                        <br />
+                                        <Tag
+                                            color="processing"
+                                            style={{ fontWeight: 500 }}
+                                        >
+                                            {profile.referralCode}
+                                        </Tag>
+                                    </div>
 
-                    <Divider />
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>
+                                            Referral Link
+                                        </Text>
+                                        <br />
+                                        <Text copyable>
+                                            {profile.referralLink}
+                                        </Text>
+                                    </div>
+                                </Space>
+                            </Col>
 
-                    {/* VERIFICATION STATUS */}
-                    <Row gutter={16}>
-                        <Col>
-                            {aadhaar?.verified ? (
-                                <Tag color="green">Aadhaar Verified</Tag>
-                            ) : (
-                                <Tag color="red">Aadhaar Not Verified</Tag>
-                            )}
-                        </Col>
+                            {/* RIGHT: LEVEL + META */}
+                            <Col span={10}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 10,
+                                        alignItems: "flex-end" // 🔥 important
+                                    }}
+                                >
+                                    {/* USER LEVEL */}
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>
+                                            User Level
+                                        </Text>
+                                        <br />
+                                        <Tag
+                                            style={{
+                                                background: "#E6F4FF",
+                                                color: "#1677FF",
+                                                border: "1px solid #91C3FD",
+                                                fontSize: 12,
+                                                fontWeight: 600,
+                                                padding: "4px 10px",
+                                                borderRadius: 6
+                                            }}
+                                        >
+                                            LEVEL {profile.userLevel}
+                                        </Tag>
+                                    </div>
 
-                        <Col>
-                            {pan?.verified ? (
-                                <Tag color="green">PAN Verified</Tag>
-                            ) : (
-                                <Tag color="red">PAN Not Verified</Tag>
-                            )}
-                        </Col>
-                    </Row>
+                                    {/* DOB */}
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>
+                                            Date of Birth
+                                        </Text>
+                                        <br />
+                                        <Text style={{ fontWeight: 500 }}>
+                                            {dob}
+                                        </Text>
+                                    </div>
+
+                                    {/* JOINED */}
+                                    <div>
+                                        <Text type="secondary" style={{ fontSize: 11 }}>
+                                            Joined On
+                                        </Text>
+                                        <br />
+                                        <Text style={{ fontWeight: 500 }}>
+                                            {joinedDate}
+                                        </Text>
+                                    </div>
+                                </div>
+                            </Col>
+
+                        </Row>
+                    </Card>
+
+                    {/* ================= BOX 3: VERIFICATION ================= */}
+                    <Card
+                        bordered={false}
+                        style={{ borderRadius: 12 }}
+                        bodyStyle={{ padding: "12px 16px" }}
+                    >
+                        <Title level={5} style={{ marginBottom: 8 }}>
+                            Verification Status
+                        </Title>
+
+                        <Space size={10}>
+                            <Tag
+                                icon={<SafetyOutlined />}
+                                color={aadhaar?.verified ? "green" : "red"}
+                                style={{
+                                    padding: "4px 10px",
+                                    borderRadius: 6,
+                                    fontWeight: 500
+                                }}
+                            >
+                                Aadhaar {aadhaar?.verified ? "Verified" : "Not Verified"}
+                            </Tag>
+
+                            <Tag
+                                icon={<SafetyOutlined />}
+                                color={pan?.verified ? "green" : "red"}
+                                style={{
+                                    padding: "4px 10px",
+                                    borderRadius: 6,
+                                    fontWeight: 500
+                                }}
+                            >
+                                PAN {pan?.verified ? "Verified" : "Not Verified"}
+                            </Tag>
+                        </Space>
+                    </Card>
                 </>
             )}
         </Modal>
     );
 };
 
-export default KycModal;
+export default ProfileModal;

@@ -1,5 +1,5 @@
-import { 
-  DashboardOutlined, 
+import {
+  DashboardOutlined,
   AppstoreOutlined,
   FileTextOutlined,
   PieChartOutlined,
@@ -187,6 +187,14 @@ const dashBoardNavTree = [{
       icon: DashboardOutlined,
       breadcrumb: false,
       submenu: []
+    } ,
+    {
+      key: 'apps-Bill-payments',
+      path: `${APP_PREFIX_PATH}/apps/customers`,
+      title: 'Bill Payments',
+      icon: MailOutlined,
+      breadcrumb: false,
+      submenu: []
     }
     ,
     {
@@ -200,7 +208,7 @@ const dashBoardNavTree = [{
     {
       key: 'apps-chat',
       path: `${APP_PREFIX_PATH}/apps/referral-tree`,
-      title: 'Referal Tree',
+      title: 'Team Members',
       icon: MessageOutlined,
       breadcrumb: false,
       submenu: []
@@ -210,6 +218,15 @@ const dashBoardNavTree = [{
       path: `${APP_PREFIX_PATH}/reports`,
       icon: CalendarOutlined,
       title: 'Reports',
+      breadcrumb: false,
+      submenu: []
+    },
+
+    {
+      key: 'Ban Users',
+      path: `${APP_PREFIX_PATH}/reports`,
+      icon: CalendarOutlined,
+      title: 'Ban Users',
       breadcrumb: false,
       submenu: []
     },
@@ -251,7 +268,7 @@ const appsNavTree = [{
     {
       key: 'apps-chat',
       path: `${APP_PREFIX_PATH}/apps/referral-tree`,
-      title: 'Referal Tree',
+      title: 'Team Members',
       icon: MessageOutlined,
       breadcrumb: false,
       submenu: []
@@ -260,7 +277,7 @@ const appsNavTree = [{
       key: 'reports',
       path: `${APP_PREFIX_PATH}/reports`,
       icon: CalendarOutlined,
-        title: 'Reports',
+      title: 'Reports',
       breadcrumb: false,
       submenu: []
     },

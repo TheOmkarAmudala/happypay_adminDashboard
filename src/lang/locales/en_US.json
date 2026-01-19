@@ -6,6 +6,9 @@
 	"sidenav.dashboard.analytic": "Commercial",
 	"sidenav.dashboard.sales": "KYC",
 	"sidenav.dashboard.customer": "Customer",
+	"sidenav.dashboard.Support": "Support",
+	"sidenav.dashboard.Billpayments": "billpayments",
+
 
 	"sidenav.apps": "User",
 	"sidenav.apps.mail": "Customer",

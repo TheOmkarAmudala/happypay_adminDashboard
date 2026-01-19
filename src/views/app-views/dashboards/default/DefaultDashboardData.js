@@ -56,7 +56,6 @@ export const getAnnualStatisticData = (profile) => [
 	},
 	{
 		title: "Business Cards",
-
 		status: -3.2,
 		subtitle: "Total Pay Out",
 		route: "/BusinessCards",
