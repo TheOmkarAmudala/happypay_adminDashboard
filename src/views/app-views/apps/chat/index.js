@@ -29,8 +29,8 @@ const ChildrenByLevel = () => {
 
 	// Filters
 	const [searchText, setSearchText] = useState("");
-	const [kycFilter, setKycFilter] = useState("all"); // all | done | pending
-	const [sortOrder, setSortOrder] = useState("new"); // new | old
+	const [kycFilter, setKycFilter] = useState("all");
+	const [sortOrder, setSortOrder] = useState("new");
 
 	const requestIdRef = useRef(0);
 
@@ -43,15 +43,13 @@ const ChildrenByLevel = () => {
 			const res = await axios.get(
 				`${API_BASE}/users/getChildren?level=${selectedLevel}`,
 				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
+					headers: { Authorization: `Bearer ${token}` }
 				}
 			);
 
 			if (currentRequestId !== requestIdRef.current) return;
 			setChildren(res.data?.data || []);
-		} catch (err) {
+		} catch {
 			if (currentRequestId !== requestIdRef.current) return;
 			setChildren([]);
 		} finally {
@@ -92,31 +90,14 @@ const ChildrenByLevel = () => {
 			});
 	}, [children, searchText, kycFilter, sortOrder]);
 
-	/* ================= SKELETON UI ================= */
-	const SkeletonGrid = () => (
-		<Row gutter={[16, 16]}>
-			{Array.from({ length: 8 }).map((_, i) => (
-				<Col xs={24} sm={12} md={8} lg={6} key={i}>
-					<Card style={{ borderRadius: 12 }}>
-						<Skeleton
-							active
-							title={{ width: "60%" }}
-							paragraph={{ rows: 2 }}
-						/>
-					</Card>
-				</Col>
-			))}
-		</Row>
-	);
-
 	/* ================= UI ================= */
 	return (
 		<Card bordered={false} style={{ borderRadius: 12 }}>
-			{/* ===== Header ===== */}
-			<Title level={4}>Referral Tree – Level {level}</Title>
+			<Title level={4}>Referral Tree</Title>
 
+			{/* ===== FILTER BAR ===== */}
 			<Row gutter={[12, 12]} align="middle">
-				<Col xs={24} md={8}>
+				<Col xs={24} md={7}>
 					<Search
 						placeholder="Search username or referral code"
 						allowClear
@@ -125,11 +106,7 @@ const ChildrenByLevel = () => {
 				</Col>
 
 				<Col xs={12} md={4}>
-					<Select
-						value={kycFilter}
-						style={{ width: "100%" }}
-						onChange={setKycFilter}
-					>
+					<Select value={kycFilter} style={{ width: "100%" }} onChange={setKycFilter}>
 						<Option value="all">All KYC</Option>
 						<Option value="done">KYC Done</Option>
 						<Option value="pending">KYC Pending</Option>
@@ -137,17 +114,28 @@ const ChildrenByLevel = () => {
 				</Col>
 
 				<Col xs={12} md={4}>
-					<Select
-						value={sortOrder}
-						style={{ width: "100%" }}
-						onChange={setSortOrder}
-					>
+					<Select value={sortOrder} style={{ width: "100%" }} onChange={setSortOrder}>
 						<Option value="new">Newest</Option>
 						<Option value="old">Oldest</Option>
 					</Select>
 				</Col>
 
-				<Col xs={24} md={8} style={{ textAlign: "right" }}>
+				{/* ✅ LEVEL SELECTOR */}
+				<Col xs={12} md={4}>
+					<Select
+						value={level}
+						style={{ width: "100%" }}
+						onChange={setLevel}
+					>
+						{[1, 2, 3, 4, 5].map((l) => (
+							<Option key={l} value={l}>
+								Level {l}
+							</Option>
+						))}
+					</Select>
+				</Col>
+
+				<Col xs={24} md={5} style={{ textAlign: "right" }}>
 					<Tag color="blue" style={{ padding: "6px 12px", fontSize: 14 }}>
 						👥 {filteredChildren.length} Customers
 					</Tag>
@@ -156,25 +144,17 @@ const ChildrenByLevel = () => {
 
 			<Divider />
 
-			{/* ===== Level Selector ===== */}
-			<div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-				{[1, 2, 3, 4, 5].map((l) => (
-					<Button
-						key={l}
-						type={level === l ? "primary" : "default"}
-						shape="round"
-						onClick={() => setLevel(l)}
-					>
-						Level {l}
-					</Button>
-				))}
-			</div>
-
-			<Divider />
-
-			{/* ===== Content ===== */}
+			{/* ===== CONTENT ===== */}
 			{loading ? (
-				<SkeletonGrid />
+				<Row gutter={[16, 16]}>
+					{Array.from({ length: 6 }).map((_, i) => (
+						<Col xs={24} sm={12} md={8} lg={6} key={i}>
+							<Card>
+								<Skeleton active paragraph={{ rows: 2 }} />
+							</Card>
+						</Col>
+					))}
+				</Row>
 			) : filteredChildren.length === 0 ? (
 				<Empty description="No users found" />
 			) : (
@@ -182,21 +162,13 @@ const ChildrenByLevel = () => {
 					{filteredChildren.map((user) => (
 						<Col xs={24} sm={12} md={8} lg={6} key={user.id}>
 							<Card hoverable style={{ borderRadius: 12 }}>
-								<Title level={5} style={{ marginBottom: 4 }}>
-									{user.username}
-								</Title>
-
+								<Title level={5}>{user.username}</Title>
 								<Tag color="geekblue">{user.referralCode}</Tag>
 
-								<div style={{ marginTop: 8 }}>
-									<Tag color={user.kycDone ? "green" : "red"}>
-										{user.kycDone ? "KYC Verified" : "KYC Pending"}
-									</Tag>
-								</div>
+
 
 								<Text type="secondary" style={{ fontSize: 12 }}>
-									Joined:{" "}
-									{new Date(user.createdAt).toLocaleDateString()}
+									Joined: {new Date(user.createdAt).toLocaleDateString()}
 								</Text>
 							</Card>
 						</Col>

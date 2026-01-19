@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Input, Button, Tag, message, Divider, Typography } from "antd";
+import { Card, Row, Col, Input, Button, Tag, message, Divider, Typography,  } from "antd";
 import { Modal, Select } from "antd";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { CheckCircleFilled } from "@ant-design/icons";
 
-const { Title } = Typography;
+
+const { Text } = Typography;
 
 const KYCPage = () => {
 	const token = useSelector(state => state.auth.token);
@@ -57,17 +59,46 @@ const KYCPage = () => {
 
 	/* -------------------- GET KYC STATUS -------------------- */
 	useEffect(() => {
-		const fetchKyc = async () => {
+		const fetchKycStatus = async () => {
 			try {
 				const res = await axiosAuth.get("users/kyc");
-				if (res.data?.data?.aadhaarVerified) setAadhaarVerified(true);
-				if (res.data?.data?.panVerified) setPanVerified(true);
+
+				const kycList = Array.isArray(res.data?.data)
+					? res.data.data
+					: [];
+
+				const isAadhaarVerified = kycList.some(
+					(item) => item.type === "aadhaar" && item.verified === true
+				);
+
+				const isPanVerified = kycList.some(
+					(item) => item.type === "pan" && item.verified === true
+				);
+
+				setAadhaarVerified(isAadhaarVerified);
+				setPanVerified(isPanVerified);
+
+				// Auto-unlock bank if PAN already verified
+				if (isPanVerified) {
+					setShowBankSection(true);
+					fetchBankAccounts();
+				}
 			} catch (err) {
-				console.warn("KYC status not found");
+				console.warn("Failed to fetch KYC status", err);
 			}
 		};
-		fetchKyc();
+
+		fetchKycStatus();
 	}, []);
+
+
+	useEffect(() => {
+		if (panVerified) {
+			setShowBankSection(true);
+			fetchBankAccounts();
+		}
+	}, [panVerified]);
+
 
 	const fetchBankAccounts = async () => {
 		try {
@@ -131,14 +162,11 @@ const KYCPage = () => {
 		try {
 			setLoading(true);
 
-
-
 			const payload = {
-				otp: otp.trim(),               // string, 6 digits
-				refId: aadhaarTxnId,            // MUST be "32953327"
-				aadhaar: aadhaar.trim()         // same Aadhaar used in send OTP
+				otp: otp.trim(),
+				refId: aadhaarTxnId,
+				aadhaar: aadhaar.trim()
 			};
-
 
 			const res = await axios.post(
 				"https://test.happypay.live/cashfree/aadhaar/verifyotp",
@@ -151,24 +179,20 @@ const KYCPage = () => {
 				}
 			);
 
+			// ✅ IF REQUEST DID NOT FAIL → SUCCESS
+			setAadhaarVerified(true);
+			message.success("Aadhaar verified successfully");
 
-			if (res.data?.message === "Aadhaar verified successfully") {
-				setAadhaarVerified(true);
-				message.success("Aadhaar verified successfully");
-			} else {
-				message.error(res.data?.message || "Invalid OTP");
-			}
 		} catch (err) {
-			console.error(
-				"AADHAAR VERIFY ERROR:",
-				err.response?.status,
-				err.response?.data
+			console.error("AADHAAR VERIFY ERROR:", err.response?.data || err);
+			message.error(
+				err.response?.data?.message || "OTP verification failed"
 			);
-			message.error(err.response?.data?.message || "Failed to verify OTP");
 		} finally {
 			setLoading(false);
 		}
 	};
+
 
 	/* -------------------- PAN -------------------- */
 	const verifyPan = async () => {
@@ -338,10 +362,15 @@ const KYCPage = () => {
 						)}
 
 						{aadhaarVerified && (
-							<Tag color="green" className="mt-3">
-								VERIFIED
+							<Tag
+								color="green"
+								icon={<CheckCircleFilled />}
+								style={{ marginTop: 12 }}
+							>
+								Aadhaar Verified
 							</Tag>
 						)}
+
 					</Card>
 				</Col>
 
@@ -359,23 +388,22 @@ const KYCPage = () => {
 						bordered
 						style={{
 							borderRadius: 12,
-							borderTop: "4px solid #1a4fa3"
-						}}
+							opacity: aadhaarVerified ? 1 : 0.45,
+							pointerEvents: aadhaarVerified ? "auto" : "none"	}}
 					>
 						<Input
 							placeholder="Enter PAN Number"
 							maxLength={10}
-							disabled={panVerified}
+							disabled={!aadhaarVerified || panVerified}
+
 							value={pan}
-							onChange={e =>
-								setPan(e.target.value.toUpperCase())
-							}
+							onChange={e => setPan(e.target.value.toUpperCase())}
 						/>
 
 						<Input
 							placeholder="Enter Name as on PAN"
 							className="mt-2"
-							disabled={panVerified}
+							disabled={!aadhaarVerified || panVerified}
 							value={panName}
 							onChange={e => setPanName(e.target.value)}
 						/>
@@ -386,9 +414,12 @@ const KYCPage = () => {
 								block
 								className="mt-3"
 								loading={loading}
-								onClick={verifyPan}
-								disabled={pan.length !== 10 || panName.length < 3}
-							>
+								disabled={
+									!aadhaarVerified ||
+									pan.length !== 10 ||
+									panName.length < 3
+								}
+								onClick={verifyPan} >
 								Verify PAN
 							</Button>
 						) : (
@@ -396,132 +427,120 @@ const KYCPage = () => {
 								VERIFIED
 							</Tag>
 						)}
+
+
+						{!aadhaarVerified && (
+							<Text type="secondary" style={{ display: "block", marginTop: 8 }}>
+								Verify Aadhaar to unlock PAN
+							</Text>
+						)}
 					</Card>
 				</Col>
 
 			</Row>
 
 			{/* BANK SECTION */}
-				{/* ================= BANK CARD ================= */}
-				<Card
-					title={
-						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-							<span>Bank Account Verification</span>
-							<span style={{ fontSize: 12, color: "#389e0d" }}>
-        • Secure Payout Setup
-      </span>
-						</div>
-					}
-					bordered
-					style={{
-						borderRadius: 12,
-						borderTop: "4px solid #52c41a",
-						marginTop: 24
-					}}
-				>
-					{/* subtle gradient header */}
-					<div
-						style={{
-							height: 6,
-							background:
-								"linear-gradient(90deg, #d9f7be 0%, #ffffff 50%, #f6ffed 100%)",
-							marginBottom: 16,
-							borderRadius: 4
-						}}
-					/>
+			{/* ================= BANK ACCOUNT VERIFICATION ================= */}
+			<Card
+				title={
+					<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+						<span>Bank Account Verification</span>
+						<span style={{ fontSize: 12, color: "#389e0d" }}>
+				• Secure Payout Setup
+			</span>
+					</div>
+				}
+				bordered
+				style={{
+					borderRadius: 12,
+					borderTop: "4px solid #52c41a",
+					marginTop: 24,
+					opacity: panVerified ? 1 : 0.5,
+					pointerEvents: panVerified ? "auto" : "none",
+				}}
+			>
+				{/* Helper message */}
+				{!panVerified && (
+					<Text type="secondary">
+						Complete PAN verification to unlock Bank setup
+					</Text>
+				)}
 
-					{/* STEP 1: CTA */}
-					{!showBankSection && (
-						<Button
-							type="primary"
-							block
+				{/* BANK FORM */}
+				{showBankSection && panVerified && (
+					<>
+						<Divider orientation="left">Select Bank</Divider>
+
+						<Select
+							showSearch
 							size="large"
-							onClick={() => {
-								fetchBankAccounts();
-								setShowBankSection(true);
-							}}
+							placeholder="Search your bank"
+							style={{ width: "100%" }}
+							value={selectedBank}
+							onChange={setSelectedBank}
 							loading={bankLoading}
-						>
-							Add / Verify Bank Account
-						</Button>
-					)}
+							options={bankList.map((bank) => ({
+								label: bank,
+								value: bank,
+							}))}
+							filterOption={(input, option) =>
+								option.label.toLowerCase().includes(input.toLowerCase())
+							}
+						/>
 
-					{/* STEP 2: BANK SELECTION */}
-					{showBankSection && (
-						<>
-							<Divider orientation="left">Select Bank</Divider>
+						{selectedBank && (
+							<>
+								<Divider orientation="left">Bank Details</Divider>
 
-							<Select
-								showSearch
-								placeholder="Search your bank"
-								style={{ width: "100%" }}
-								size="large"
-								value={selectedBank}
-								onChange={setSelectedBank}
-								options={bankList.map(bank => ({
-									label: bank,
-									value: bank
-								}))}
-								filterOption={(input, option) =>
-									option.label.toLowerCase().includes(input.toLowerCase())
-								}
-							/>
+								<Row gutter={[16, 16]}>
+									<Col xs={24} md={12}>
+										<Input
+											size="large"
+											placeholder="Account Number"
+											value={accountNumber}
+											onChange={(e) =>
+												setAccountNumber(e.target.value.replace(/\D/g, ""))
+											}
+										/>
+									</Col>
 
-							{/* STEP 3: DETAILS UNLOCK */}
-							{selectedBank && (
-								<>
-									<Divider orientation="left">Bank Details</Divider>
+									<Col xs={24} md={12}>
+										<Input
+											size="large"
+											placeholder="Confirm Account Number"
+											value={confirmAccountNumber}
+											onChange={(e) =>
+												setConfirmAccountNumber(e.target.value.replace(/\D/g, ""))
+											}
+											status={
+												confirmAccountNumber &&
+												confirmAccountNumber !== accountNumber
+													? "error"
+													: ""
+											}
+										/>
+									</Col>
 
-									<Row gutter={[16, 16]}>
-										<Col xs={24} md={12}>
-											<Input
-												size="large"
-												placeholder="Account Number"
-												value={accountNumber}
-												onChange={e =>
-													setAccountNumber(e.target.value.replace(/\D/g, ""))
-												}
-											/>
-										</Col>
+									<Col xs={24} md={12}>
+										<Input
+											size="large"
+											placeholder="Account Holder Name"
+											value={accountHolderName}
+											onChange={(e) =>
+												setAccountHolderName(e.target.value.toUpperCase())
+											}
+										/>
+									</Col>
 
-										<Col xs={24} md={12}>
-											<Input
-												size="large"
-												placeholder="Confirm Account Number"
-												value={confirmAccountNumber}
-												onChange={e =>
-													setConfirmAccountNumber(e.target.value.replace(/\D/g, ""))
-												}
-												status={
-													confirmAccountNumber &&
-													confirmAccountNumber !== accountNumber
-														? "error"
-														: ""
-												}
-											/>
-										</Col>
-
-										<Col xs={24} md={12}>
-											<Input
-												size="large"
-												placeholder="Account Holder Name"
-												value={accountHolderName}
-												onChange={e =>
-													setAccountHolderName(e.target.value.toUpperCase())
-												}
-											/>
-										</Col>
-
-										<Col xs={24} md={12}>
-											<Input
-												size="large"
-												placeholder="IFSC Code"
-												maxLength={11}
-												value={ifsc}
-												onChange={e => setIfsc(e.target.value.toUpperCase())}
-											/>
-										</Col>
-									</Row>
+									<Col xs={24} md={12}>
+										<Input
+											size="large"
+											placeholder="IFSC Code"
+											maxLength={11}
+											value={ifsc}
+											onChange={(e) => setIfsc(e.target.value.toUpperCase())}
+										/>
+									</Col>
 
 									<Col xs={24} md={12}>
 										<Input
@@ -529,29 +548,29 @@ const KYCPage = () => {
 											placeholder="Phone Number"
 											maxLength={10}
 											value={bankPhone}
-											onChange={e =>
+											onChange={(e) =>
 												setBankPhone(e.target.value.replace(/\D/g, ""))
 											}
 										/>
 									</Col>
+								</Row>
 
-
-									<Button
-										type="primary"
-										size="large"
-										style={{ marginTop: 20 }}
-										block
-										disabled={!isBankFormValid}
-										loading={bankLoading}
-										onClick={submitBankAccount}
-									>
-										Submit Bank Details
-									</Button>
-								</>
-							)}
-						</>
-					)}
-				</Card>
+								<Button
+									type="primary"
+									size="large"
+									block
+									style={{ marginTop: 20 }}
+									disabled={!isBankFormValid}
+									loading={bankLoading}
+									onClick={submitBankAccount}
+								>
+									Submit Bank Details
+								</Button>
+							</>
+						)}
+					</>
+				)}
+			</Card>
 
 
 		</>

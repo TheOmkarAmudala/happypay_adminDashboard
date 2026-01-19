@@ -18,6 +18,7 @@ const PaymentPage = () => {
     const [baseAmount, setBaseAmount] = useState(10000);
     const [modalOpen, setModalOpen] = useState(false);
 
+
     const { data: customers, loading } = useSelector(
         (state) => state.customers
     );
@@ -41,6 +42,7 @@ const PaymentPage = () => {
     return (
         <div style={{ padding: 12 }}>
 
+
             {/* ===== BACK BUTTON (VISIBLE ON STEP > 1) ===== */}
             {step > 1 && (
                 <Button
@@ -56,19 +58,34 @@ const PaymentPage = () => {
             {/* ================= STEP 1: PAYMENT MODE ================= */}
             {step === 1 && (
                 <>
+
                     <SlpePaymentModesCards
                         disabled={false}
+                        selectedMode={selectedMode}
                         onSelect={setSelectedMode}
                     />
 
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            marginTop: 16,
+                        }}
+                    >
                     <Button
                         type="primary"
                         disabled={!selectedMode}
-                        style={{ marginTop: 16 }}
-                        onClick={() => setStep(2)}
+                        style={{
+                            marginTop: 16,
+                            backgroundColor: "#4F46E5",
+                            borderColor: "#4F46E5",
+                            color: "#FFFFFF",
+                        }}  onClick={() => setStep(2)}
+
                     >
                         Next
                     </Button>
+                    </div>
                 </>
             )}
 
@@ -94,6 +111,10 @@ const PaymentPage = () => {
                             onClick={() => {
                                 setModalOpen(true);
                                 setStep(3);
+                            }}
+                            style={{
+                                backgroundColor: "#4F46E5",
+                                borderColor: "#4F46E5",
                             }}
                         >
                             Next

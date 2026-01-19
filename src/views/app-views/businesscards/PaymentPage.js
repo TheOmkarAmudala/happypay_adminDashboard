@@ -58,17 +58,21 @@ const PaymentPage = () => {
                 <>
                     <SlpePaymentModesCards
                         disabled={false}
+                        selectedMode={selectedMode}
+
                         onSelect={setSelectedMode}
                     />
 
-                    <Button
-                        type="primary"
-                        disabled={!selectedMode}
-                        style={{ marginTop: 16 }}
-                        onClick={() => setStep(2)}
-                    >
-                        Next
-                    </Button>
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                        <Button
+                            type="primary"
+                            disabled={!selectedMode}
+                            onClick={() => setStep(2)}
+                        >
+                            Next
+                        </Button>
+                    </div>
+
                 </>
             )}
 
