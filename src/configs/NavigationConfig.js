@@ -223,13 +223,13 @@ const dashBoardNavTree = [{
     },
 
     {
-      key: 'Ban Users',
-      path: `${APP_PREFIX_PATH}/reports`,
-      icon: CalendarOutlined,
+      key: 'ban-users',
+      path: `${APP_PREFIX_PATH}/ban`,
       title: 'Ban Users',
-      breadcrumb: false,
-      submenu: []
+      icon: CalendarOutlined, // or whatever icon
+      authority: [7], // 👈 ONLY OWNER / ADMIN
     },
+
     {
       key: 'dashboards-kyc',
       path: `${APP_PREFIX_PATH}/dashboards/kyc`,

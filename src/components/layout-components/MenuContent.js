@@ -6,11 +6,12 @@ import Icon from '../util-components/Icon';
 import navigationConfig from 'configs/NavigationConfig';
 import { useSelector, useDispatch } from 'react-redux';
 import { SIDE_NAV_LIGHT, NAV_TYPE_SIDE } from "constants/ThemeConstant";
-import utils from 'utils'
+import utils from 'utils';
 import { onMobileNavToggle } from 'store/slices/themeSlice';
 
 const { useBreakpoint } = Grid;
 
+/* ---------- Helpers ---------- */
 const setLocale = (localeKey, isLocaleOn = true) =>
 	isLocaleOn ? <IntlMessage id={localeKey} /> : localeKey.toString();
 
@@ -19,58 +20,88 @@ const setDefaultOpen = (key) => {
 	let keyString = "";
 	if (key) {
 		const arr = key.split("-");
-		for (let index = 0; index < arr.length; index++) {
-			const elm = arr[index];
-			index === 0 ? (keyString = elm) : (keyString = `${keyString}-${elm}`);
+		for (let i = 0; i < arr.length; i++) {
+			keyString = i === 0 ? arr[i] : `${keyString}-${arr[i]}`;
 			keyList.push(keyString);
 		}
 	}
 	return keyList;
 };
 
-const MenuItem = ({title, icon, path}) => {
-
+/* ---------- Menu Item ---------- */
+const MenuItem = ({ title, icon, path }) => {
 	const dispatch = useDispatch();
-
 	const isMobile = !utils.getBreakPoint(useBreakpoint()).includes('lg');
 
 	const closeMobileNav = () => {
-		if (isMobile) {
-			dispatch(onMobileNavToggle(false))
-		}
-	}
+		if (isMobile) dispatch(onMobileNavToggle(false));
+	};
 
 	return (
 		<>
-			{icon && <Icon type={icon} /> }
+			{icon && <Icon type={icon} />}
 			<span>{setLocale(title)}</span>
-			{path && <Link onClick={closeMobileNav} to={path} />}
+			{path && <Link to={path} onClick={closeMobileNav} />}
 		</>
-	)
-}
+	);
+};
 
-const getSideNavMenuItem = (navItem) => navItem.map(nav => {
-	return {
+/* ---------- 🔒 AUTHORITY FILTER ---------- */
+const filterByAuthority = (items, userLevel) => {
+	return items
+		.filter(item => {
+			if (!item.authority) return true;
+			return item.authority.includes(userLevel);
+		})
+		.map(item => ({
+			...item,
+			submenu: item.submenu
+				? filterByAuthority(item.submenu, userLevel)
+				: []
+		}));
+};
+
+/* ---------- Builders ---------- */
+const getSideNavMenuItem = (navItem) =>
+	navItem.map(nav => ({
 		key: nav.key,
-		label: <MenuItem title={nav.title} {...(nav.isGroupTitle ? {} : {path: nav.path, icon: nav.icon})} />,
-		...(nav.isGroupTitle ? {type: 'group'} : {}),
-		...(nav.submenu.length > 0 ? {children: getSideNavMenuItem(nav.submenu)} : {})
-	}
-})
+		label: (
+			<MenuItem
+				title={nav.title}
+				{...(nav.isGroupTitle ? {} : { path: nav.path, icon: nav.icon })}
+			/>
+		),
+		...(nav.isGroupTitle ? { type: 'group' } : {}),
+		...(nav.submenu?.length ? { children: getSideNavMenuItem(nav.submenu) } : {})
+	}));
 
-const getTopNavMenuItem = (navItem) => navItem.map(nav => {
-	return {
+const getTopNavMenuItem = (navItem) =>
+	navItem.map(nav => ({
 		key: nav.key,
-		label: <MenuItem title={nav.title} icon={nav.icon} {...(nav.isGroupTitle ? {} : {path: nav.path})} />,
-		...(nav.submenu.length > 0 ? {children: getTopNavMenuItem(nav.submenu)} : {})
-	}
-})
+		label: (
+			<MenuItem
+				title={nav.title}
+				icon={nav.icon}
+				{...(nav.isGroupTitle ? {} : { path: nav.path })}
+			/>
+		),
+		...(nav.submenu?.length ? { children: getTopNavMenuItem(nav.submenu) } : {})
+	}));
 
+/* ---------- Side Nav ---------- */
 const SideNavContent = (props) => {
-
 	const { routeInfo, hideGroupTitle, sideNavTheme = SIDE_NAV_LIGHT } = props;
+	const userLevel = useSelector(state => state.profile?.data?.userLevel);
 
-	const menuItems = useMemo(() => getSideNavMenuItem(navigationConfig), []);
+	const filteredNav = useMemo(
+		() => filterByAuthority(navigationConfig, userLevel),
+		[userLevel]
+	);
+
+	const menuItems = useMemo(
+		() => getSideNavMenuItem(filteredNav),
+		[filteredNav]
+	);
 
 	return (
 		<Menu
@@ -85,27 +116,34 @@ const SideNavContent = (props) => {
 	);
 };
 
+/* ---------- Top Nav ---------- */
 const TopNavContent = () => {
-
 	const topNavColor = useSelector(state => state.theme.topNavColor);
+	const userLevel = useSelector(state => state.profile?.data?.userLevel);
 
-	const menuItems = useMemo(() => getTopNavMenuItem(navigationConfig), [])
+	const filteredNav = useMemo(
+		() => filterByAuthority(navigationConfig, userLevel),
+		[userLevel]
+	);
+
+	const menuItems = useMemo(
+		() => getTopNavMenuItem(filteredNav),
+		[filteredNav]
+	);
 
 	return (
-		<Menu 
-			mode="horizontal" 
+		<Menu
+			mode="horizontal"
 			style={{ backgroundColor: topNavColor }}
 			items={menuItems}
 		/>
 	);
 };
 
-const MenuContent = (props) => {
-	return props.type === NAV_TYPE_SIDE ? (
-		<SideNavContent {...props} />
-	) : (
-		<TopNavContent {...props} />
-	);
-};
+/* ---------- Export ---------- */
+const MenuContent = (props) =>
+	props.type === NAV_TYPE_SIDE
+		? <SideNavContent {...props} />
+		: <TopNavContent {...props} />;
 
 export default MenuContent;
