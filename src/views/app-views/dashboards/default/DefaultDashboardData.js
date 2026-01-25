@@ -66,7 +66,7 @@ export const getAnnualStatisticData = (profile) => [
 
 		status: 1.8,
 		subtitle: "Total Refunds",
-		route: "/Amex",
+		route: "/amex&dinner",
 		icon: amex
 	},
 ];

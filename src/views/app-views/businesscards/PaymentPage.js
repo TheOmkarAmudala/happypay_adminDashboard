@@ -94,18 +94,14 @@ const PaymentPage = () => {
             : selectedMode.name.toLowerCase().includes("travel")
                 ? "travel"
                 : "Other",
-
         cn: selectedCustomer.phone,
-
         op: "",
         cir: "",
-
         ad1: selectedBank.bank_account_number,
         ad2: selectedBank.beneficiary_name,
         ad3: selectedBank.bank_ifsc,
         ad4: "",
-
-        beneficiary_id: selectedBank.beneficiary_id,
+        beneficiary_id: "686f7be987304564aafc528c",
 
         test: false,
 

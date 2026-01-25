@@ -68,7 +68,7 @@ const PaymentPage = () => {
             ad4: "",
 
             // ✅ CORRECT beneficiary id (from bank)
-            beneficiary_id: selectedBank.beneficiary_id,
+            beneficiary_id: "686f7be987304564aafc528c",
 
             test: false,
 

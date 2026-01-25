@@ -187,20 +187,17 @@ const tableColumns = [
 
 export const DefaultDashboard = () => {
   const [visitorChartData] = useState(VisitorChartData);
-   const [activeMembersData] = useState(ActiveMembersData);
+  const [activeMembersData] = useState(ActiveMembersData);
   const [newMembersData] = useState(NewMembersData)
-  const { direction } = useSelector(state => state.theme)
+  const {direction} = useSelector(state => state.theme)
   const [recentTransactionData, setRecentTransactionData] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   const navigate = useNavigate();
   const token = useSelector(state => state.auth.token);
-  const { data: profile, loading } = useSelector(state => state.profile);
+  const {data: profile, loading} = useSelector(state => state.profile);
 
   const annualStatisticData = getAnnualStatisticData(profile);
-
-
-
 
 
   // Navigate to the app-prefixed route. If data provides '/pay-out', normalize
@@ -241,7 +238,7 @@ export const DefaultDashboard = () => {
                 gatewayName: "Razorpay",
                 orderAmount: item.amount ? `₹${item.amount}` : "-",
                 paymentStatus: item.paymentStatus ?? "-",
-                  transactionStatus: item.status ?? "-"
+                transactionStatus: item.status ?? "-"
               };
             });
 
@@ -267,97 +264,75 @@ export const DefaultDashboard = () => {
 
   return (
       <>
-        <Row gutter={16}>
-          <Col xs={24} sm={24} md={12} lg={24}>
-            <Row gutter={[16, 16]} className="mb-3">
-              {(loading ? Array.from({ length: 6 }) : annualStatisticData).map((elm, i) => (
-                  <Col
-                      key={i}
-                      xs={12}
-                      sm={12}
-                      md={8}
-                      lg={8}
-                      xl={8}
-                      style={{ display: "flex" }}
+        {/* ================= DASHBOARD CARDS ================= */}
+        <div className="mb-3">
+          <Row gutter={[16, 16]}>
+            {(loading ? Array.from({length: 6}) : annualStatisticData).map((elm, i) => (
+                <Col key={i} xs={12} sm={12} md={6} lg={6} className="flex">
+                  <div
+                      className={`flex-1 ${loading ? "cursor-default" : "cursor-pointer"}`}
+                      onClick={() => !loading && handleStatClick(elm.route)}
                   >
-                    <div
-                        style={{
-                          flex: 1,
-                          cursor: loading ? "default" : "pointer",
-                          pointerEvents: loading ? "none" : "auto",
-                          transition: "transform 0.2s ease",
-                        }}
-                        onClick={() => !loading && handleStatClick(elm.route)}
-                        onMouseEnter={(e) =>
-                            !loading && (e.currentTarget.style.transform = "scale(1.02)")
-                        }
-                        onMouseLeave={(e) =>
-                            (e.currentTarget.style.transform = "scale(1)")
-                        }
-                    >
-                      {loading ? (
-                          <StatisticWidgetSkeleton />
-                      ) : (
-                          <StatisticWidget
-                              title={elm.title}
-                              value={elm.value}
-                              subtitle={elm.subtitle}
-                              icon={elm.icon}
-                          />
-                      )}
-                    </div>
-                  </Col>
-              ))}
-            </Row>
-
-
-          </Col>
-          <Col xs={24} sm={24} md={24} lg={6}>
-
-
-          </Col>
-        </Row>
-        <Row gutter={16}>
-
-
-          <Col xs={24} sm={24} md={24} lg={24}>
-            <Card title="Latest Transactions" extra={<CardDropdown items={latestTransactionOption} />}>
-              {loadingTransactions ? (
-                  <TableSkeleton rows={5} />
-              ) : (
-                  <Table
-                      columns={tableColumns}
-                      dataSource={sortedTransactions.slice(0, visibleCount)}
-                      rowKey="key"
-                      pagination={false}
-                  />
-              )}
-
-              {!loadingTransactions && (
-                  <div style={{ textAlign: "center", marginTop: 16 }}>
-                    {visibleCount < recentTransactionData.length && (
-                        <Button
-                            onClick={() => setVisibleCount(prev => prev + 10)}
-                            style={{ marginRight: 8 }}
-                        >
-                          Load More
-                        </Button>
-                    )}
-
-                    {visibleCount > 10 && (
-                        <Button onClick={() => setVisibleCount(10)}>
-                          Load Less
-                        </Button>
+                    {loading ? (
+                        <StatisticWidgetSkeleton/>
+                    ) : (
+                        <StatisticWidget
+                            title={elm.title}
+                            value={elm.value}
+                            subtitle={elm.subtitle}
+                            icon={elm.icon}
+                        />
                     )}
                   </div>
-              )}
-            </Card>
+                </Col>
+            ))}
+          </Row>
+        </div>
 
+      {/* ================= TABLE ================= */}
+        <div className="px-1">
+          <Row gutter={16}>
+            <Col xs={24}>
+              <Card
+                  title="Latest Transactions"
+                  extra={<CardDropdown items={latestTransactionOption}/>}
+                  className="shadow-sm rounded-xl"
+              >
+                {loadingTransactions ? (
+                    <TableSkeleton rows={6}/>
+                ) : (
+                    <Table
+                        columns={tableColumns}
+                        dataSource={sortedTransactions.slice(0, visibleCount)}
+                        rowKey="key"
+                        pagination={false}
+                        scroll={{y: 420}}   // single scroll source ✅
+                        sticky
+                        size="middle"
+                    />
+                )}
 
-          </Col>
-        </Row>
+                {!loadingTransactions && (
+                    <div className="flex justify-center gap-3 mt-4">
+                      {visibleCount < recentTransactionData.length && (
+                          <Button onClick={() => setVisibleCount(prev => prev + 10)}>
+                            Load More
+                          </Button>
+                      )}
+                      {visibleCount > 10 && (
+                          <Button onClick={() => setVisibleCount(10)}>
+                            Load Less
+                          </Button>
+                      )}
+                    </div>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        </div>
       </>
-  )
-}
 
+  );
+}
 export default DefaultDashboard;
+

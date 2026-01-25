@@ -186,7 +186,9 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
                                 )}
 
                                 {/* ICON */}
-                                <img src={config.icon} alt={mode.name} style={{ height: 28 }} />
+                                <img src={config.icon} alt={mode.name} style={{ height: 38,
+                                    width: 38,
+                                    objectFit: "contain", }} />
 
                                 {/* NAME */}
                                 <Text strong style={{ fontSize: 14 }}>

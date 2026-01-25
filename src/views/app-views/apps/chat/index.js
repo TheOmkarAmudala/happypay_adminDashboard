@@ -93,7 +93,7 @@ const ChildrenByLevel = () => {
 	/* ================= UI ================= */
 	return (
 		<Card bordered={false} style={{ borderRadius: 12 }}>
-			<Title level={4}>Referral Tree</Title>
+			<Title level={4}>Team Members</Title>
 
 			{/* ===== FILTER BAR ===== */}
 			<Row gutter={[12, 12]} align="middle">

@@ -22,7 +22,8 @@ export const SideNav = ({navCollapsed, routeInfo, hideGroupTitle, currentTheme }
         box-shadow: 0 1px 4px -1px rgba(0,0,0,.15);
         z-index: 999;
         direction: ltr;
-        ${currentTheme === 'light' && sideNavTheme !== SIDE_NAV_DARK ? `background-color: ${GRAY_SCALE.WHITE} !important;`  : `background-color: ${TEMPLATE.SIDE_NAV_DARK_BG_COLOR} !important;`}
+          color: #ffffff !important;
+        ${currentTheme === 'light' && sideNavTheme !== SIDE_NAV_DARK ? `background-color: ${TEMPLATE.SIDE_NAV_DARK_BG_COLOR} !important;`  : `background-color: ${TEMPLATE.SIDE_NAV_DARK_BG_COLOR} !important;`}
         ${currentTheme === 'dark' && sideNavTheme !== SIDE_NAV_DARK ? `background-color: ${DARK_MODE.BG_COLOR} !important`  : ``}
         ${currentTheme === 'dark' && sideNavTheme === SIDE_NAV_DARK ? `background-color: ${TEMPLATE.SIDE_NAV_DARK_BG_COLOR} !important`  : ``}
       `}

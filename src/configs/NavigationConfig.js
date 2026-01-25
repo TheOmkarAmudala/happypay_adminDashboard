@@ -190,13 +190,14 @@ const dashBoardNavTree = [{
       submenu: []
     } ,
     {
-      key: 'apps-Bill-payments',
-      path: `${APP_PREFIX_PATH}/apps/customers`,
+      key: 'Bill',
+      path: `${APP_PREFIX_PATH}/billpayments`,
       title: 'Bill Payments',
       icon: MailOutlined,
       breadcrumb: false,
       submenu: []
     }
+
     ,
     {
       key: 'apps-customers',
