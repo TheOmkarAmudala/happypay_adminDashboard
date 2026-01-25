@@ -1,89 +1,77 @@
-import React, { useState, useEffect } from "react";
-import { Button, Space } from "antd";
+import React, { useEffect, useState } from "react";
+import { Button, message } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 
 import SlpePaymentModesCards from "./index";
-import ServiceChargeModal from "./ServiceChargeModal";
 import SelectCustomerSection from "./SelectCustomerSection";
+import ServiceChargeModal from "./ServiceChargeModal";
 import { fetchCustomers } from "store/slices/customerSlice";
 
 const PaymentPage = () => {
     const dispatch = useDispatch();
 
-    const [step, setStep] = useState(1);
-    const [selectedMode, setSelectedMode] = useState(null);
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
-    const [baseAmount, setBaseAmount] = useState(10000);
-    const [modalOpen, setModalOpen] = useState(false);
-
-    // ✅ BANK STATE (FETCHED ONCE)
-    const [bankAccounts, setBankAccounts] = useState([]);
-    const [bankLoading, setBankLoading] = useState(false);
     const token = useSelector((state) => state.auth.token);
-
     const { data: customers, loading } = useSelector(
         (state) => state.customers
     );
 
-    // Fetch customers
+    const [step, setStep] = useState(1);
+    const [selectedMode, setSelectedMode] = useState(null);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedBank, setSelectedBank] = useState(null);
+
+    const [bankAccounts, setBankAccounts] = useState([]);
+    const [bankLoading, setBankLoading] = useState(false);
+    const [baseAmount, setBaseAmount] = useState(10000);
+
+    /* ================= FETCH CUSTOMERS ================= */
     useEffect(() => {
-        if (customers.length === 0) {
+        if (!customers.length) {
             dispatch(fetchCustomers());
         }
     }, [dispatch, customers.length]);
 
-    // Fetch banks once
-    useEffect(() => {
-        const fetchBanks = async () => {
-            try {
-                setBankLoading(true);
-                const res = await fetch(
-                    "https://test.happypay.live/payout/bankAccounts",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
+    /* ================= FETCH BANKS ================= */
+    const fetchCustomerBanks = async (customerId) => {
+        if (!customerId || !token) return;
+
+        try {
+            setBankLoading(true);
+            const res = await fetch(
+                `https://test.happypay.live/customer/getAllBankAccounts?customer_id=${customerId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        Accept: "application/json"
                     }
-                );
-                const data = await res.json();
-                console.log(data)
-                setBankAccounts(Array.isArray(data?.data) ? data.data : []);
-            } catch (err) {
-                console.error("Bank fetch failed", err);
-            } finally {
-                setBankLoading(false);
-            }
-        };
+                }
+            );
 
-        fetchBanks();
-    }, []);
-
-    const [selectedBank, setSelectedBank] = useState(null);
-
-
-    const handleBack = () => {
-        if (step === 2) setStep(1);
-        if (step === 3) {
-            setModalOpen(false);
-            setStep(2);
+            const json = await res.json();
+            setBankAccounts(Array.isArray(json?.data) ? json.data : []);
+        } catch (err) {
+            console.error(err);
+            message.error("Failed to fetch bank accounts");
+            setBankAccounts([]);
+        } finally {
+            setBankLoading(false);
         }
     };
 
     return (
-        <div style={{ padding: 12 }}>
+        <div style={{ padding: 16, maxWidth: 1200, margin: "0 auto" }}>
             {step > 1 && (
                 <Button
                     type="text"
                     icon={<ArrowLeftOutlined />}
-                    onClick={handleBack}
-                    style={{ marginBottom: 12 }}
+                    onClick={() => setStep(step - 1)}
                 >
                     Back
                 </Button>
             )}
 
-            {/* STEP 1 */}
+            {/* STEP 1 – PAYMENT MODE */}
             {step === 1 && (
                 <>
                     <SlpePaymentModesCards
@@ -91,7 +79,7 @@ const PaymentPage = () => {
                         onSelect={setSelectedMode}
                     />
 
-                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                    <div style={{ textAlign: "right", marginTop: 16 }}>
                         <Button
                             type="primary"
                             disabled={!selectedMode}
@@ -103,59 +91,43 @@ const PaymentPage = () => {
                 </>
             )}
 
-            {/* STEP 2 */}
+            {/* STEP 2 – CUSTOMER + BANK */}
             {step === 2 && (
-                <>
-                    <SelectCustomerSection
-                        customers={customers}
-                        loading={loading}
-                        bankAccounts={bankAccounts}
-                        bankLoading={bankLoading}
-                        selectedCustomer={selectedCustomer}
-                        onSelect={(customer, bank) => {
-                            setSelectedCustomer(customer);
-                            setSelectedBank(bank);
-                        }}
-                        onChangeCustomer={() => {
-                            setSelectedCustomer(null);
-                            setSelectedBank(null);
-                        }}
-                    />
-                    <Space style={{ marginTop: 16 }}>
-                        <Button onClick={() => setStep(1)}>Back</Button>
-                        <Button
-                            type="primary"
-                            disabled={!selectedCustomer}
-                            onClick={() => {
-                                setModalOpen(true);
-                                setStep(3);
-                            }}
-                        >
-                            Next
-                        </Button>
-                    </Space>
-                </>
+                <SelectCustomerSection
+                    customers={customers}
+                    loading={loading}
+                    bankAccounts={bankAccounts}
+                    bankLoading={bankLoading}
+                    fetchCustomerBanks={fetchCustomerBanks}
+                    onSelect={(customer, bank) => {
+                        setSelectedCustomer(customer);
+                        setSelectedBank(bank);
+                        setStep(3);
+                    }}
+                    onChangeCustomer={() => {
+                        setSelectedCustomer(null);
+                        setSelectedBank(null);
+                        setBankAccounts([]);
+                    }}
+                />
             )}
 
-            {/* STEP 3 */}
+            {/* STEP 3 – PAYMENT SUMMARY */}
             <ServiceChargeModal
-                open={modalOpen}
+                open={step === 3}
                 selectedCustomer={selectedCustomer}
                 selectedMode={selectedMode}
                 baseAmount={baseAmount}
                 setBaseAmount={setBaseAmount}
-                bankAccounts={bankAccounts}
-                bankLoading={bankLoading}
-                onClose={() => {
-                    setModalOpen(false);
-                    setStep(2);
-                }}
+                onClose={() => setStep(2)}
                 onApply={(data) => {
-                    console.log("FINAL PAYMENT DATA:", data);
-                    setModalOpen(false);
+                    console.log("FINAL PAYMENT DATA:", {
+                        ...data,
+                        customer: selectedCustomer,
+                        bank: selectedBank
+                    });
                 }}
             />
-
         </div>
     );
 };

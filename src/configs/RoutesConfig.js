@@ -1,5 +1,6 @@
 import React from 'react'
 import { AUTH_PREFIX_PATH, APP_PREFIX_PATH } from 'configs/AppConfig'
+import {FundOutlined} from "@ant-design/icons";
 
 export const publicRoutes = [
     {
@@ -87,6 +88,21 @@ export const protectedRoutes = [
         key: 'domesticcards',
         path: `${APP_PREFIX_PATH}/domesticcards`,
         component: React.lazy(() => import('views/app-views/domesticcards/PaymentPage')),
+    },
+    {
+        key: 'Ban Users',
+        path: `${APP_PREFIX_PATH}/banusers`,
+        component: React.lazy(() => import('views/app-views/banuser')),
+    },
+    {
+        key: 'Payout',
+        path: `${APP_PREFIX_PATH}/payout`,
+        component: React.lazy(() => import('views/app-views/payout')),
+    },
+    {
+        key: 'Pay-In',
+        path: `${APP_PREFIX_PATH}/payin`,
+        component: React.lazy(() => import('views/app-views/payin')),
     },
     {
         key: 'reports',

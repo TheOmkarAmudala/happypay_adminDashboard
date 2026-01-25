@@ -69,22 +69,6 @@ export const getAnnualStatisticData = (profile) => [
 		route: "/Amex",
 		icon: amex
 	},
-	{
-		title: "Pay-In",
-		value: "₹1,92,000",
-		status: -3.2,
-		subtitle: "Total Pay Out",
-		route: "/payin",
-		icon: payin
-	},
-	{
-		title: "Pay-Out",
-		value: "₹1,92,000",
-		status: -3.2,
-		subtitle: "Total Pay Out",
-		route: "/payout",
-		icon: payout
-	},
 ];
 
 

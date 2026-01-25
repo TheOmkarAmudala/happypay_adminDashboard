@@ -117,6 +117,7 @@ const extraNavTree = [
             breadcrumb: true,
             submenu: []
           },
+
           {
             key: 'extra-auth-register-1',
             path: `${APP_PREFIX_PATH}/register-1`,
@@ -224,7 +225,7 @@ const dashBoardNavTree = [{
 
     {
       key: 'Ban Users',
-      path: `${APP_PREFIX_PATH}/reports`,
+      path: `${APP_PREFIX_PATH}/banusers`,
       icon: CalendarOutlined,
       title: 'Ban Users',
       breadcrumb: false,
@@ -236,6 +237,22 @@ const dashBoardNavTree = [{
       key: 'dashboards-kyc',
       path: `${APP_PREFIX_PATH}/dashboards/kyc`,
       title: 'KYC',
+      icon: FundOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'Payout',
+      path: `${APP_PREFIX_PATH}/payout`,
+      title: 'Pay-Out',
+      icon: FundOutlined,
+      breadcrumb: false,
+      submenu: []
+    },
+    {
+      key: 'Pay-In',
+      path: `${APP_PREFIX_PATH}/payin`,
+      title: 'Pay-in',
       icon: FundOutlined,
       breadcrumb: false,
       submenu: []
@@ -986,5 +1003,5 @@ const navigationConfig = [
   ...extraNavTree,
   ...docsNavTree
 ]
- */}
+*/}
 export default navigationConfig;
