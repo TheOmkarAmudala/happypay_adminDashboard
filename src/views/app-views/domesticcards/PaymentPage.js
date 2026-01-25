@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, message } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
-
+import axios from "axios";
 import SlpePaymentModesCards from "./index";
 import SelectCustomerSection from "./SelectCustomerSection";
 import ServiceChargeModal from "./ServiceChargeModal";
@@ -32,6 +32,103 @@ const PaymentPage = () => {
         }
     }, [dispatch, customers.length]);
 
+    const profile = useSelector((state) => state.profile.data);
+
+    const buildPaymentPayload = ({
+                                     settlementAmount,
+                                     percentage,
+                                     selectedCustomer,
+                                     selectedBank,
+                                     selectedMode,
+                                     profile
+                                 }) => {
+        return {
+            amount: Number(settlementAmount.toFixed(2)),
+
+            // 👤 Logged-in merchant phone
+            phone: profile.phoneNumber,
+
+            // 🧾 Card category
+            productinfo: selectedMode.name.toLowerCase().includes("edu")
+                ? "education"
+                : selectedMode.name.toLowerCase().includes("travel")
+                    ? "travel"
+                    : "Other",
+
+            // 👤 Customer phone
+            cn: selectedCustomer.phone,
+
+            op: "",
+            cir: "",
+
+            // 🏦 Bank details
+            ad1: selectedBank.bank_account_number,
+            ad2: selectedBank.beneficiary_name,
+            ad3: selectedBank.bank_ifsc,
+            ad4: "",
+
+            // ✅ CORRECT beneficiary id (from bank)
+            beneficiary_id: selectedBank.beneficiary_id,
+
+            test: false,
+
+            // 👤 Profile
+            userLevel: profile.userLevel,
+
+            // 💸 Pricing
+            custom_pricing: percentage,
+
+            payment_mode: "slpe",
+
+            // 🧾 PG ID
+            slpe_gateway_id: String(selectedMode.id)
+        };
+    };
+
+
+    const handlePaymentInit = async (payload, token) => {
+        try {
+            const res = await axios.post(
+                "https://test.happypay.live/service/paymentInit",
+                payload,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+
+            console.log("PAYMENT INIT RESPONSE:", res.data);
+
+
+// ✅ success check
+            if (
+                res.data?.status === "success" &&
+                typeof res.data?.data === "string"
+            ) {
+                const paymentUrl = res.data.data;
+
+
+// 🔥 REDIRECT TO SLPE PAYMENT PAGE
+                window.location.href = paymentUrl;
+                return;
+            }
+
+
+// fallback error
+            message.error("Failed to create payment link");
+
+
+        } catch (err) {
+            console.error("PAYMENT INIT ERROR:", err);
+            message.error(
+                err?.response?.data?.message ||
+                "Payment initiation failed"
+            );
+        }
+    };
     /* ================= FETCH BANKS ================= */
     const fetchCustomerBanks = async (customerId) => {
         if (!customerId || !token) return;
@@ -48,7 +145,10 @@ const PaymentPage = () => {
                 }
             );
 
+
+
             const json = await res.json();
+            console.log("FETCH BANK ACCOUNTS RESPONSE:", json);
             setBankAccounts(Array.isArray(json?.data) ? json.data : []);
         } catch (err) {
             console.error(err);
@@ -121,11 +221,20 @@ const PaymentPage = () => {
                 setBaseAmount={setBaseAmount}
                 onClose={() => setStep(2)}
                 onApply={(data) => {
-                    console.log("FINAL PAYMENT DATA:", {
-                        ...data,
-                        customer: selectedCustomer,
-                        bank: selectedBank
+                    const payload = buildPaymentPayload({
+                        settlementAmount: data.settlementAmount,
+                        percentage: data.percentage,
+                        selectedCustomer,
+                        selectedBank,
+                        selectedMode,
+                        profile
                     });
+
+
+                    console.log("FINAL PAYMENT PAYLOAD:", payload);
+
+
+                    handlePaymentInit(payload, token);
                 }}
             />
         </div>
