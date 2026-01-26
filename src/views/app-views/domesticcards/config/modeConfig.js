@@ -1,4 +1,4 @@
-import RazorpayIcon from "../../../../assets/razorpay.png";
+import RazorpayIcon from "../../../../assets/razorpay.svg";
 import CashfreeIcon from "../../../../assets/cashfree.png";
 import PayUIcon from "../../../../assets/payu.png";
 
@@ -10,8 +10,12 @@ export const MODE_CONFIG = {
     },
     "Slpe Silver Edu Lite": {
         category: "edu",
+        icon: RazorpayIcon,
+        iconStyle: {
+            width: 28,
+            height: 28
+        },
 
-        icon: RazorpayIcon
     },
     "Slpe Silver Edu": {
         category: "edu",

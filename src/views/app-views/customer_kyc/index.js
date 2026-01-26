@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Input, Button, Tag, message, Divider, Typography  } from "antd";
+import { Card, Row, Col, Input, Button, Tag, message, Divider, Typography, Modal } from "antd";
 import { Select } from "antd";
 import axios from "axios";
 import { useSelector } from "react-redux";
@@ -162,20 +162,22 @@ const AddBankCard = ({
 };
 
 
-const KYCPage = () => {
-	const token = useSelector(state => state.auth.token);
+const KYCPage = ({ customer_id }) => {
+    const token = useSelector(state => state.auth.token);
 
 
 
-	const axiosAuth = React.useMemo(() => {
-		return axios.create({
-			baseURL: "https://test.happypay.live/",
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		});
-	}, [token]);
-
+    // Create an axios instance that automatically includes the Authorization header
+    // and the optional customer_id (sent alongside the token as requested).
+    const axiosAuth = React.useMemo(() => {
+        return axios.create({
+            baseURL: "https://test.happypay.live/",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                ...(customer_id ? { customer_id } : {}),
+            },
+        });
+    }, [token, customer_id]);
 
 	/* -------------------- STATE -------------------- */
 	const [aadhaar, setAadhaar] = useState("");
@@ -233,6 +235,9 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 			try {
 				setPageLoading(true);
 
+				// Debug log: exact endpoint and customer_id header (if any)
+				console.log(`Fetching KYC: ${axiosAuth.defaults.baseURL}users/kyc` + (customer_id ? `?customer_id=${customer_id}` : ""));
+
 				const res = await axiosAuth.get("users/kyc");
 				const kycList = Array.isArray(res.data?.data) ? res.data.data : [];
 
@@ -284,6 +289,9 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 	const fetchBankAccounts = async () => {
 		try {
 			setBankLoading(true);
+
+			// Debug log: bank accounts endpoint
+			console.log(`Fetching Bank Accounts: ${axiosAuth.defaults.baseURL}payout/bankAccounts` + (customer_id ? `?customer_id=${customer_id}` : ""));
 
 			const res = await axiosAuth.get("/payout/bankAccounts");
 			const banks = Array.isArray(res.data?.data) ? res.data.data : [];
@@ -365,18 +373,17 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 			const payload = {
 				otp: otp.trim(),
 				refId: aadhaarTxnId,
-				aadhaar: aadhaar.trim()
+				aadhaar: aadhaar.trim(),
+				...(customer_id ? { customer_id } : {})
 			};
 
-			const res = await axios.post(
-				"https://test.happypay.live/cashfree/aadhaar/verifyotp",
+			// Use axiosAuth so the Authorization header and customer_id header (if present)
+			// are sent automatically. Also pass Content-Type explicitly.
+			console.log(`Calling Aadhaar verify: ${axiosAuth.defaults.baseURL}cashfree/aadhaar/verifyotp`, payload);
+			const res = await axiosAuth.post(
+				"cashfree/aadhaar/verifyotp",
 				payload,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json"
-					}
-				}
+				{ headers: { "Content-Type": "application/json" } }
 			);
 
 			// ✅ IF REQUEST DID NOT FAIL → SUCCESS
@@ -584,9 +591,11 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 		try {
 			setLoading(true);
 
+			console.log(`Calling PAN verify: ${axiosAuth.defaults.baseURL}cashfree/pan/verify` , { pan: pan.trim(), name: panName.trim(), ...(customer_id ? { customer_id } : {}) });
 			const res = await axiosAuth.post("cashfree/pan/verify", {
 				pan: pan.trim(),
-				name: panName.trim()
+				name: panName.trim(),
+				...(customer_id ? { customer_id } : {})
 			});
 
 			console.log("PAN VERIFY RESPONSE:", res.data);
@@ -614,13 +623,12 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 				BankAccountNumber: accountNumber,
 				BankIFSC: ifsc,
 				Name: aadhaarName,
-				Phone: bankPhone
+				Phone: bankPhone,
+				...(customer_id ? { customer_id } : {})
 			};
 
-			const res = await axiosAuth.post(
-				"payout/addBankAccount",
-				payload
-			);
+			console.log(`Calling Add Bank Account: ${axiosAuth.defaults.baseURL}payout/addBankAccount`, payload);
+			const res = await axiosAuth.post("payout/addBankAccount", payload);
 
 			if (
 				res.data?.status === "success" &&
@@ -854,64 +862,49 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 					background: "#f8fafc"
 				}}
 			>
-				{hasBanks &&
-					getPrimaryBankAccounts(bankList).map(bank => (
-						<BankAccountRow
-							key={bank.id}
-							bank={bank}
-							onDelete={deleteBankAccount}
-						/>
-					))
-				}
+				{/* Top toolbar: always-visible Add button (right-aligned) */}
+				<div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+					<Button type="primary" onClick={() => setShowAddBankForm(true)}>
+						Add Bank Account
+					</Button>
+				</div>
 
-
-
-
-
+				{hasBanks && getPrimaryBankAccounts(bankList).map(bank => (
+					<BankAccountRow key={bank.id} bank={bank} onDelete={deleteBankAccount} />
+				))}
 
 				{/* When showBankSection === true, show your AddBankCard BELOW */}
-				{showAddBankForm && (
-					<div style={{ marginTop: 16 }}>
-						<div
-							style={{
-								display: "flex",
-								justifyContent: "flex-end",
-								marginBottom: 8
-							}}
-						>
-							<Tooltip title="Close add bank form">
-								<MinusOutlined
-									onClick={() => setShowAddBankForm(false)}
-									style={{
-										color: "#dc2626",
-										fontSize: 18,
-										cursor: "pointer",
-										background: "#fee2e2",
-										padding: 6,
-										borderRadius: "50%"
-									}}
-								/>
-							</Tooltip>
-						</div>
-						<AddBankCard
-							accountNumber={accountNumber}
-							setAccountNumber={setAccountNumber}
-							confirmAccountNumber={confirmAccountNumber}
-							setConfirmAccountNumber={setConfirmAccountNumber}
-							accountHolderName={accountHolderName}
-							setAccountHolderName={setAccountHolderName}
-							ifsc={ifsc}
-							setIfsc={setIfsc}
-							bankPhone={bankPhone}
-							setBankPhone={setBankPhone}
-							onSubmit={submitBankAccount}
-							loading={bankLoading}
-							isValid={isBankFormValid}
-							aadhaarName={aadhaarName}
-							aadhaarVerified={aadhaarVerified}
-						/>
-					</div>
-				)}
+				<Modal
+					open={showAddBankForm}
+					centered
+					footer={null}
+					width={700}
+					onCancel={() => setShowAddBankForm(false)}
+					bodyStyle={{ maxHeight: '70vh', overflowY: 'auto' }}
+					title="Add Bank Account"
+				>
+					<AddBankCard
+						accountNumber={accountNumber}
+						setAccountNumber={setAccountNumber}
+						confirmAccountNumber={confirmAccountNumber}
+						setConfirmAccountNumber={setConfirmAccountNumber}
+						accountHolderName={accountHolderName}
+						setAccountHolderName={setAccountHolderName}
+						ifsc={ifsc}
+						setIfsc={setIfsc}
+						bankPhone={bankPhone}
+						setBankPhone={setBankPhone}
+						onSubmit={async () => {
+							await submitBankAccount();
+							// close modal after submit attempt; fetchBankAccounts will refresh list
+							setShowAddBankForm(false);
+						}}
+						loading={bankLoading}
+						isValid={isBankFormValid}
+						aadhaarName={aadhaarName}
+						aadhaarVerified={aadhaarVerified}
+					/>
+				</Modal>
 			</Card>
 
 

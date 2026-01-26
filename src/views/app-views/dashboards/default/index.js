@@ -296,6 +296,7 @@ export const DefaultDashboard = () => {
                             value={elm.value}
                             subtitle={elm.subtitle}
                             icon={elm.icon}
+                            iconStyle={elm.iconStyle}
                         />
                     )}
                   </div>

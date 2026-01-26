@@ -125,7 +125,7 @@
                                     key={mode.id}
                                     style={{
                                         display: "flex",
-                                        justifyContent: "center",
+                                        justifyContent: "space-between",
                                     }}
                                 >
                                 <Card

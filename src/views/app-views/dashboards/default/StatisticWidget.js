@@ -4,7 +4,7 @@ const { useBreakpoint } = Grid;
 
 const { Text, Title } = Typography;
 
-const StatisticWidget = ({ title, value, subtitle, icon }) => {
+const StatisticWidget = ({ title, value, subtitle, icon, iconStyle }) => {
     const screens = useBreakpoint();
     const isMobile = !screens.md;
     return (
@@ -40,8 +40,8 @@ const StatisticWidget = ({ title, value, subtitle, icon }) => {
                 <Avatar
                     size={48}
                     src={icon}
-                    style={{
-                        backgroundColor: "#f5f5f5",
+                    style={iconStyle?.width &&
+                        { backgroundColor: "#f5f5f5",
                         padding: 8,
                     }}
                 />

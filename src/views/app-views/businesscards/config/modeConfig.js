@@ -1,4 +1,4 @@
-import RazorpayIcon from "../../../../assets/razorpay.png";
+import RazorpayIcon from "../../../../assets/razorpay.svg";
 import CashfreeIcon from "../../../../assets/cashfree.png";
 import PayUIcon from "../../../../assets/payu.png";
 
