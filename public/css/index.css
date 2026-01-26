@@ -1,0 +1,10 @@
+.ant-otp-input {
+    border-radius: 8px !important;
+    border: 1.5px solid #d9d9d9 !important;
+    transition: all 0.3s ease;
+}
+
+.ant-otp-input:focus {
+    border-color: #1E63E9 !important;
+    box-shadow: 0 0 0 2px rgba(30, 99, 233, 0.1) !important;
+}

@@ -191,7 +191,7 @@ export const authSlice = createSlice({
 			state.token = action.payload;
 			state.isAuthenticated = true;
 			state.redirect = '/app/dashboard';
-			localStorage.setItem('AUTH_TOKEN', action.payload);
+			localStorage.setItem(AUTH_TOKEN, action.payload);
 		},
 		setUserProfile: (state, action) => {
 			state.profile = action.payload
@@ -223,7 +223,7 @@ export const authSlice = createSlice({
 			state.token = null;
 			state.isAuthenticated = false;
 			state.redirect = '/';
-			localStorage.removeItem('AUTH_TOKEN');
+			localStorage.removeItem(AUTH_TOKEN);
 		},
 
 		// ⏳ Global auth loading
@@ -243,7 +243,7 @@ export const authSlice = createSlice({
 				state.token = action.payload;
 				state.isAuthenticated = true;
 				state.redirect = '/app/dashboard';
-				localStorage.setItem('AUTH_TOKEN', action.payload);
+				localStorage.setItem(AUTH_TOKEN, action.payload);
 			})
 			.addCase(signIn.rejected, (state, action) => {
 				state.loading = false;
@@ -257,7 +257,7 @@ export const authSlice = createSlice({
 				state.token = null;
 				state.isAuthenticated = false;
 				state.redirect = '/';
-				localStorage.removeItem('AUTH_TOKEN');
+				localStorage.removeItem(AUTH_TOKEN);
 			})
 
 			/* -------- GOOGLE -------- */
@@ -269,7 +269,7 @@ export const authSlice = createSlice({
 				state.token = action.payload;
 				state.isAuthenticated = true;
 				state.redirect = '/app/dashboard';
-				localStorage.setItem('AUTH_TOKEN', action.payload);
+				localStorage.setItem(AUTH_TOKEN, action.payload);
 			})
 			.addCase(signInWithGoogle.rejected, (state, action) => {
 				state.loading = false;
@@ -286,7 +286,7 @@ export const authSlice = createSlice({
 				state.token = action.payload;
 				state.isAuthenticated = true;
 				state.redirect = '/app/dashboard';
-				localStorage.setItem('AUTH_TOKEN', action.payload);
+				localStorage.setItem(AUTH_TOKEN, action.payload);
 			})
 			.addCase(signInWithFacebook.rejected, (state, action) => {
 				state.loading = false;
@@ -307,7 +307,7 @@ export const authSlice = createSlice({
 				if (action.payload?.token) {
 					state.token = action.payload.token;
 					state.isAuthenticated = true;
-					localStorage.setItem('AUTH_TOKEN', action.payload.token);
+					localStorage.setItem(AUTH_TOKEN, action.payload.token);
 				}
 
 				state.redirect = '/app/dashboard';

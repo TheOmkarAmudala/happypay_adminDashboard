@@ -33,11 +33,15 @@ import {
   ReloadOutlined
 } from '@ant-design/icons';
 import utils from 'utils';
+import { Skeleton, Grid } from "antd";
 import { useSelector } from 'react-redux';
 
-import { Skeleton } from "antd";
+
+
 
 const TableSkeleton = ({ rows = 5 }) => {
+
+
   return (
       <div>
         {Array.from({ length: rows }).map((_, i) => (
@@ -124,37 +128,44 @@ const tableColumns = [
     title: "S/N",
     dataIndex: "sn",
     key: "sn",
-    icon: icon
+    icon: icon,
+    width: 40,
   },
   {
     title: "Customer Details",
     dataIndex: "customerDetails",
-    key: "customerDetails"
+    key: "customerDetails",
+    width: 200,
   },
   {
     title: "Service Txn Ref ID",
     dataIndex: "serviceTxnRefId",
-    key: "serviceTxnRefId"
+    key: "serviceTxnRefId",
+    width: 120,
   },
   {
     title: "Transaction Time",
     dataIndex: "transactionTime",
-    key: "transactionTime"
+    key: "transactionTime",
+    width: 120,
   },
   {
     title: "Gateway Name",
     dataIndex: "gatewayName",
-    key: "gatewayName"
+    key: "gatewayName",
+    width: 120,
   },
   {
     title: "Order / PayIn Amount",
     dataIndex: "orderAmount",
-    key: "orderAmount"
+    key: "orderAmount",
+    width: 120,
   },
   {
     title: "Payment Status",
     dataIndex: "paymentStatus",
     key: "paymentStatus",
+    width: 120,
     render: (status) => {
       const safeStatus = typeof status === "string" ? status : "UNKNOWN";
 
@@ -176,6 +187,7 @@ const tableColumns = [
   {
     title: "Transaction Status",
     dataIndex: "transactionStatus",
+    width: 130,
     key: "transactionStatus",
     render: (status) => (
         <Tag color={status === "success" ? "green" : "orange"}>
@@ -261,7 +273,10 @@ export const DefaultDashboard = () => {
     );
   }, [recentTransactionData]);
 
+  const { useBreakpoint } = Grid;
 
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
   return (
       <>
         {/* ================= DASHBOARD CARDS ================= */}
@@ -270,7 +285,7 @@ export const DefaultDashboard = () => {
             {(loading ? Array.from({length: 6}) : annualStatisticData).map((elm, i) => (
                 <Col key={i} xs={12} sm={12} md={6} lg={6} className="flex">
                   <div
-                      className={`flex-1 ${loading ? "cursor-default" : "cursor-pointer"}`}
+                      className={`flex-1 ${loading ? "cursor-default" : "cursor-pointer"} w-full h-[540px] flex`}
                       onClick={() => !loading && handleStatClick(elm.route)}
                   >
                     {loading ? (
@@ -290,37 +305,56 @@ export const DefaultDashboard = () => {
         </div>
 
       {/* ================= TABLE ================= */}
-        <div className="px-1">
+        <div className="px-1 sm:px-2">
           <Row gutter={16}>
             <Col xs={24}>
               <Card
                   title="Latest Transactions"
-                  extra={<CardDropdown items={latestTransactionOption}/>}
+                  extra={<CardDropdown items={latestTransactionOption} />}
                   className="shadow-sm rounded-xl"
+                  bodyStyle={{
+                    padding: isMobile ? "12px" : "24px",
+                  }}
               >
                 {loadingTransactions ? (
-                    <TableSkeleton rows={6}/>
+                    <TableSkeleton rows={6} />
                 ) : (
                     <Table
                         columns={tableColumns}
                         dataSource={sortedTransactions.slice(0, visibleCount)}
                         rowKey="key"
                         pagination={false}
-                        scroll={{y: 420}}   // single scroll source ✅
+                        size={isMobile ? "small" : "middle"}
                         sticky
-                        size="middle"
+                        scroll={{
+                          x: "max-content", // 🔥 KEY LINE
+                          y: isMobile ? 300 : 420,
+                        }}
                     />
                 )}
 
+
                 {!loadingTransactions && (
-                    <div className="flex justify-center gap-3 mt-4">
+                    <div
+                        className={`flex mt-4 gap-3 ${
+                            isMobile ? "flex-col" : "justify-center"
+                        }`}
+                    >
                       {visibleCount < recentTransactionData.length && (
-                          <Button onClick={() => setVisibleCount(prev => prev + 10)}>
+                          <Button
+                              block={isMobile}
+                              onClick={() => setVisibleCount((prev) => prev + 10)}
+                          >
                             Load More
                           </Button>
                       )}
+
+
                       {visibleCount > 10 && (
-                          <Button onClick={() => setVisibleCount(10)}>
+                          <Button
+                              block={isMobile}
+                              onClick={() => setVisibleCount(10)}
+                          >
                             Load Less
                           </Button>
                       )}

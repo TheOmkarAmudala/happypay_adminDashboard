@@ -1,65 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Form, Input, Divider, Alert } from "antd";
-import {
-	PhoneOutlined,
-	LockOutlined
-} from "@ant-design/icons";
-import { motion } from "framer-motion";
+import { Button, Form, Input, Divider, Alert } from "antd"; //
+import { PhoneOutlined, ArrowLeftOutlined, ReloadOutlined } from "@ant-design/icons";
+import { motion, AnimatePresence } from "framer-motion"; //
 import { useNavigate } from "react-router-dom";
-import { setUserProfile } from "store/slices/authSlice";
 
 import CustomIcon from "components/util-components/CustomIcon";
 import { GoogleSVG, FacebookSVG } from "assets/svg/icon";
 
 import {
-	signIn,
 	signInSuccess,
-	showLoading,
 	hideAuthMessage,
 	signInWithGoogle,
 	signInWithFacebook,
 	showAuthMessage,
-	resetRedirect
+	resetRedirect,
 } from "store/slices/authSlice";
 
 const BRAND_BLUE = "#1E63E9";
-
-/* -------------------------------------------------------------------------- */
-/*                               LOGIN FORM                                   */
-/* -------------------------------------------------------------------------- */
 
 const LoginForm = () => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const [form] = Form.useForm();
 
-	const {
-		token,
-		loading,
-		redirect,
-		showMessage,
-		message,
-		isAuthenticated
-	} = useSelector((state) => state.auth);
+	const { loading, redirect, showMessage, message, isAuthenticated } = useSelector((state) => state.auth);
 
-	const [loginMode, setLoginMode] = useState("PASSWORD");
 	const [otpSent, setOtpSent] = useState(false);
 	const [otpLoading, setOtpLoading] = useState(false);
 
-	/* ----------------------------- LOGIN HANDLER ----------------------------- */
-
-	const onLogin = (values) => {
-		if (loginMode === "PASSWORD") {
-			dispatch(showLoading());
-			dispatch(signIn(values));
-		} else {
-			verifyOtp();
-		}
-	};
-
 	/* ----------------------------- SEND OTP ---------------------------------- */
-
 	const sendOtp = async () => {
 		try {
 			const phone = form.getFieldValue("phoneNumber");
@@ -69,16 +39,13 @@ const LoginForm = () => {
 			}
 
 			setOtpLoading(true);
-
-			const res = await fetch(
-				`https://test.happypay.live/users/getotp?phoneNumber=${phone}`
-			);
+			const res = await fetch(`https://test.happypay.live/users/getotp?phoneNumber=${phone}`);
 			const data = await res.json();
 
 			if (data.status !== "success") {
 				throw new Error(data.message || "Failed to send OTP");
 			}
-
+             console.log(data);
 			setOtpSent(true);
 		} catch (err) {
 			dispatch(showAuthMessage(err.message));
@@ -88,11 +55,9 @@ const LoginForm = () => {
 	};
 
 	/* ----------------------------- VERIFY OTP -------------------------------- */
-
 	const verifyOtp = async () => {
 		try {
 			setOtpLoading(true);
-
 			const phoneNumber = form.getFieldValue("phoneNumber");
 			const otp = form.getFieldValue("otp");
 
@@ -100,9 +65,7 @@ const LoginForm = () => {
 				throw new Error("Enter valid 6-digit OTP");
 			}
 
-			const res = await fetch(
-				`https://test.happypay.live/users/loginWithOPT?phoneNumber=${phoneNumber}&otp=${otp}`
-			);
+			const res = await fetch(`https://test.happypay.live/users/loginWithOPT?phoneNumber=${phoneNumber}&otp=${otp}`);
 			const result = await res.json();
 
 			if (result.status !== "success") {
@@ -119,166 +82,105 @@ const LoginForm = () => {
 		}
 	};
 
-	/* ----------------------------- SIDE EFFECTS ------------------------------ */
-
 	useEffect(() => {
 		if (redirect && isAuthenticated) {
 			navigate(redirect);
 			dispatch(resetRedirect());
 		}
-	}, [redirect, isAuthenticated]);
-
-	useEffect(() => {
-		if (showMessage) {
-			const timer = setTimeout(() => {
-				dispatch(hideAuthMessage());
-			}, 3000);
-			return () => clearTimeout(timer);
-		}
-	}, [showMessage]);
-
-	/* ----------------------------- SOCIAL UI -------------------------------- */
-
-	const renderSocialLogin = (
-		<>
-			<Divider plain>
-				<span className="text-gray-400 text-sm">or continue with</span>
-			</Divider>
-
-			<div className="flex justify-center gap-3">
-				<Button
-					shape="round"
-					icon={<CustomIcon svg={GoogleSVG} />}
-					disabled={loading}
-					className="h-10 px-4"
-					onClick={() => dispatch(signInWithGoogle())}
-				>
-					Google
-				</Button>
-
-				<Button
-					shape="round"
-					icon={<CustomIcon svg={FacebookSVG} />}
-					disabled={loading}
-					className="h-10 px-4"
-					onClick={() => dispatch(signInWithFacebook())}
-				>
-					Facebook
-				</Button>
-			</div>
-		</>
-	);
-
-	/* ----------------------------- RENDER ----------------------------------- */
+	}, [redirect, isAuthenticated, navigate, dispatch]);
 
 	return (
-		<>
-			{/* ERROR MESSAGE */}
-			<motion.div
-				initial={{ opacity: 0, marginBottom: 0 }}
-				animate={{
-					opacity: showMessage ? 1 : 0,
-					marginBottom: showMessage ? 16 : 0
-				}}
-			>
-				<Alert type="error" showIcon message={message} />
-			</motion.div>
+		<div className="login-form-wrapper">
+			<AnimatePresence mode="wait">
+				{showMessage && (
+					<motion.div
+						key="alert"
+						initial={{ opacity: 0, height: 0 }}
+						animate={{ opacity: 1, height: 'auto' }}
+						exit={{ opacity: 0, height: 0 }}
+					>
+						<Alert type="error" showIcon message={message} className="mb-4" />
+					</motion.div>
+				)}
+			</AnimatePresence>
 
-			<Form
-				form={form}
-				layout="vertical"
-				onFinish={onLogin}
-				className="w-full"
-			>
-				{/* MOBILE NUMBER */}
+			<Form form={form} layout="vertical">
 				<Form.Item
 					name="phoneNumber"
-					label="Mobile Number"
-					rules={[
-						{ required: true, message: "Enter mobile number" },
-						{ pattern: /^[6-9]\d{9}$/, message: "Enter valid mobile number" }
-					]}
+					label={<span className="font-semibold text-gray-600">Mobile Number</span>}
+					rules={[{ required: true, message: "Enter mobile number" }, { pattern: /^[6-9]\d{9}$/, message: "Enter valid mobile number" }]}
 				>
 					<Input
-						prefix={<PhoneOutlined />}
+						prefix={<PhoneOutlined className="text-gray-400" />}
 						size="large"
-						maxLength={10}
-						inputMode="numeric"
-						className="pl-2"
+						disabled={otpSent}
+						style={{ borderRadius: '8px' }}
+						onChange={(e) => form.setFieldsValue({ phoneNumber: e.target.value.replace(/\D/g, "") })}
 					/>
 				</Form.Item>
 
-				{/* PASSWORD */}
-				{loginMode === "PASSWORD" && (
-					<Form.Item
-						name="passcode"
-						label="Password"
-						rules={[{ required: true, message: "Enter password" }]}
-					>
-						<Input.Password
-							prefix={<LockOutlined />}
-							size="large"
-						/>
-					</Form.Item>
-				)}
+				<AnimatePresence mode="wait">
+					{otpSent && (
+						<motion.div
+							key="otp-section"
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -10 }}
+						>
+							<div className="flex justify-between items-center mb-1">
+								<span className="text-gray-600 font-semibold ant-form-item-label">OTP</span>
+								<Button
+									type="link"
+									size="small"
+									onClick={() => setOtpSent(false)}
+									icon={<ArrowLeftOutlined />}
+									className="p-0 text-xs"
+								>
+									Change Number
+								</Button>
+							</div>
+							<Form.Item name="otp" rules={[{ required: true, message: "Enter OTP" }]}>
+								<Input
+									size="large"
+									maxLength={6}
+									placeholder="000000"
+									style={{ borderRadius: '8px', textAlign: 'center', letterSpacing: '12px', fontSize: '20px', fontWeight: 'bold' }}
+								/>
+							</Form.Item>
 
-				{/* OTP */}
-				{loginMode === "OTP" && otpSent && (
-					<Form.Item
-						name="otp"
-						label="OTP"
-						rules={[{ required: true, message: "Enter OTP" }]}
-					>
-						<Input
-							size="large"
-							maxLength={6}
-							inputMode="numeric"
-							className="tracking-widest text-center"
-						/>
-					</Form.Item>
-				)}
+							<div className="flex justify-center mb-4">
+								<Button
+									type="link"
+									icon={<ReloadOutlined />}
+									onClick={sendOtp}
+									loading={otpLoading}
+									className="p-0 text-xs font-bold"
+								>
+									Resend OTP
+								</Button>
+							</div>
+						</motion.div>
+					)}
+				</AnimatePresence>
 
-				{/* PRIMARY ACTION */}
-				{loginMode === "OTP" && !otpSent && (
-					<Button
-						block
-						size="large"
-						loading={otpLoading}
-						onClick={sendOtp}
-						style={{ background: BRAND_BLUE, borderColor: BRAND_BLUE }}
-						type="primary"
-					>
-						Send OTP
-					</Button>
-				)}
-
-				{(loginMode === "PASSWORD" || otpSent) && (
-					<Button
-						block
-						size="large"
-						htmlType="submit"
-						loading={loading || otpLoading}
-						style={{ background: BRAND_BLUE, borderColor: BRAND_BLUE }}
-						type="primary"
-					>
-						Sign In
-					</Button>
-				)}
-
-				{/* MODE SWITCH */}
-				<div className="flex justify-between mt-3 text-sm">
-					<Button type="link" className="px-0" onClick={() => setLoginMode("OTP")}>
-						Sign in with OTP
-					</Button>
-					<Button type="link" className="px-0" onClick={() => setLoginMode("PASSWORD")}>
-						Use password instead
-					</Button>
-				</div>
-
-				{/* SOCIAL LOGIN */}
-				{loginMode === "PASSWORD" && <div className="mt-4">{renderSocialLogin}</div>}
+				<Button
+					block
+					size="large"
+					type="primary"
+					loading={otpLoading}
+					onClick={otpSent ? verifyOtp : sendOtp}
+					style={{ background: BRAND_BLUE, borderRadius: '8px', height: '48px', fontWeight: 600 }}
+				>
+					{otpSent ? "Verify & Continue" : "Send OTP"}
+				</Button>
 			</Form>
-		</>
+
+			<Divider plain className="my-8">
+				<span className="text-gray-400 text-xs uppercase tracking-widest">Secure Login</span>
+			</Divider>
+
+
+		</div>
 	);
 };
 
