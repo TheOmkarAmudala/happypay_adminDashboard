@@ -222,7 +222,7 @@
     
                                         {/* TOP */}
                                         <div style={{ display: "flex", gap: 10 }}>
-                                            <img src={config.icon} alt={mode.name} style={{ height: 28 }} />
+                                            <img src={config.icon} alt={mode.name} style={{ height: 18 }} />
                                         </div>
     
                                         {/* NAME */}

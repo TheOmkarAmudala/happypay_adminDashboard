@@ -92,11 +92,13 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
                 </Button>
             </Space>
 
-            <Row gutter={[16, 16]}>
+            {/* increased vertical gutter and prevents overlap */}
+            <Row gutter={[16, 24]}>
                 {(loading ? Array.from({ length: 8 }) : filteredModes).map((mode, i) => {
                     if (loading) {
                         return (
-                            <Col xs={24} sm={12} md={12} lg={8} xl={6} key={i}>
+                            // center skeleton to match card layout so grid spacing is consistent
+                            <Col xs={24} sm={12} md={12} lg={8} xl={6} key={i} style={{ display: "flex", justifyContent: "center" }}>
                                 <PaymentModeCardSkeleton />
                             </Col>
                         );
@@ -116,15 +118,17 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
                     const gatewayId = meta?.id ?? null;
 
                     return (
-                        <Col xs={24} sm={12} md={8} lg={6} key={mode.id}>
+                        // center the card inside the column so it respects available column width
+                        <Col xs={24} sm={12} md={8} lg={6} key={mode.id} style={{ display: "flex", justifyContent: "start" }}>
                             <Card
                                 hoverable
                                 onClick={() => onSelect(mode)}
                                 onMouseEnter={() => setHoveredId(mode.id)}
                                 onMouseLeave={() => setHoveredId(null)}
                                 style={{
-                                    width: 280,
-                                    height: 150,
+                                    width: "100%",        // responsive
+                                    maxWidth: 280,       // keep the original card max size
+                                    minHeight: 150,      // allow expansion without overlap
                                     borderRadius: 16,
                                     cursor: "pointer",
                                     position: "relative",
@@ -186,9 +190,7 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
                                 )}
 
                                 {/* ICON */}
-                                <img src={config.icon} alt={mode.name} style={{ height: 38,
-                                    width: 38,
-                                    objectFit: "contain", }} />
+                                <img src={config.icon} alt={mode.name} style={{ height: 18, width: "auto", objectFit: "contain" }} />
 
                                 {/* NAME */}
                                 <Text strong style={{ fontSize: 14 }}>
@@ -258,3 +260,4 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
 };
 
 export default SlpePaymentModesCards;
+

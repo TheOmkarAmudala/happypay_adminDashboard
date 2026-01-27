@@ -289,8 +289,8 @@ const CustomerKycManagement = () => {
 				title={renderKycPage ? `Customer KYC — ${currentCustomer?.name || currentCustomer?.id || ""}` : ["Aadhaar Verification", "PAN Verification", "Bank Verification"][currentStep]}
 			>
 				{renderKycPage ? (
-					// Render the full KYC page and pass the customer id as prop
-					<KYCPage customer_id={currentCustomer?.id} />
+					// Render the full KYC page and pass the customer id as prop; make verified fields read-only
+					<KYCPage customer_id={currentCustomer?.id} readOnlyOnVerified={true} />
 				) : (
 					<>
 						{currentStep === 0 && <AadhaarStep onSuccess={() => setCurrentStep(1)} />}

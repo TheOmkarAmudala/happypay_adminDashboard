@@ -1,30 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Input, Button, Tag, message, Divider, Typography, Modal } from "antd";
-import { Select } from "antd";
+import { Card, Row, Col, Input, Button, Tag, message, Typography, Modal } from "antd";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { CheckCircleFilled, DeleteOutlined, BankOutlined, PlusOutlined, CopyOutlined } from "@ant-design/icons";
-import { Skeleton } from "antd";
-
-import { MinusOutlined } from "@ant-design/icons";
-
+import { CheckCircleFilled, DeleteOutlined, BankOutlined, PlusOutlined, CopyOutlined, NumberOutlined, PhoneOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { Tooltip } from "antd";
-import {
-	UserOutlined,
-	NumberOutlined,
-	PhoneOutlined,
-	InfoCircleOutlined
-} from "@ant-design/icons";
 
 const { Text } = Typography;
 const AddBankCard = ({
-						 accountNumber, setAccountNumber,
-						 confirmAccountNumber, setConfirmAccountNumber,
-						 accountHolderName, setAccountHolderName,
-						 ifsc, setIfsc,
-						 bankPhone, setBankPhone,
-						 onSubmit, loading, isValid
-					 }) => {
+				 accountNumber, setAccountNumber,
+				 confirmAccountNumber, setConfirmAccountNumber,
+				 accountHolderName, setAccountHolderName,
+				 ifsc, setIfsc,
+				 bankPhone, setBankPhone,
+				 onSubmit, loading, isValid
+			 }) => {
 
 	const [aadhaarName, setAadhaarName] = useState("");
 	const [aadhaarVerified, setAadhaarVerified] = useState(false);
@@ -162,22 +151,21 @@ const AddBankCard = ({
 };
 
 
-const KYCPage = ({ customer_id }) => {
+const KYCPage = ({ customer_id, readOnlyOnVerified = true }) => {
     const token = useSelector(state => state.auth.token);
 
 
 
     // Create an axios instance that automatically includes the Authorization header
-    // and the optional customer_id (sent alongside the token as requested).
+    // NOTE: we deliberately do NOT add customer_id as a header - the API expects it as a query param
     const axiosAuth = React.useMemo(() => {
         return axios.create({
             baseURL: "https://test.happypay.live/",
             headers: {
                 Authorization: `Bearer ${token}`,
-                ...(customer_id ? { customer_id } : {}),
             },
         });
-    }, [token, customer_id]);
+    }, [token]);
 
 	/* -------------------- STATE -------------------- */
 	const [aadhaar, setAadhaar] = useState("");
@@ -235,34 +223,79 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 			try {
 				setPageLoading(true);
 
-				// Debug log: exact endpoint and customer_id header (if any)
-				console.log(`Fetching KYC: ${axiosAuth.defaults.baseURL}users/kyc` + (customer_id ? `?customer_id=${customer_id}` : ""));
+				// Decide endpoint: customer KYC vs user KYC
+				if (customer_id) {
+					console.log(`Fetching customer KYC: ${axiosAuth.defaults.baseURL}customer/kyc?customer_id=${customer_id}`);
+					const res = await axiosAuth.get("customer/kyc", { params: { customer_id } });
+					// backend may return a single object or an array
+					const kycRaw = res.data?.data;
+					const kycList = Array.isArray(kycRaw) ? kycRaw : kycRaw ? [kycRaw] : [];
 
-				const res = await axiosAuth.get("users/kyc");
-				const kycList = Array.isArray(res.data?.data) ? res.data.data : [];
+					// process kycList same as before
+					const aadhaarEntry = kycList
+						.filter(item => item.type === "aadhaar" && item.verified)
+						.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
 
-				// ---- existing logic untouched ----
-				const aadhaarEntry = kycList
-					.filter(item => item.type === "aadhaar" && item.verified)
-					.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+					if (aadhaarEntry) {
+						setAadhaarVerified(true);
+						setAadhaarName(aadhaarEntry.response?.name || "");
+						setAadhaarDob(aadhaarEntry.response?.dob || "");
+						// Populate Aadhaar input with masked value if available
+						const aadhaarValue = aadhaarEntry.response?.aadhaar || aadhaarEntry.identification || "";
+						if (aadhaarValue) {
+							// mask all but last 4
+							const masked = aadhaarValue.length > 4 ? `XXXX${aadhaarValue.slice(-4)}` : aadhaarValue;
+							setAadhaar(masked);
+							setAadhaarLast4(aadhaarValue.slice(-4));
+						}
+					}
 
-				if (aadhaarEntry) {
-					setAadhaarVerified(true);
-					setAadhaarName(aadhaarEntry.response?.name || "");
-					setAadhaarDob(aadhaarEntry.response?.dob || "");
+					const panEntry = kycList
+						.filter(item => item.type === "pan" && item.verified)
+						.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+
+					if (panEntry) {
+						setPanVerified(true);
+						const panIdent = panEntry.identification || panEntry.response?.pan || "";
+						setPan(panIdent ? `XXXX${panIdent.slice(-4)}` : "");
+						setPanName(panEntry.response?.registered_name || "");
+					}
+
+					await fetchBankAccounts();
+				} else {
+					console.log(`Fetching user KYC: ${axiosAuth.defaults.baseURL}users/kyc`);
+					const res = await axiosAuth.get("users/kyc");
+					const kycList = Array.isArray(res.data?.data) ? res.data.data : [];
+
+					const aadhaarEntry = kycList
+						.filter(item => item.type === "aadhaar" && item.verified)
+						.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+
+					if (aadhaarEntry) {
+						setAadhaarVerified(true);
+						setAadhaarName(aadhaarEntry.response?.name || "");
+						setAadhaarDob(aadhaarEntry.response?.dob || "");
+						const aadhaarValue = aadhaarEntry.response?.aadhaar || aadhaarEntry.identification || "";
+						if (aadhaarValue) {
+							const masked = aadhaarValue.length > 4 ? `XXXX${aadhaarValue.slice(-4)}` : aadhaarValue;
+							setAadhaar(masked);
+							setAadhaarLast4(aadhaarValue.slice(-4));
+						}
+					}
+
+					const panEntry = kycList
+						.filter(item => item.type === "pan" && item.verified)
+						.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+
+					if (panEntry) {
+						setPanVerified(true);
+						const panIdent = panEntry.identification || panEntry.response?.pan || "";
+						setPan(panIdent ? `XXXX${panIdent.slice(-4)}` : "");
+						setPanName(panEntry.response?.registered_name || "");
+					}
+
+					await fetchBankAccounts();
 				}
-
-				const panEntry = kycList
-					.filter(item => item.type === "pan" && item.verified)
-					.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
-
-				if (panEntry) {
-					setPanVerified(true);
-					setPan(`XXXX${panEntry.identification.slice(-4)}`);
-					setPanName(panEntry.response?.registered_name || "");
-				}
-
-				await fetchBankAccounts();
 			} catch (err) {
 				message.error("Failed to load KYC");
 			} finally {
@@ -271,13 +304,15 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 		};
 
 		fetchKycStatus();
-	}, []);
+	}, [axiosAuth, customer_id]);
 
 
 
 	useEffect(() => {
 		if (panVerified) {
-			setShowAddBankForm(prev => !prev);
+			// Previously we toggled the Add Bank modal automatically here.
+			// Don't open the Add Bank modal automatically — let the user click "Add Bank Account".
+			// Keep fetching bank accounts so we can reflect any newly added bank.
 
 			fetchBankAccounts();
 		}
@@ -291,17 +326,18 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 			setBankLoading(true);
 
 			// Debug log: bank accounts endpoint
-			console.log(`Fetching Bank Accounts: ${axiosAuth.defaults.baseURL}payout/bankAccounts` + (customer_id ? `?customer_id=${customer_id}` : ""));
+			if (customer_id) console.log(`Fetching Bank Accounts: ${axiosAuth.defaults.baseURL}payout/bankAccounts?customer_id=${customer_id}`);
+			else console.log(`Fetching Bank Accounts: ${axiosAuth.defaults.baseURL}payout/bankAccounts`);
 
-			const res = await axiosAuth.get("/payout/bankAccounts");
+			const res = await axiosAuth.get("/payout/bankAccounts", { params: customer_id ? { customer_id } : {} });
 			const banks = Array.isArray(res.data?.data) ? res.data.data : [];
 
 			setBankList(banks);
 
 			if (banks.length === 0) {
-				// No banks → auto show add form
+				// No banks → mark hasBanks false. Do NOT auto-open add-bank modal; user must click Add Bank.
 				setHasBanks(false);
-				setShowAddBankForm(true);
+				// do not call setShowAddBankForm(true)
 			} else {
 				// Banks exist → hide add form initially
 				setHasBanks(true);
@@ -701,7 +737,7 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 						<Input
 							placeholder="Enter Aadhaar Number"
 							maxLength={12}
-							disabled={aadhaarVerified}
+							disabled={readOnlyOnVerified ? aadhaarVerified : false}
 							value={aadhaar}
 							onChange={e =>
 								setAadhaar(e.target.value.replace(/\D/g, ""))
@@ -809,18 +845,17 @@ const [aadhaarLast4, setAadhaarLast4] = useState("");
 						<Input
 							placeholder="Enter PAN Number"
 							maxLength={10}
-							disabled={!aadhaarVerified || panVerified}
+							disabled={readOnlyOnVerified ? (panVerified || !aadhaarVerified) : !aadhaarVerified}
 
 							value={pan}
 							onChange={e => setPan(e.target.value.toUpperCase())}
 						/>
 
 
-
 						<Input
 							placeholder="Enter Name as on PAN"
 							className="mt-2"
-							disabled={!aadhaarVerified || panVerified}
+							disabled={readOnlyOnVerified ? (panVerified || !aadhaarVerified) : !aadhaarVerified}
 							value={panName}
 							onChange={e => setPanName(e.target.value)}
 						/>

@@ -7,7 +7,6 @@ import {
     Row,
     Col,
     Input,
-    Space,
     Select,
     Modal,
     Divider,
@@ -17,10 +16,10 @@ import {
 import {
     SearchOutlined,
     CheckCircleFilled,
-    CloseCircleFilled,
-    BankOutlined
+    CloseCircleFilled
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import KYCPage from "../customer_kyc"; // render full customer KYC page inside a modal
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -31,9 +30,7 @@ const SelectCustomerSection = ({
                                    bankAccounts = [],
                                    bankLoading,
                                    fetchCustomerBanks,
-                                   selectedCustomer,
-                                   onSelect,
-                                   onChangeCustomer
+                                   onSelect
                                }) => {
     const navigate = useNavigate();
 
@@ -45,6 +42,11 @@ const SelectCustomerSection = ({
     const [bankModalOpen, setBankModalOpen] = useState(false);
     const [activeCustomer, setActiveCustomer] = useState(null);
     const [selectedBank, setSelectedBank] = useState(null);
+
+    // --- NEW: KYC modal state ---
+    const [kycOpen, setKycOpen] = useState(false);
+    const [renderKycPage, setRenderKycPage] = useState(false);
+    const [currentKycCustomer, setCurrentKycCustomer] = useState(null);
 
     /* ================= HELPERS ================= */
     const isKycVerified = (c) =>
@@ -147,10 +149,8 @@ const SelectCustomerSection = ({
                                     <Card
                                         hoverable={verified}
                                         onClick={async () => {
-                                            if (!verified) {
-                                                navigate("/app/apps/customers");
-                                                return;
-                                            }
+                                            // only allow bank-selection when verified; otherwise do nothing (button opens KYC)
+                                            if (!verified) return;
 
                                             setActiveCustomer(customer);
                                             setSelectedBank(null);
@@ -160,8 +160,7 @@ const SelectCustomerSection = ({
                                         }}
                                         style={{
                                             borderRadius: 16,
-                                            opacity: verified ? 1 : 0.5,
-                                            cursor: verified ? "pointer" : "not-allowed"
+                                            position: "relative"
                                         }}
                                     >
                                         {verified ? (
@@ -186,14 +185,32 @@ const SelectCustomerSection = ({
                                             />
                                         )}
 
-                                        <Title level={5}>{customer.name}</Title>
-                                        <Text>{customer.phone}</Text>
+                                        <Title level={5} style={{ color: verified ? undefined : '#64748b' }}>{customer.name}</Title>
+                                        <Text style={{ color: verified ? undefined : '#64748b' }}>{customer.phone}</Text>
 
                                         <div style={{ marginTop: 8 }}>
                                             <Tag color={verified ? "green" : "orange"}>
                                                 {verified ? "KYC Verified" : "KYC Pending"}
                                             </Tag>
                                         </div>
+
+                                        {/* If not verified, show prominent Complete KYC button (only button opens KYC) */}
+                                        {!verified && (
+                                            <Button
+                                                type="primary"
+                                                danger
+                                                style={{ marginTop: 12, cursor: 'pointer', zIndex: 2 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setCurrentKycCustomer(customer);
+                                                    setRenderKycPage(true);
+                                                    setKycOpen(true);
+                                                }}
+                                                aria-label={`Complete KYC for ${customer.name}`}
+                                            >
+                                                Complete KYC →
+                                            </Button>
+                                        )}
                                     </Card>
                                 </Col>
                             );
@@ -201,6 +218,25 @@ const SelectCustomerSection = ({
                     </Row>
                 )}
             </div>
+
+            {/* ===== KYC MODAL (renders full customer_kyc page) ===== */}
+            <Modal
+                open={kycOpen}
+                centered
+                footer={null}
+                width={renderKycPage ? 1000 : 600}
+                bodyStyle={{ maxHeight: '80vh', overflowY: 'auto' }}
+                onCancel={() => {
+                    setKycOpen(false);
+                    setRenderKycPage(false);
+                    setCurrentKycCustomer(null);
+                }}
+                title={renderKycPage ? `Customer KYC — ${currentKycCustomer?.name || currentKycCustomer?.id || ""}` : "Complete KYC"}
+            >
+                {renderKycPage ? (
+                    <KYCPage customer_id={currentKycCustomer?.id} readOnlyOnVerified={true} />
+                ) : null}
+            </Modal>
 
             {/* ================= BANK SELECTION MODAL ================= */}
             <Modal
@@ -346,3 +382,4 @@ const SelectCustomerSection = ({
 };
 
 export default SelectCustomerSection;
+
