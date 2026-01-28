@@ -1,10 +1,11 @@
-import icon from "../../../../assets/img.png";
-import domestics from "../../../../assets/domesticcard.jpg";
-import coporate from "../../../../assets/coporate.jpg"
+import icon from "../../../../assets/wallet.png";
+import domestics from "../../../../assets/3d-credit-card.png";
+import coporate from "../../../../assets/bank-card.png"
 
 import payin from "../../../../assets/payin.png"
 import payout from "../../../../assets/payout.png"
-import amex from "../../../../assets/amex.jpg"
+import amex from "../../../../assets/atm-card.png"
+
 
 export const VisitorChartData = {
   	series: [

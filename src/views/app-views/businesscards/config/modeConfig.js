@@ -28,4 +28,10 @@ export const MODE_CONFIG = {
         category: "travel",
         icon: CashfreeIcon,
     },
+    "SLPE INSURE PRIME": {
+        category: "insurance",
+         icon: PayUIcon,
+    },
 };
+
+export default MODE_CONFIG;

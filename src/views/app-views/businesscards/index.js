@@ -30,6 +30,7 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
         if (lower.includes("edu")) return "edu";
         if (lower.includes("travel") || lower.includes("tarvel") || lower.includes("ocean"))
             return "travel";
+        if (lower.includes("insurance") || lower.includes("insure") || lower.includes("insure")) return "insurance";
         return "other";
     };
 
@@ -89,6 +90,12 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
                     onClick={() => setCategory("travel")}
                 >
                     Travel
+                </Button>
+                <Button
+                    type={category === "insurance" ? "primary" : "default"}
+                    onClick={() => setCategory("insurance")}
+                >
+                    Insurance
                 </Button>
             </Space>
 
