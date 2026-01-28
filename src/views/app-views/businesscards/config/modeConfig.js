@@ -27,11 +27,7 @@ export const MODE_CONFIG = {
     "Slpe Ocean Pay": {
         category: "travel",
         icon: CashfreeIcon,
-    },
-    "SLPE INSURE PRIME": {
-        category: "insurance",
-         icon: PayUIcon,
-    },
+    }
 };
 
 export default MODE_CONFIG;

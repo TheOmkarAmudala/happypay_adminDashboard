@@ -65,4 +65,12 @@ export const SERVICE_CHARGE_CONFIG = {
         3: 1.47,
         2: 1.50,
     },
+    "SLPE INSURE PRIME": {
+        7:1.5,
+        6:1.62,
+        5:1.63,
+        4:1.65,
+        3:1.67,
+        2:1.70,
+    }
 };

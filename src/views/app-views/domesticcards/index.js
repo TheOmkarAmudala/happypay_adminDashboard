@@ -44,15 +44,15 @@ const SlpePaymentModesCards = ({ onSelect, selectedMode }) => {
         return entry?.[userLevel] ?? null;
     };
 
-    const getTxnLimit = (modeName) => {
-        if (!userLevel) return null;
+    const NORMALIZED_TXN_LIMIT_CONFIG = Object.fromEntries(
+        Object.entries(DOMESTIC_CARD_TXN_LIMIT_CONFIG).map(([key, val]) => [
+            normalize(key),
+            val,
+        ])
+    );
 
-        const entry = Object.entries(DOMESTIC_CARD_TXN_LIMIT_CONFIG).find(
-            ([key]) => normalize(key) === normalize(modeName)
-        )?.[1];
-
-        return entry?.[userLevel] ?? null;
-    };
+    const getTxnLimit = (modeName) =>
+        NORMALIZED_TXN_LIMIT_CONFIG[normalize(modeName)]?.maxTxnLimit ?? null;
 
     /* ---------- data ---------- */
     useEffect(() => {

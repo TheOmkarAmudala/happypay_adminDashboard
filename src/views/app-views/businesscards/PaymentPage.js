@@ -8,7 +8,7 @@ import SlpePaymentModesCards from "./index";
 import SelectCustomerSection from "./SelectCustomerSection";
 import ServiceChargeModal from "./ServiceChargeModal";
 import { fetchCustomers } from "store/slices/customerSlice";
-
+import { PAYMENT_MODE_TXN_CONFIG } from "./config/paymentModeTxnConfig";
 const PaymentPage = () => {
     const dispatch = useDispatch();
 
@@ -31,6 +31,19 @@ const PaymentPage = () => {
 
     const [baseAmount, setBaseAmount] = useState(10000);
     const [modalOpen, setModalOpen] = useState(false);
+
+    const normalize = (s = "") =>
+        s.trim().toLowerCase().replace(/\s+/g, "").replace("tarvel", "travel");
+
+    const getTxnLimitFromConfig = (modeName) => {
+        if (!modeName) return null;
+
+        const entry = Object.entries(PAYMENT_MODE_TXN_CONFIG).find(
+            ([key]) => normalize(key) === normalize(modeName)
+        )?.[1];
+
+        return entry?.maxTxnLimit ?? null;
+    };
 
     /* ================= FETCH CUSTOMERS ================= */
     useEffect(() => {
@@ -145,6 +158,10 @@ const PaymentPage = () => {
         }
     };
 
+    const maxTxnLimit = selectedMode
+        ? getTxnLimitFromConfig(selectedMode.name)
+        : null;
+
     return (
         <div style={{ padding: 16, maxWidth: 1200, margin: "0 auto" }}>
             {/* BACK BUTTON */}
@@ -208,6 +225,7 @@ const PaymentPage = () => {
                 selectedMode={selectedMode}
                 baseAmount={baseAmount}
                 setBaseAmount={setBaseAmount}
+                maxTxnLimit={maxTxnLimit}   // ✅ ADD THIS
                 onClose={() => {
                     setModalOpen(false);
                     setStep(2);

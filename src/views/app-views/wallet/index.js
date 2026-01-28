@@ -18,7 +18,7 @@ import {
     Input,
     Typography
 } from "antd";
-
+import WalletTransactionModal from "./Modal";
 import {
     ArrowDownOutlined,
     ArrowUpOutlined,
@@ -328,143 +328,13 @@ const WalletTransactionsPage = ({ onWalletTotalChange }) => {
 
             {/* ===== MODAL ===== */}
             {/* ===== MODAL ===== */}
-            <Modal
+            <WalletTransactionModal
                 open={isModalOpen}
-                footer={null}
-                width={isMobile ? "100%" : 720}
-                style={isMobile ? { top: 20 } : {}}
-                bodyStyle={{
-                    padding: isMobile ? 14 : 24,
-                    maxHeight: isMobile ? "85vh" : "none",
-                    overflowY: "auto"
-                }}
-                onCancel={() => setIsModalOpen(false)}
-            >
-                {detailLoading ? (
-                    <Skeleton active />
-                ) : (
-                    selectedTx && (
-                        <div style={{ maxWidth: 560, margin: "0 auto" }}>
-                            {/* ===== STATUS ===== */}
-                            <div style={{ textAlign: "center", marginBottom: 12 }}>
-                                <Tag
-                                    color="green"
-                                    style={{
-                                        padding: "6px 14px",
-                                        fontSize: 13,
-                                        borderRadius: 20
-                                    }}
-                                >
-                                    ✓ Transfer Successful
-                                </Tag>
-                            </div>
-
-                            {/* ===== AMOUNT ===== */}
-                            <div style={{ textAlign: "center", marginBottom: 12 }}>
-                                <div style={{ fontSize: isMobile ? 28 : 34, fontWeight: 600 }}>
-                                    ₹{selectedTx.amount?.toFixed(2)}
-                                </div>
-                                <Text type="secondary" style={{ fontSize: 12 }}>
-                                    {new Date(selectedTx.createdAt).toLocaleString()}
-                                </Text>
-                            </div>
-
-                            {/* ===== BENEFICIARY ===== */}
-                            <Card
-                                size="small"
-                                style={{
-                                    borderRadius: 12,
-                                    marginBottom: 12
-                                }}
-                            >
-                                <Row gutter={[0, 6]}>
-                                    <Col span={24}>
-                                        <Text strong>
-                                            {selectedTx?.extraInfo?.bank_account?.beneficiary_name || "Beneficiary"}
-                                        </Text>
-                                    </Col>
-
-                                    <Col span={24}>
-                                        <Text type="secondary">
-                                         Bank Account Number:   XXXX{" "}
-                                            {selectedTx?.extraInfo?.bank_account?.bank_account_number?.slice(-4)}
-                                        </Text>
-                                    </Col>
-
-                                    <Col span={24}>
-                                        <Text type="secondary">
-                                            IFSC: {selectedTx?.extraInfo?.bank_account?.bank_ifsc || "-"}
-                                        </Text>
-                                    </Col>
-
-                                    <Col span={24}>
-                                        <Tag color="blue" style={{ marginTop: 4 }}>
-                                            Bank Transfer
-                                        </Tag>
-                                    </Col>
-                                </Row>
-                            </Card>
-
-                            {/* ===== AMOUNT BREAKDOWN ===== */}
-                            <Card
-                                size="small"
-                                style={{
-                                    borderRadius: 12,
-                                    marginBottom: 16
-                                }}
-                            >
-                                <Row justify="space-between">
-                                    <Text>Amount</Text>
-                                    <Text>₹{selectedTx.amount?.toFixed(2)}</Text>
-                                </Row>
-
-                                <Row justify="space-between" style={{ marginTop: 6 }}>
-                                    <Text>Charges</Text>
-                                    <Text type="danger">
-                                        -₹{selectedTx.chargeAmount?.toFixed(2) || "0.00"}
-                                    </Text>
-                                </Row>
-
-                                <Divider style={{ margin: "10px 0" }} />
-
-                                <Row justify="space-between">
-                                    <Text strong>Total Sent</Text>
-                                    <Text strong style={{ color: "#3f8600" }}>
-                                        ₹{selectedTx.amount?.toFixed(2)}
-                                    </Text>
-                                </Row>
-                            </Card>
-
-                            {/* ===== DETAILS ===== */}
-                            <Title level={5} style={{ marginBottom: 8 }}>
-                                Transaction Details
-                            </Title>
-
-                            <Descriptions bordered size="small" column={1}>
-                                <Descriptions.Item label="Reference ID">
-                                    {selectedTx.serviceReferenceId}
-                                </Descriptions.Item>
-
-                                <Descriptions.Item label="UTR">
-                                    {selectedTx?.extraInfo?.payout_response?.transferutr ||
-                                        selectedTx?.response?.transfer_utr ||
-                                        "-"}
-                                </Descriptions.Item>
-
-                                <Descriptions.Item label="Transfer Mode">
-                                    {selectedTx?.extraInfo?.payout_response?.transfermode?.toUpperCase()}
-                                </Descriptions.Item>
-
-                                <Descriptions.Item label="Status">
-                                    <Tag color="green">
-                                        {selectedTx?.extraInfo?.payout_response?.statuscode}
-                                    </Tag>
-                                </Descriptions.Item>
-                            </Descriptions> </div>
-                    )
-                )}
-            </Modal>
-
+                onClose={() => setIsModalOpen(false)}
+                loading={detailLoading}
+                transaction={selectedTx}
+                isMobile={isMobile}
+            />
 
         </Card>
     );

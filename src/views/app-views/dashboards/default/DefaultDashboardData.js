@@ -5,6 +5,7 @@ import coporate from "../../../../assets/bank-card.png"
 import payin from "../../../../assets/payin.png"
 import payout from "../../../../assets/payout.png"
 import amex from "../../../../assets/atm-card.png"
+import { CARD_THEMES } from "./CardThemes";
 
 
 export const VisitorChartData = {
@@ -35,42 +36,43 @@ export const VisitorChartData = {
 }
 
 
+
 export const getAnnualStatisticData = (profile) => [
 	{
 		title: "Wallet Balance",
-		value:   profile && profile.mainWallet != null
-			? `₹${Number(profile.mainWallet).toFixed(2)}`
-			: null,
-		status: 12.5,
+		value:
+			profile && profile.mainWallet != null
+				? `₹${Number(profile.mainWallet).toFixed(2)}`
+				: null,
 		subtitle: "Total Pay In",
 		route: "/wallet",
-		icon: icon
-
+		icon,
+		iconStyle: CARD_THEMES.domestic,
 	},
 	{
 		title: "Domestic Cards",
-
-		status: 12.5,
 		subtitle: "Total Pay In",
 		route: "/domesticcards",
-		icon: domestics
+		icon: domestics,
+		iconStyle: CARD_THEMES.domestic,
 	},
 	{
 		title: "Business Cards",
-		status: -3.2,
 		subtitle: "Total Pay Out",
 		route: "/BusinessCards",
-		icon: coporate
+		icon: coporate,
+		iconStyle: CARD_THEMES.business,
 	},
 	{
 		title: "Amex & Diner Cards",
-
-		status: 1.8,
 		subtitle: "Total Refunds",
 		route: "/amex&dinner",
-		icon: amex
+		icon: amex,
+		iconStyle: CARD_THEMES.amex,
 	},
 ];
+
+
 
 
 

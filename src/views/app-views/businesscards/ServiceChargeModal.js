@@ -6,6 +6,7 @@ import {
     Button,
     Typography,
     Space,
+    Tag,
     message
 } from "antd";
 import { useSelector } from "react-redux";
@@ -14,7 +15,6 @@ import { SERVICE_CHARGE_CONFIG_CONSUMER } from "./config/ServiceChargeConfig";
 const { Text } = Typography;
 
 const MIN_AMOUNT = 1000;
-const MAX_AMOUNT = 100000;
 
 /* ================= NUMBER → WORDS ================= */
 const numberToWords = (num) => {
@@ -45,6 +45,7 @@ const ServiceChargeModal = ({
                                 selectedMode,
                                 baseAmount,
                                 setBaseAmount,
+                                maxTxnLimit,          // ✅ CONFIG LIMIT
                                 onClose,
                                 onApply
                             }) => {
@@ -75,13 +76,18 @@ const ServiceChargeModal = ({
     if (!open || !selectedCustomer || !selectedMode) return null;
 
     /* ================= VALIDATION ================= */
+    const isAmountNull = baseAmount === null;
     const isBelowMin = baseAmount !== null && baseAmount < MIN_AMOUNT;
-    const isAboveMax = baseAmount !== null && baseAmount > MAX_AMOUNT;
+    const isAboveMax =
+        baseAmount !== null &&
+        maxTxnLimit !== null &&
+        baseAmount > maxTxnLimit;
+
     const isAmountInvalid =
-        baseAmount === null || isBelowMin || isAboveMax;
+        isAmountNull || isBelowMin || isAboveMax;
 
     /* ================= CALCULATIONS ================= */
-    const serviceCharge = (baseAmount * percentage) / 100;
+    const serviceCharge = (baseAmount * percentage) / 100 || 0;
 
     const merchantCommission =
         percentage > minPercentage
@@ -119,24 +125,38 @@ const ServiceChargeModal = ({
                         addonAfter="₹"
                         style={{ width: "100%", marginTop: 6 }}
                         status={isAmountInvalid ? "error" : ""}
-                        onChange={(v) => setBaseAmount(v)}
+                        onChange={(v) => {
+                            if (v === null) return setBaseAmount(null);
+
+                            if (maxTxnLimit && v > maxTxnLimit) {
+                                setBaseAmount(maxTxnLimit);
+                                message.warning(
+                                    `Max allowed is ₹${maxTxnLimit.toLocaleString("en-IN")}`
+                                );
+                                return;
+                            }
+
+                            setBaseAmount(v);
+                        }}
                     />
 
-                    {isBelowMin && (
+                    {/* ERRORS */}
+                    {isAmountNull && (
                         <Text type="danger" style={{ fontSize: 12 }}>
                             Enter amount greater than ₹{MIN_AMOUNT}
                         </Text>
                     )}
 
-                    {baseAmount === null && (
+                    {isBelowMin && (
                         <Text type="danger" style={{ fontSize: 12 }}>
-                            Enter amount greater than ₹{MIN_AMOUNT}
+                            Minimum amount is ₹{MIN_AMOUNT.toLocaleString("en-IN")}
                         </Text>
                     )}
 
                     {isAboveMax && (
                         <Text type="danger" style={{ fontSize: 12 }}>
-                            Maximum allowed amount is ₹{MAX_AMOUNT}
+                            Maximum allowed for {selectedMode.name.replace("Slpe ", "")} is ₹
+                            {maxTxnLimit.toLocaleString("en-IN")}
                         </Text>
                     )}
 
@@ -144,6 +164,12 @@ const ServiceChargeModal = ({
                         <Text type="secondary" style={{ fontSize: 12 }}>
                             {numberToWords(baseAmount)}
                         </Text>
+                    )}
+
+                    {maxTxnLimit && (
+                        <Tag color="blue" style={{ marginTop: 6 }}>
+                            Max Txn ₹{maxTxnLimit.toLocaleString("en-IN")}
+                        </Tag>
                     )}
                 </div>
 

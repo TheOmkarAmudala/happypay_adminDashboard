@@ -10,7 +10,7 @@ import { fetchCustomers } from "store/slices/customerSlice";
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
+import { DOMESTIC_CARD_TXN_LIMIT_CONFIG } from "./config/DomesticCardTxnLimitConfig";
 /* ===================== Utility helpers ===================== */
 const STORAGE_KEY = 'hp_pending_tx';
 
@@ -30,7 +30,21 @@ const TX_STATES = {
   TIMEOUT: 'timeout',
   CANCELLED: 'cancelled'
 };
+const normalize = (s = "") =>
+    s.trim().toLowerCase().replace(/\s+/g, "").replace("tarvel", "travel");
 
+
+const getTxnLimitFromConfig = (modeName) => {
+  if (!modeName) return null;
+
+
+  const entry = Object.entries(DOMESTIC_CARD_TXN_LIMIT_CONFIG).find(
+      ([key]) => normalize(key) === normalize(modeName)
+  )?.[1];
+
+
+  return entry?.maxTxnLimit ?? null;
+};
 /* ===================== Component ===================== */
 const PaymentPage = () => {
   const dispatch = useDispatch();
@@ -46,6 +60,10 @@ const PaymentPage = () => {
   const [bankAccounts, setBankAccounts] = useState([]);
   const [bankLoading, setBankLoading] = useState(false);
   const [baseAmount, setBaseAmount] = useState(10000);
+
+  const maxTxnLimit = selectedMode
+      ? getTxnLimitFromConfig(selectedMode.name)
+      : null;
 
   useEffect(() => {
     if (!customers?.length) dispatch(fetchCustomers());
@@ -316,6 +334,13 @@ const PaymentPage = () => {
 
   /* ========== Hardened payment init with idempotency + dedupe + persistence ========== */
   const handlePaymentInit = async (payloadBase) => {
+    if (maxTxnLimit && payload.amount > maxTxnLimit) {
+      message.error(
+          `Maximum allowed transaction for ${selectedMode.name} is ₹${maxTxnLimit.toLocaleString("en-IN")}`
+      );
+      return;
+    }
+
     if (isSubmitting) {
       message.info('Payment is already in progress');
       return;
@@ -549,27 +574,27 @@ const PaymentPage = () => {
 
       {/* STEP 3 – PAYMENT SUMMARY */}
       <ServiceChargeModal
-        open={step === 3}
-        selectedCustomer={selectedCustomer}
-        selectedMode={selectedMode}
-        baseAmount={baseAmount}
-        setBaseAmount={setBaseAmount}
-        onClose={() => setStep(2)}
-        onApply={(data) => {
-          const payload = buildPaymentPayload({
-            settlementAmount: data.settlementAmount,
-            percentage: data.percentage,
-            selectedCustomer,
-            selectedBank,
-            selectedMode,
-            profile,
-            idempotencyKey: generateId()
-          });
+          open={step === 3}
+          selectedCustomer={selectedCustomer}
+          selectedMode={selectedMode}
+          baseAmount={baseAmount}
+          setBaseAmount={setBaseAmount}
+          maxTxnLimit={maxTxnLimit}   // ✅ ADD THIS
+          onClose={() => setStep(2)}
+          onApply={(data) => {
+            const payload = buildPaymentPayload({
+              settlementAmount: data.settlementAmount,
+              percentage: data.percentage,
+              selectedCustomer,
+              selectedBank,
+              selectedMode,
+              profile,
+              idempotencyKey: generateId()
+            });
 
-          handlePaymentInit(payload);
-        }}
+            handlePaymentInit(payload);
+          }}
       />
-
       {/* overlay shows FSM-driven UI (user can hide it with Continue in background) */}
       {overlayVisible && Overlay()}
 

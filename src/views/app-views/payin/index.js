@@ -11,6 +11,9 @@ import {
     Statistic,
     Space
 } from "antd";
+import PayInTransactionModal from "./PayInTransactionModal";
+
+
 import {
     ReloadOutlined,
     WalletOutlined,
@@ -31,6 +34,7 @@ const statusColor = {
     pending: "orange",
     failed: "red"
 };
+
 
 const PayInPage = () => {
     const token = useSelector(state => state.auth.token);
@@ -54,6 +58,27 @@ const PayInPage = () => {
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [sortBy, setSortBy] = useState("NONE");
     const [search, setSearch] = useState("");
+    const [modalOpen, setModalOpen] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [selectedTx, setSelectedTx] = useState(null);
+
+    const fetchPayInDetails = async (referenceId) => {
+        try {
+            setDetailLoading(true);
+            setModalOpen(true);
+
+            const res = await axios.get(
+                `https://test.happypay.live/users/serviceTransaction?id=${referenceId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            console.log("Transaction details:", res.data);
+            setSelectedTx(res.data?.data);
+        } catch (e) {
+            console.error("Failed to fetch transaction details", e);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
 
     /* ================= FETCH PAYINS ================= */
     const fetchPayIns = useCallback(async () => {
@@ -311,6 +336,10 @@ const PayInPage = () => {
                             pagination={{ pageSize: 10 }}
                             scroll={{ x: 700 }}
                             size="small"
+                            onRow={(record) => ({
+                                onClick: () => fetchPayInDetails(record.referenceId),
+                                style: { cursor: "pointer" }
+                            })}
                         />
                     </Card>
                 </Col>
@@ -323,6 +352,13 @@ const PayInPage = () => {
                     />
                 </Col>
             </Row>
+
+            <PayInTransactionModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                loading={detailLoading}
+                transaction={selectedTx}
+            />
         </>
     );
 };

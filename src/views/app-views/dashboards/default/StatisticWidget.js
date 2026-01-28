@@ -37,14 +37,28 @@ const StatisticWidget = ({ title, value, subtitle, icon, iconStyle }) => {
                     gap: 12,
                 }}
             >
-                <Avatar
-                    size={48}
-                    src={icon}
-                    style={iconStyle?.width &&
-                        { backgroundColor: "#f5f5f5",
-                        padding: 8,
+                <div
+                    style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: "50%",
+                        background: iconStyle?.softBg || "#f5f7fa",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
                     }}
-                />
+                >
+                    <img
+                        src={icon}
+                        alt=""
+                        style={{
+                            width: 26,
+                            height: 26,
+                            opacity: 0.9,
+                        }}
+                    />
+                </div>
 
                 <Title
                     level={4}

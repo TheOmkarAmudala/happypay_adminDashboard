@@ -6,6 +6,8 @@ import {
 	MenuFoldOutlined,
 	MenuUnfoldOutlined
 } from "@ant-design/icons";
+import WhatsAppIcon from "assets/whatsapp.png";
+import TelegramIcon from "assets/telegram.png";
 
 import Logo from "../Logo";
 import NavNotification from "../NavNotification";

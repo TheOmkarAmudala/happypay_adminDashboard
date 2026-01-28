@@ -15,7 +15,6 @@ import { SERVICE_CHARGE_CONFIG } from "./config/ServiceChargeConfig";
 const { Text } = Typography;
 
 const MIN_AMOUNT = 1000;
-const MAX_AMOUNT = 100000;
 
 /* ================= NUMBER → WORDS ================= */
 const numberToWords = (num) => {
@@ -46,6 +45,7 @@ const ServiceChargeModal = ({
                                 selectedMode,
                                 baseAmount,
                                 setBaseAmount,
+                                maxTxnLimit,        // ✅ CONFIG-DRIVEN LIMIT
                                 onClose,
                                 onApply
                             }) => {
@@ -54,7 +54,7 @@ const ServiceChargeModal = ({
     );
 
     const [minPercentage, setMinPercentage] = useState(null);
-    const [percentage, setPercentage] = useState(2); // default 2%
+    const [percentage, setPercentage] = useState(2);
 
     /* ================= INIT PRICING ================= */
     useEffect(() => {
@@ -73,11 +73,18 @@ const ServiceChargeModal = ({
     if (!open || !selectedCustomer || !selectedMode) return null;
 
     /* ================= AMOUNT VALIDATION ================= */
+    const isAmountNull = baseAmount === null;
     const isBelowMin = baseAmount !== null && baseAmount < MIN_AMOUNT;
-    const isAboveMax = baseAmount !== null && baseAmount > MAX_AMOUNT;
-    const isAmountInvalid = baseAmount === null || isBelowMin || isAboveMax;
+    const isAboveMax =
+        baseAmount !== null &&
+        maxTxnLimit !== null &&
+        baseAmount > maxTxnLimit;
+
+    const isAmountInvalid = isAmountNull || isBelowMin || isAboveMax;
+
     /* ================= CALCULATIONS ================= */
-    const serviceCharge = (baseAmount * percentage) / 100;
+    const serviceCharge = (baseAmount * percentage) / 100 || 0;
+
     const merchantCommission =
         percentage > minPercentage
             ? ((percentage - minPercentage) * baseAmount) / 100
@@ -116,25 +123,37 @@ const ServiceChargeModal = ({
                         style={{ width: "100%", marginTop: 6 }}
                         status={isAmountInvalid ? "error" : ""}
                         onChange={(v) => {
-// 👈 IMPORTANT: allow null while deleting
+                            if (v === null) return setBaseAmount(null);
+
+                            if (maxTxnLimit && v > maxTxnLimit) {
+                                setBaseAmount(maxTxnLimit);
+                                message.warning(
+                                    `Max allowed is ₹${maxTxnLimit.toLocaleString("en-IN")}`
+                                );
+                                return;
+                            }
+
                             setBaseAmount(v);
                         }}
                     />
 
-                    {/* ERROR MESSAGE */}
+                    {/* ERRORS */}
+                    {isAmountNull && (
+                        <Text type="danger" style={{ fontSize: 12 }}>
+                            Enter amount greater than ₹{MIN_AMOUNT}
+                        </Text>
+                    )}
+
                     {isBelowMin && (
                         <Text type="danger" style={{ fontSize: 12 }}>
-                            Enter amount greater than ₹{MIN_AMOUNT}
+                            Minimum amount is ₹{MIN_AMOUNT.toLocaleString("en-IN")}
                         </Text>
                     )}
-                    {baseAmount === null && (
-                        <Text type="danger" style={{ fontSize: 12 }}>
-                            Enter amount greater than ₹{MIN_AMOUNT}
-                        </Text>
-                    )}
+
                     {isAboveMax && (
                         <Text type="danger" style={{ fontSize: 12 }}>
-                            Maximum allowed amount is ₹{MAX_AMOUNT}
+                            Maximum allowed for {selectedMode.name.replace("Slpe ", "")} is ₹
+                            {maxTxnLimit.toLocaleString("en-IN")}
                         </Text>
                     )}
 
@@ -143,9 +162,14 @@ const ServiceChargeModal = ({
                             {numberToWords(baseAmount)}
                         </Text>
                     )}
+
+                    {maxTxnLimit && (
+                        <Tag color="blue" style={{ marginTop: 6 }}>
+                            Max Txn ₹{maxTxnLimit.toLocaleString("en-IN")}
+                        </Tag>
+                    )}
                 </div>
 
-                {/* SERVICE CHARGE */}
                 {/* SERVICE CHARGE */}
                 <div>
                     <Text type="secondary">
@@ -190,6 +214,7 @@ const ServiceChargeModal = ({
                         </Button>
                     </Space>
                 </div>
+
                 {/* BREAKDOWN */}
                 <Card size="small">
                     <Text>

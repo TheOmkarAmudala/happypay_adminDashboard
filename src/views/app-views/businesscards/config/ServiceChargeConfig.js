@@ -56,5 +56,5 @@ export const SERVICE_CHARGE_CONFIG_CONSUMER = {
         4: 1.75,
         3: 1.77,
         2: 1.80,
-    },
+    }
 };
