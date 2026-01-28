@@ -143,3 +143,63 @@
         min-width: 100%;
     }
 }
+
+/* MOBILE: stacked card / readable rows for very small screens */
+@media (max-width: 480px) {
+    .slab-card {
+        padding: 12px;
+    }
+
+    .slab-title {
+        font-size: 15px;
+    }
+
+    /* replace table with a responsive stacked layout using CSS display tweaks */
+    .slab-table {
+        display: block;
+    }
+
+    .slab-table thead {
+        display: none;
+    }
+
+    .slab-table tbody {
+        display: block;
+    }
+
+    .slab-table tbody tr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--hp-blue-border);
+        align-items: center;
+    }
+
+    .slab-table tbody tr td {
+        display: block;
+        padding: 0;
+        white-space: normal;
+    }
+
+    .slab-table tbody tr td:nth-child(1)::before { content: "Mode: "; font-weight: 600; color: var(--hp-muted); }
+    .slab-table tbody tr td:nth-child(2)::before { content: "Card: "; font-weight: 600; color: var(--hp-muted); }
+    .slab-table tbody tr td:nth-child(3)::before { content: "Network: "; font-weight: 600; color: var(--hp-muted); }
+    .slab-table tbody tr td:nth-child(4)::before { content: "Type: "; font-weight: 600; color: var(--hp-muted); }
+    .slab-table tbody tr td:nth-child(5)::before { content: "Total: "; font-weight: 600; color: var(--hp-muted); }
+
+    .rate-pill {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+/* slightly reduce spacing on tablet */
+@media (max-width: 767px) and (min-width: 481px) {
+    .slab-table th, .slab-table td {
+        padding: 10px 10px;
+    }
+    .slab-title { font-size: 16px; }
+}
+
+/* end of added responsive rules */

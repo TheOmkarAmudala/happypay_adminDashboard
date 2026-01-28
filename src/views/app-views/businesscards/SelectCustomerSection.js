@@ -282,7 +282,7 @@ const SelectCustomerSection = ({
                 title={renderKycPage ? `Customer KYC — ${currentKycCustomer?.name || currentKycCustomer?.id || ""}` : "Complete KYC"}
             >
                 {renderKycPage ? (
-                    <KYCPage customer_id={currentKycCustomer?.id} readOnlyOnVerified={true} />
+                    <KYCPage customer_id={currentKycCustomer?.id} />
                 ) : null}
             </Modal>
 

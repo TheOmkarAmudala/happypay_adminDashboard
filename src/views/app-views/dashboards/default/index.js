@@ -1,46 +1,22 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Row, Col, Button, Avatar, Dropdown, Table, Menu, Tag } from 'antd';
+import { Row, Col, Button, Dropdown, Table, Tag } from 'antd';
 import StatisticWidget from './StatisticWidget';
-import ChartWidget from 'components/shared-components/ChartWidget';
-import AvatarStatus from 'components/shared-components/AvatarStatus';
-import GoalWidget from 'components/shared-components/GoalWidget';
 import Card from 'components/shared-components/Card';
 import Flex from 'components/shared-components/Flex';
-import { AUTH_TOKEN } from "constants/AuthConstant";
-import { useNavigate } from "react-router-dom";
-import { APP_PREFIX_PATH } from 'configs/AppConfig';
 import { getAnnualStatisticData } from "./DefaultDashboardData";
 import axios from "../../../../utils/axios";
 import icon from "../../../../assets/img.png";
 import StatisticWidgetSkeleton from "./StatisticWidgetSkeleton";
-import {
-  VisitorChartData,
-  AnnualStatisticData,
-  ActiveMembersData,
-  NewMembersData,
-  RecentTransactionData
-} from './DefaultDashboardData';
-import ApexChart from 'react-apexcharts';
-import { apexLineChartDefaultOption, COLOR_2 } from 'constants/ChartConstant';
+import { AnnualStatisticData, RecentTransactionData } from './DefaultDashboardData';
+import { COLOR_2 } from 'constants/ChartConstant';
 import { SPACER } from 'constants/ThemeConstant'
-import {
-  UserAddOutlined,
-  FileExcelOutlined,
-  PrinterOutlined,
-  PlusOutlined,
-  EllipsisOutlined,
-  StopOutlined,
-  ReloadOutlined
-} from '@ant-design/icons';
-import utils from 'utils';
+import { FileExcelOutlined, PrinterOutlined, EllipsisOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Skeleton, Grid } from "antd";
 import { useSelector } from 'react-redux';
-
-
-
+import { useNavigate } from 'react-router-dom';
+import { APP_PREFIX_PATH } from 'configs/AppConfig';
 
 const TableSkeleton = ({ rows = 5 }) => {
-
 
   return (
       <div>
@@ -64,23 +40,6 @@ const TableSkeleton = ({ rows = 5 }) => {
       </div>
   );
 };
-
-
-const MembersChart = props => (
-    <ApexChart {...props}/>
-)
-
-const memberChartOption = {
-  ...apexLineChartDefaultOption,
-  ...{
-    chart: {
-      sparkline: {
-        enabled: true,
-      }
-    },
-    colors: [COLOR_2],
-  }
-}
 
 const latestTransactionOption = [
   {
@@ -198,10 +157,6 @@ const tableColumns = [
 ];
 
 export const DefaultDashboard = () => {
-  const [visitorChartData] = useState(VisitorChartData);
-  const [activeMembersData] = useState(ActiveMembersData);
-  const [newMembersData] = useState(NewMembersData)
-  const {direction} = useSelector(state => state.theme)
   const [recentTransactionData, setRecentTransactionData] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
 
@@ -274,7 +229,6 @@ export const DefaultDashboard = () => {
   }, [recentTransactionData]);
 
   const { useBreakpoint } = Grid;
-
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   return (
@@ -285,8 +239,13 @@ export const DefaultDashboard = () => {
             {(loading ? Array.from({length: 6}) : annualStatisticData).map((elm, i) => (
                 <Col key={i} xs={12} sm={12} md={6} lg={6} className="flex">
                   <div
-                      className={`flex-1 ${loading ? "cursor-default" : "cursor-pointer"} w-full h-[540px] flex`}
+                      className={`flex-1 ${loading ? "cursor-default" : "cursor-pointer"} w-full flex`}
                       onClick={() => !loading && handleStatClick(elm.route)}
+                      style={{
+                        height: isMobile ? 180 : 180, // fixed smaller height on mobile, keep original on desktop
+                        overflow: 'hidden',
+
+                      }}
                   >
                     {loading ? (
                         <StatisticWidgetSkeleton/>
@@ -299,9 +258,9 @@ export const DefaultDashboard = () => {
                             iconStyle={elm.iconStyle}
                         />
                     )}
-                  </div>
-                </Col>
-            ))}
+                   </div>
+                 </Col>
+             ))}
           </Row>
         </div>
 

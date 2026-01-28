@@ -108,16 +108,17 @@ const ProfileModal = ({ open, onClose }) => {
                                             color: "#1890ff"
                                         }}
                                     />
-                                    <Title
-                                        level={5}
+                                    <text
+
                                         style={{
                                             color: "#fff",
                                             margin: 0,
                                             fontWeight: 600
                                         }}
+                                        className="text-20px md:text-24px"
                                     >
                                         {profile.username}
-                                    </Title>
+                                    </text>
                                 </Space>
                             </Col>
 

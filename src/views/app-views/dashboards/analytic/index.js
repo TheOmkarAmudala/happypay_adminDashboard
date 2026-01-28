@@ -128,25 +128,44 @@ const COMMISSION_DATA = [
       ["1.45%", "1.93%"]
     ],
     types: ["Consumer", "Business"]
+  },
+  {
+    title: "SLPE Ocean Pay",
+    maxLimit: "40,000",
+    values: [
+      ["1.33%", "1.80%"],
+      ["1.37%", "1.85%"],
+      ["1.38%", "1.88%"],
+      ["1.40%", "1.88%"],
+      ["1.42%", "1.90%"],
+      ["1.45%", "1.93%"]
+    ],
+    types: ["Consumer", "Business"]
   }
 ];
 
 /* ---------- Main Component ---------- */
 const CommissionSlabs = () => {
-  const userLevel = useSelector(
+  let userLevel = useSelector(
       (state) => state.profile?.data?.userLevel
   );
 
-  const roleIndex = Math.max(0, Math.min(5, 7 - userLevel));
+  // make sure userLevel is a number and fallback to 2 (safe default)
+  const ul = Number(userLevel) || 2;
+  const roleIndex = Math.max(0, Math.min(5, 7 - ul));
 
   return (
       <Row gutter={[16, 16]}>
         {COMMISSION_DATA.map((card, idx) => {
-          const rows = card.values[roleIndex].map((rate, i) => ({
+          // guard: ensure we have a values row for roleIndex
+          const safeIndex = Math.max(0, Math.min(card.values.length - 1, roleIndex));
+          const ratesRow = card.values[safeIndex] || card.values[0] || [];
+
+          const rows = ratesRow.map((rate, i) => ({
             mode: "CC",
             cardType: "-",
             network: "-",
-            type: card.types[i],
+            type: card.types && card.types[i] ? card.types[i] : "-",
             total: rate
           }));
 

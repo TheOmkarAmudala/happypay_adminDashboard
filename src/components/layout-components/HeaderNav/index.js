@@ -114,7 +114,7 @@ export const HeaderNav = (props) => {
 							{/* WhatsApp */}
 							<NavItem
 								mode={navMode}
-								onClick={() => window.open("https://whatsapp.com/channel/0029VbBae4sIN9iec7Y49s2k))", "_blank")}
+								onClick={() => window.open("https://whatsapp.com/channel/0029VbBae4sIN9iec7Y49s2k\n", "_blank")}
 							>
 								<FaWhatsapp
 									className="nav-icon"
@@ -134,8 +134,6 @@ export const HeaderNav = (props) => {
 							</NavItem>
 						</div>
 
-						{/* Notifications */}
-						<NavNotification mode={navMode} />
 
 						{/* Profile */}
 						<NavProfile mode={navMode} />

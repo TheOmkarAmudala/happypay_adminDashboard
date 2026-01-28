@@ -7,6 +7,7 @@ import {
     Row,
     Col,
     Input,
+    Space,
     Select,
     Modal,
     Divider,
@@ -16,7 +17,8 @@ import {
 import {
     SearchOutlined,
     CheckCircleFilled,
-    CloseCircleFilled
+    CloseCircleFilled,
+    BankOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import KYCPage from "../customer_kyc"; // render full customer KYC page inside a modal
@@ -30,7 +32,9 @@ const SelectCustomerSection = ({
                                    bankAccounts = [],
                                    bankLoading,
                                    fetchCustomerBanks,
-                                   onSelect
+                                   selectedCustomer,
+                                   onSelect,
+                                   onChangeCustomer
                                }) => {
     const navigate = useNavigate();
 
@@ -234,7 +238,7 @@ const SelectCustomerSection = ({
                 title={renderKycPage ? `Customer KYC — ${currentKycCustomer?.name || currentKycCustomer?.id || ""}` : "Complete KYC"}
             >
                 {renderKycPage ? (
-                    <KYCPage customer_id={currentKycCustomer?.id} readOnlyOnVerified={true} />
+                    <KYCPage customer_id={currentKycCustomer?.id} />
                 ) : null}
             </Modal>
 
